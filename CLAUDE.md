@@ -63,5 +63,19 @@ particle    = { x, y, vx, vy, life, decay, size, color }
 Remote: https://github.com/Yong0225/space-shooter  
 Branch: `master`
 
-Commit message convention: `type: short description` (e.g. `feat:`, `fix:`, `refactor:`).  
-After each meaningful change: `git add shooter.html && git commit -m "..." && git push`.
+**Commit and push after every meaningful unit of work.** Do not batch multiple features into one commit or leave work uncommitted at the end of a session. The goal is that GitHub always reflects the current state of the project so work is never lost and any change can be reverted.
+
+Commit message convention: `type: short description` (e.g. `feat:`, `fix:`, `refactor:`).
+
+When to commit:
+- After adding a new feature or mechanic
+- After fixing a bug
+- After any refactor or visual change
+- After updating CLAUDE.md or project config
+
+Command sequence after each change:
+```
+git add <changed files>
+git commit -m "type: description"
+git push
+```
