@@ -74,27 +74,22 @@ def get_place_details(place_id: str) -> dict:
     }
 
 
-def scrape_website(url: str) -> dict:
-    """Visit a restaurant website and extract email + social links."""
-    found = {"email": "", "instagram": "", "facebook": ""}
-    if not url:
-        return found
+SUBPAGES_TO_TRY = ["/contact", "/about", "/links", "/contact-us", "/about-us"]
 
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=10, allow_redirects=True)
-        resp.raise_for_status()
-        html = resp.text
-        soup = BeautifulSoup(html, "html.parser")
 
-        # Collect all href links
-        hrefs = [a.get("href", "") for a in soup.find_all("a", href=True)]
-        page_text = " ".join(hrefs) + " " + html
+def _extract_from_html(html: str, found: dict) -> None:
+    """Parse html and update found dict in-place for any missing fields."""
+    soup = BeautifulSoup(html, "html.parser")
+    hrefs = [a.get("href", "") for a in soup.find_all("a", href=True)]
+    page_text = " ".join(hrefs) + " " + html
 
-        for platform, pattern in SOCIAL_PATTERNS.items():
+    for platform, pattern in SOCIAL_PATTERNS.items():
+        if not found[platform]:
             match = pattern.search(page_text)
             if match:
                 found[platform] = match.group(0).rstrip("/")
 
+    if not found["email"]:
         emails = EMAIL_PATTERN.findall(page_text)
         for email in emails:
             domain = email.split("@")[-1].lower()
@@ -102,8 +97,34 @@ def scrape_website(url: str) -> dict:
                 found["email"] = email
                 break
 
+
+def scrape_website(url: str) -> dict:
+    """Visit a restaurant website and extract email + social links."""
+    found = {"email": "", "instagram": "", "facebook": ""}
+    if not url:
+        return found
+
+    base = url.rstrip("/")
+
+    # Scrape homepage first
+    try:
+        resp = requests.get(base, headers=HEADERS, timeout=10, allow_redirects=True)
+        resp.raise_for_status()
+        _extract_from_html(resp.text, found)
     except Exception:
         pass
+
+    # If still missing social links, try common subpages
+    if not found["instagram"] or not found["facebook"]:
+        for subpage in SUBPAGES_TO_TRY:
+            if found["instagram"] and found["facebook"]:
+                break
+            try:
+                resp = requests.get(base + subpage, headers=HEADERS, timeout=8, allow_redirects=True)
+                if resp.status_code == 200:
+                    _extract_from_html(resp.text, found)
+            except Exception:
+                continue
 
     return found
 
