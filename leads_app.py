@@ -61,27 +61,47 @@ def get_details(gmaps, place_id):
         "website": r.get("website", ""),
     }
 
-def scrape_website(url):
-    found = {"email": "", "instagram": "", "facebook": ""}
-    if not url:
-        return found
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=10, allow_redirects=True)
-        html = resp.text
-        soup = BeautifulSoup(html, "html.parser")
-        hrefs = [a.get("href", "") for a in soup.find_all("a", href=True)]
-        text  = " ".join(hrefs) + " " + html
-        for platform, pattern in SOCIAL.items():
+SUBPAGES_TO_TRY = ["/contact", "/about", "/links", "/contact-us", "/about-us"]
+
+
+def _extract_from_html(html, found):
+    soup = BeautifulSoup(html, "html.parser")
+    hrefs = [a.get("href", "") for a in soup.find_all("a", href=True)]
+    text = " ".join(hrefs) + " " + html
+    for platform, pattern in SOCIAL.items():
+        if not found[platform]:
             m = pattern.search(text)
             if m:
                 found[platform] = m.group(0).rstrip("/")
+    if not found["email"]:
         for email in EMAIL_RE.findall(text):
             domain = email.split("@")[-1].lower()
             if domain not in SKIP_EMAIL and not domain.endswith(".png"):
                 found["email"] = email
                 break
+
+
+def scrape_website(url):
+    found = {"email": "", "instagram": "", "facebook": ""}
+    if not url:
+        return found
+    base = url.rstrip("/")
+    try:
+        resp = requests.get(base, headers=HEADERS, timeout=10, allow_redirects=True)
+        resp.raise_for_status()
+        _extract_from_html(resp.text, found)
     except Exception:
         pass
+    if not found["instagram"] or not found["facebook"]:
+        for subpage in SUBPAGES_TO_TRY:
+            if found["instagram"] and found["facebook"]:
+                break
+            try:
+                resp = requests.get(base + subpage, headers=HEADERS, timeout=8, allow_redirects=True)
+                if resp.status_code == 200:
+                    _extract_from_html(resp.text, found)
+            except Exception:
+                continue
     return found
 
 def save_excel(rows, query):
