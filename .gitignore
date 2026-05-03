@@ -13,6 +13,7 @@ Thumbs.db
 # Environment / secrets
 .env
 *.env
+.fb_session.json
 
 # Python
 __pycache__/

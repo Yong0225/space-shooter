@@ -4,7 +4,9 @@ Primary: Playwright screenshots + Gemini Vision (sees actual posts, poster quali
 Fallback: Google Search grounding (if page scraping fails)
 
 Usage:
-    py analyze_leads.py <input_xlsx> <output_xlsx>
+    py analyze_leads.py <input_xlsx> <output_xlsx> [--start N] [--end N]
+
+--start / --end: 1-indexed row numbers counted from the first data row (inclusive)
 
 Dependencies:
     py -m pip install requests openpyxl python-dotenv playwright
@@ -12,9 +14,11 @@ Dependencies:
 
 Environment (.env):
     GEMINI_API_KEY=<your key>
+    FB_EMAIL=<facebook login email>
+    FB_PASSWORD=<facebook password>
 """
 
-import os, re, json, sys, time, base64
+import os, re, json, sys, time, base64, argparse
 import requests
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -25,6 +29,10 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 if not GEMINI_API_KEY:
     print("ERROR: GEMINI_API_KEY not found in .env")
     sys.exit(1)
+
+FB_EMAIL = os.getenv("FB_EMAIL", "")
+FB_PASSWORD = os.getenv("FB_PASSWORD", "")
+FB_STATE_FILE = ".fb_session.json"
 
 GEMINI_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -66,10 +74,7 @@ def _dismiss_facebook_popups(page):
 
 
 def _dismiss_instagram_popups(page):
-    """
-    Close Instagram's login modal.
-    First tries the X button inside the dialog; if not found, presses Escape.
-    """
+    """Close Instagram's login modal."""
     close_selectors = [
         'div[role="dialog"] button[aria-label="Close"]',
         'div[role="dialog"] svg[aria-label="Close"]',
@@ -84,7 +89,6 @@ def _dismiss_instagram_popups(page):
                 return True
         except Exception:
             pass
-    # Fallback: Escape key
     try:
         page.keyboard.press("Escape")
         page.wait_for_timeout(600)
@@ -93,22 +97,94 @@ def _dismiss_instagram_popups(page):
     return False
 
 
+def ensure_facebook_login() -> bool:
+    """
+    Log into Facebook once and save session state for reuse across all scrapes.
+    Subsequent calls reuse the saved state file without re-logging in.
+    """
+    if not FB_EMAIL or not FB_PASSWORD:
+        return False
+    if os.path.exists(FB_STATE_FILE):
+        print("[FB] Reusing saved Facebook session")
+        return True
+
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return False
+
+    print("[FB] Logging into Facebook (first-time setup)...")
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True)
+            ctx = browser.new_context(
+                viewport={"width": 1366, "height": 900},
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/124.0.0.0 Safari/537.36"
+                ),
+                locale="en-US",
+            )
+            page = ctx.new_page()
+            page.goto("https://www.facebook.com/login", wait_until="domcontentloaded", timeout=30000)
+            page.wait_for_timeout(3000)
+            # Dismiss cookie/consent banners first so they don't block the form
+            _dismiss_facebook_popups(page)
+            page.wait_for_timeout(1500)
+            # Try multiple selectors for the email input
+            email_selectors = ["#email", 'input[name="email"]', 'input[type="email"]', '[autocomplete="email"]']
+            email_filled = False
+            for sel in email_selectors:
+                try:
+                    loc = page.locator(sel).first
+                    if loc.is_visible(timeout=5000):
+                        loc.fill(FB_EMAIL)
+                        email_filled = True
+                        break
+                except Exception:
+                    continue
+            if not email_filled:
+                print("[FB] Could not find email input — scraping without login")
+                browser.close()
+                return False
+            # Fill password
+            pass_selectors = ["#pass", 'input[name="pass"]', 'input[type="password"]']
+            pass_filled = False
+            for sel in pass_selectors:
+                try:
+                    loc = page.locator(sel).first
+                    if loc.is_visible(timeout=3000):
+                        loc.fill(FB_PASSWORD)
+                        pass_filled = True
+                        break
+                except Exception:
+                    continue
+            if not pass_filled:
+                print("[FB] Could not find password input — scraping without login")
+                browser.close()
+                return False
+            page.click('[name="login"]')
+            page.wait_for_timeout(6000)
+            current_url = page.url
+            if "checkpoint" in current_url or "/login" in current_url:
+                print("[FB] Login needs verification or failed — scraping without login")
+                browser.close()
+                return False
+            ctx.storage_state(path=FB_STATE_FILE)
+            print("[FB] Facebook session saved successfully")
+            browser.close()
+            return True
+    except Exception as e:
+        print(f"[FB] Login error: {e}")
+        return False
+
+
 def scrape_page(url: str) -> dict:
     """
     Open the social media URL with a real (headless) browser.
-    1. Wait for page to fully render (not just DOM ready)
-    2. Dismiss cookie banners / login modals before screenshotting
-    3. Scroll to bring the feed into view
-    4. Wait for at least one post/image element to appear
-    5. Capture screenshot + full page text
-
-    Returns:
-        {
-            screenshot_b64: str | None,
-            page_text: str,
-            platform: str,
-            error: str | None
-        }
+    For Facebook: uses saved login session if available to bypass login walls.
+    Returns: { screenshot_b64, page_text, platform, error }
     """
     try:
         from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
@@ -125,7 +201,8 @@ def scrape_page(url: str) -> dict:
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch(headless=True)
-        ctx = browser.new_context(
+
+        ctx_kwargs = dict(
             viewport={"width": 1366, "height": 900},
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -134,22 +211,22 @@ def scrape_page(url: str) -> dict:
             ),
             locale="en-US",
         )
+        # Use saved FB session to avoid login walls
+        if platform == "facebook" and os.path.exists(FB_STATE_FILE):
+            ctx_kwargs["storage_state"] = FB_STATE_FILE
+
+        ctx = browser.new_context(**ctx_kwargs)
         page = ctx.new_page()
 
         try:
             page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            # Wait for JS to render initial content
             page.wait_for_timeout(3500)
 
             if platform == "facebook":
                 _dismiss_facebook_popups(page)
                 page.wait_for_timeout(1000)
-
-                # Scroll down past cover photo to bring timeline into view
                 page.evaluate("window.scrollBy(0, 480)")
                 page.wait_for_timeout(1500)
-
-                # Wait for at least one post element
                 try:
                     page.wait_for_selector(
                         '[role="article"], [data-pagelet*="Timeline"], '
@@ -158,27 +235,22 @@ def scrape_page(url: str) -> dict:
                     )
                     page.wait_for_timeout(1000)
                 except Exception:
-                    pass  # Take screenshot regardless
+                    pass
 
             elif platform == "instagram":
-                # Wait briefly then close login modal
                 page.wait_for_timeout(1500)
                 _dismiss_instagram_popups(page)
                 page.wait_for_timeout(800)
-
-                # Wait for grid images to appear
                 try:
                     page.wait_for_selector("article img, ._aagv img", timeout=6000)
                 except Exception:
                     pass
 
-            # Grab page text (contains follower count, post dates, like/comment counts)
             try:
                 result["page_text"] = page.inner_text("body")
             except Exception:
                 result["page_text"] = ""
 
-            # Screenshot of current viewport (feed is now in view)
             screenshot_bytes = page.screenshot(type="jpeg", quality=88)
             result["screenshot_b64"] = base64.b64encode(screenshot_bytes).decode()
 
@@ -192,7 +264,6 @@ def scrape_page(url: str) -> dict:
 
 # ─── Gemini API ──────────────────────────────────────────────────────────────
 
-# Vision prompt: used when we have a real screenshot
 ICP_VISION_PROMPT = """
 You are a social media analyst evaluating an F&B business's social media page
 for a cold email lead generation campaign.
@@ -262,7 +333,6 @@ Good examples (style reference only — write based on actual observations):
 - "每周都在更新，但图片都是随手拍，打光和构图都很粗糙，没有品牌感。"
 """
 
-# Search fallback prompt: used when Playwright scraping fails
 ICP_SEARCH_PROMPT = """
 You are a social media analyst for a cold email lead generation campaign targeting F&B businesses.
 
@@ -354,14 +424,13 @@ def parse_json_response(text: str) -> dict:
 def analyze_lead(name: str, ig_url: str, fb_url: str) -> dict:
     """
     Analyze one lead.
-    Primary path: Playwright scrape → Gemini Vision (screenshot + page text)
-    Fallback path: Google Search grounding (if scraping fails for both URLs)
-    Facebook is tried before Instagram (more accessible without login).
+    Primary: Playwright scrape → Gemini Vision (screenshot + page text)
+    Fallback: Google Search grounding
+    Facebook is tried before Instagram (more accessible, login session available).
     """
     scrape_result = None
     url_used = None
 
-    # Try FB first (public pages work without login), then IG
     for url in filter(None, [fb_url, ig_url]):
         scraped = scrape_page(url)
         if scraped.get("error"):
@@ -372,7 +441,6 @@ def analyze_lead(name: str, ig_url: str, fb_url: str) -> dict:
             url_used = url
             break
 
-    # ── Path A: Vision ────────────────────────────────────────────────────
     if scrape_result and scrape_result.get("screenshot_b64"):
         platform = scrape_result["platform"]
         page_text = scrape_result.get("page_text", "")
@@ -382,7 +450,6 @@ def analyze_lead(name: str, ig_url: str, fb_url: str) -> dict:
             name=name,
             platform=platform,
             url=url_used,
-            # Send first 4000 chars of page text (enough for follower/date/engagement data)
             page_text=page_text[:4000] if page_text else "(page text unavailable)",
         )
 
@@ -392,7 +459,6 @@ def analyze_lead(name: str, ig_url: str, fb_url: str) -> dict:
         except Exception as e:
             print(f"    Vision call failed: {e} — falling back to search")
 
-    # ── Path B: Google Search fallback ────────────────────────────────────
     print(f"    Search grounding fallback")
     prompt = ICP_SEARCH_PROMPT.format(
         name=name,
@@ -405,7 +471,6 @@ def analyze_lead(name: str, ig_url: str, fb_url: str) -> dict:
         return parse_json_response(raw)
     except json.JSONDecodeError:
         try:
-            # Last resort: search without grounding
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {"temperature": 0.4, "maxOutputTokens": 4096},
@@ -438,15 +503,19 @@ def safe_str(s) -> str:
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
-    if len(sys.argv) == 3:
-        input_path = sys.argv[1]
-        output_path = sys.argv[2]
-    elif len(sys.argv) == 1:
-        input_path = "leads_output/mount_austin_cafe_restaurant.xlsx"
-        output_path = "leads_output/mount_austin_qualified.xlsx"
-    else:
-        print("Usage: py analyze_leads.py <input.xlsx> <output.xlsx>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Lead qualifier — ICP pain point analyzer")
+    parser.add_argument("input", nargs="?", default="leads_output/mount_austin_cafe_restaurant.xlsx",
+                        help="Input Excel file")
+    parser.add_argument("output", nargs="?", default="leads_output/mount_austin_qualified.xlsx",
+                        help="Output Excel file")
+    parser.add_argument("--start", type=int, default=None,
+                        help="First data row to process (1-indexed, inclusive)")
+    parser.add_argument("--end", type=int, default=None,
+                        help="Last data row to process (1-indexed, inclusive)")
+    args = parser.parse_args()
+
+    input_path = args.input
+    output_path = args.output
 
     if not os.path.exists(input_path):
         print(f"ERROR: Input file not found: {input_path}")
@@ -455,13 +524,34 @@ def main():
     wb_in = openpyxl.load_workbook(input_path)
     ws_in = wb_in.active
     rows = list(ws_in.iter_rows(values_only=True))
-    header = rows[0]
-    data_rows = [r for r in rows[1:] if r[0]]
-    col_map = {v: i for i, v in enumerate(header)}
 
-    total = len(data_rows)
-    print(f"Loaded {total} leads from {input_path}")
-    print(f"Columns: {list(header)}\n")
+    # Detect whether the first row is a real header or actual data
+    HEADER_KEYWORDS = {"restaurant name", "name", "instagram", "facebook", "email", "website", "phone"}
+    first_row_lower = {str(v).strip().lower() for v in rows[0] if v}
+    has_real_header = bool(first_row_lower & HEADER_KEYWORDS)
+
+    if has_real_header:
+        header = rows[0]
+        data_rows = [r for r in rows[1:] if r[0]]
+    else:
+        # No header row — all rows are data; assign standard column names positionally
+        n_cols = len(rows[0]) if rows else 0
+        std_names = ["Restaurant Name", "Website", "Google Reviews", "Email", "Facebook"]
+        header = tuple(std_names[i] if i < len(std_names) else None for i in range(n_cols))
+        data_rows = [r for r in rows if r[0]]
+
+    total_all = len(data_rows)
+    print(f"Loaded {total_all} data rows from {input_path}")
+
+    # Apply row range filter
+    if args.start is not None or args.end is not None:
+        s = (args.start - 1) if args.start else 0
+        e = args.end if args.end else total_all
+        data_rows = data_rows[s:e]
+        print(f"Row filter: {args.start or 1}–{args.end or total_all} ({len(data_rows)} rows)")
+
+    # Build column map
+    col_map = {str(v).strip(): i for i, v in enumerate(header) if v is not None}
 
     def get_col(keys, default=None):
         for k in keys:
@@ -473,14 +563,41 @@ def main():
     ig_col   = get_col(["Instagram", "instagram", "instagram/facebook"])
     fb_col   = get_col(["Facebook", "facebook"])
 
+    # Auto-detect Facebook column by URL pattern when not found via header
+    if fb_col is None:
+        for sample_row in (data_rows[:10] if data_rows else []):
+            for ci, val in enumerate(sample_row):
+                if val and isinstance(val, str) and ("facebook.com" in val or "fb.com" in val):
+                    fb_col = ci
+                    break
+            if fb_col is not None:
+                break
+        if fb_col is not None:
+            print(f"Auto-detected Facebook column at index {fb_col}")
+
+    # Auto-detect Instagram column similarly
+    if ig_col is None:
+        for sample_row in (data_rows[:10] if data_rows else []):
+            for ci, val in enumerate(sample_row):
+                if val and isinstance(val, str) and "instagram.com" in val:
+                    ig_col = ci
+                    break
+            if ig_col is not None:
+                break
+
+    # Build clean output header (exclude None-named columns)
+    meaningful = [(i, h) for i, h in enumerate(header) if h is not None]
+    out_col_indices = [i for i, h in meaningful]
+    out_col_names   = [h for i, h in meaningful]
+    out_header = out_col_names + ["Pain Point"]
+
     errors = []
 
-    # ── Resume: load already-processed names from existing output ─────────────
+    # Resume: load already-processed names from existing output
     os.makedirs(
         os.path.dirname(output_path) if os.path.dirname(output_path) else ".",
         exist_ok=True,
     )
-    out_header = list(header) + ["Pain Point"]
 
     if os.path.exists(output_path):
         wb_out = openpyxl.load_workbook(output_path)
@@ -513,6 +630,10 @@ def main():
                 cell.alignment = Alignment(wrap_text=True, vertical="top")
         wb_out.save(output_path)
 
+    # Facebook login (once, before main loop)
+    ensure_facebook_login()
+
+    total = len(data_rows)
     for idx, row in enumerate(data_rows, 1):
         name   = (row[name_col] if name_col is not None else row[0]) or ""
         ig_url = (row[ig_col]   if ig_col  is not None else "") or ""
@@ -539,10 +660,11 @@ def main():
             pain_point = result.get("pain_point", "")
             print(f"  QUALIFIED | Followers: {followers} | Triggers: {triggers}")
             print(f"  {safe_str(str(pain_point)[:120])}")
-            ws_out.append(list(row) + [pain_point])
+            filtered_row = [row[i] if i < len(row) else None for i in out_col_indices]
+            ws_out.append(filtered_row + [pain_point])
             qualified_count += 1
             already_done.add(str(name).strip())
-            _save_output()  # save immediately after each qualified lead
+            _save_output()
         elif qualifies is False:
             reason = result.get("disqualify_reason", "")
             print(f"  DISQUALIFIED | Followers: {followers} | {safe_str(reason)}")
