@@ -63,15 +63,18 @@ particle    = { x, y, vx, vy, life, decay, size, color }
 Remote: https://github.com/Yong0225/space-shooter  
 Branch: `master`
 
-**Commit and push after every meaningful unit of work.** Do not batch multiple features into one commit or leave work uncommitted at the end of a session. The goal is that GitHub always reflects the current state of the project so work is never lost and any change can be reverted.
+**Every change must be committed and pushed before the session ends. No exceptions.**
 
-Commit message convention: `type: short description` (e.g. `feat:`, `fix:`, `refactor:`).
+This rule applies to Claude Code itself — if Claude makes any change to any file during a session, it must run `git add`, `git commit`, and `git push` before finishing. Do not batch multiple unrelated changes into one commit, and never leave work uncommitted. GitHub must always reflect the latest state of the project so nothing is ever lost and any change can be reverted.
+
+Commit message convention: `type: short description` (e.g. `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`).
 
 When to commit:
-- After adding a new feature or mechanic
+- After adding a new feature or script
 - After fixing a bug
 - After any refactor or visual change
-- After updating CLAUDE.md or project config
+- After updating CLAUDE.md or any project config/documentation
+- After adding new files (scripts, markdown docs, config files)
 
 Command sequence after each change:
 ```
@@ -79,3 +82,7 @@ git add <changed files>
 git commit -m "type: description"
 git push
 ```
+
+Files to never commit:
+- `.env` (contains API keys)
+- `.claude/` (Claude Code local settings)

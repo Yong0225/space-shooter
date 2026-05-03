@@ -104,6 +104,34 @@ def scrape_website(url):
                 continue
     return found
 
+
+def _to_mbasic(fb_url):
+    """Convert any facebook.com URL to mbasic.facebook.com equivalent."""
+    return re.sub(r"https?://(www\.)?facebook\.com", "https://mbasic.facebook.com", fb_url, flags=re.I)
+
+def scrape_fb_email(fb_url):
+    """Try to extract email from Facebook page using mbasic (plain HTML, less blocking)."""
+    if not fb_url:
+        return ""
+    fb_headers = {
+        **HEADERS,
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    }
+    base = _to_mbasic(fb_url.rstrip("/"))
+    for url in [base, base + "/about"]:
+        try:
+            resp = requests.get(url, headers=fb_headers, timeout=10, allow_redirects=True)
+            if resp.status_code != 200:
+                continue
+            for email in EMAIL_RE.findall(resp.text):
+                domain = email.split("@")[-1].lower()
+                if domain not in SKIP_EMAIL and not domain.endswith(".png") and "facebook" not in domain:
+                    return email
+        except Exception:
+            continue
+    return ""
+
 def save_excel(rows, query):
     wb = Workbook()
     ws = wb.active
@@ -118,15 +146,15 @@ def save_excel(rows, query):
         c.alignment = Alignment(horizontal="center")
         ws.column_dimensions[c.column_letter].width = w
     for i, row in enumerate(rows, 2):
-        ws.cell(row=i, column=1, value=row.get("name",""))
-        ws.cell(row=i, column=2, value=row.get("phone",""))
-        ws.cell(row=i, column=3, value=row.get("email",""))
-        ws.cell(row=i, column=4, value=row.get("instagram",""))
-        ws.cell(row=i, column=5, value=row.get("facebook",""))
-        ws.cell(row=i, column=6, value=row.get("website",""))
+        ws.cell(row=i, column=1, value=row.get("name", ""))
+        ws.cell(row=i, column=2, value=row.get("phone", ""))
+        ws.cell(row=i, column=3, value=row.get("email", ""))
+        ws.cell(row=i, column=4, value=row.get("instagram", ""))
+        ws.cell(row=i, column=5, value=row.get("facebook", ""))
+        ws.cell(row=i, column=6, value=row.get("website", ""))
     os.makedirs("leads_output", exist_ok=True)
     safe = re.sub(r"[^\w\s-]", "", query).strip().replace(" ", "_")
-    path = os.path.join("leads_output", f"{safe}.xlsx")
+    path = os.path.abspath(os.path.join("leads_output", f"{safe}.xlsx"))
     wb.save(path)
     return path
 
@@ -259,6 +287,12 @@ class App(ctk.CTk):
 
                 details  = get_details(gm, place["place_id"])
                 web_data = scrape_website(details["website"])
+                if not web_data["email"] and web_data["facebook"]:
+                    self._log(f"  └─ no email found, trying FB bio...")
+                    fb_email = scrape_fb_email(web_data["facebook"])
+                    if fb_email:
+                        web_data["email"] = fb_email
+                        self._log(f"  └─ ✓ got email from FB: {fb_email}")
                 row = {"name": place["name"], **details, **web_data}
                 self._rows.append(row)
 
