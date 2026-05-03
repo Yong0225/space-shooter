@@ -2,7 +2,7 @@
 
 ## AI Generation Workflow
 
-**Gemini API Key:** `AIzaSyCGy_RgCsDXxxXSgGvGqtz3d4qBipNUTNE`
+**Gemini API Key:** 存放在 `.env` 文件里（`GEMINI_API_KEY=...`），不要写在这里
 **Model:** `gemini-2.5-flash` (free tier)
 **Endpoint:** `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={API_KEY}`
 
