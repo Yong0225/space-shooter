@@ -62,7 +62,15 @@ Return ONLY the 2 email bodies separated by "---", no labels, no numbering, no e
     return v1, v2
 
 
-wb = openpyxl.load_workbook(INPUT_FILE)
+# Resume: load OUTPUT_FILE if exists, else start from INPUT_FILE
+import shutil
+if not os.path.exists(OUTPUT_FILE):
+    shutil.copy2(INPUT_FILE, OUTPUT_FILE)
+    print(f"Created output file: {OUTPUT_FILE}")
+else:
+    print(f"Resuming from existing: {OUTPUT_FILE}")
+
+wb = openpyxl.load_workbook(OUTPUT_FILE)
 ws = wb.active
 headers = [cell.value for cell in ws[1]]
 
@@ -80,10 +88,20 @@ pain_col = headers.index("Pain Point") + 1
 # Owner column is optional — used for subject line if present
 owner_col = headers.index("Owner") + 1 if "Owner" in headers else None
 
+total = ws.max_row - 1
+done = 0
+skipped = 0
+
 for row_idx in range(2, ws.max_row + 1):
     biz_name = ws.cell(row=row_idx, column=name_col).value
     pain_point = ws.cell(row=row_idx, column=pain_col).value
     if not biz_name or not pain_point:
+        continue
+
+    # Skip if Email v1 already filled (resume checkpoint)
+    if ws.cell(row=row_idx, column=v1_col).value:
+        skipped += 1
+        print(f"[{row_idx-1}/{total}] SKIP (already done): {biz_name}")
         continue
 
     # Subject priority: owner first name > business name
@@ -91,16 +109,18 @@ for row_idx in range(2, ws.max_row + 1):
     first_name = owner.strip().split()[0] if owner and str(owner).strip() else None
     subject = f"Hi {first_name}" if first_name else f"{biz_name} x Y-Studio"
 
-    print(f"Generating emails for: {biz_name} ...")
+    print(f"[{row_idx-1}/{total}] Generating: {biz_name} ...")
     v1, v2 = call_gemini(biz_name, pain_point)
 
     ws.cell(row=row_idx, column=subject_col, value=subject)
     ws.cell(row=row_idx, column=v1_col, value=v1)
     ws.cell(row=row_idx, column=v2_col, value=v2)
 
-    print(f"  Subject: {subject}")
-    print(f"  Email v1:\n{v1}\n")
-    print(f"  Email v2:\n{v2}\n")
+    wb.save(OUTPUT_FILE)  # save immediately after each row
+    done += 1
 
-wb.save(OUTPUT_FILE)
-print(f"Saved to: {OUTPUT_FILE}")
+    print(f"  Subject: {subject}")
+    print(f"  v1: {v1[:80]}...")
+    print(f"  v2: {v2[:80]}...")
+
+print(f"\nDone. {done} generated, {skipped} skipped. Output: {OUTPUT_FILE}")

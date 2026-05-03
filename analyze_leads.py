@@ -473,8 +473,45 @@ def main():
     ig_col   = get_col(["Instagram", "instagram", "instagram/facebook"])
     fb_col   = get_col(["Facebook", "facebook"])
 
-    qualified = []
     errors = []
+
+    # ── Resume: load already-processed names from existing output ─────────────
+    os.makedirs(
+        os.path.dirname(output_path) if os.path.dirname(output_path) else ".",
+        exist_ok=True,
+    )
+    out_header = list(header) + ["Pain Point"]
+
+    if os.path.exists(output_path):
+        wb_out = openpyxl.load_workbook(output_path)
+        ws_out = wb_out.active
+        existing_rows = list(ws_out.iter_rows(min_row=2, values_only=True))
+        already_done = {str(r[0]).strip() for r in existing_rows if r[0]}
+        qualified_count = len(existing_rows)
+        print(f"Resuming — {qualified_count} already saved in {output_path}")
+    else:
+        wb_out = openpyxl.Workbook()
+        ws_out = wb_out.active
+        ws_out.title = "Qualified Leads"
+        ws_out.append(out_header)
+        for cell in ws_out[1]:
+            cell.font      = Font(bold=True, color="FFFFFF")
+            cell.fill      = PatternFill(fill_type="solid", fgColor="2E75B6")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+        wb_out.save(output_path)
+        already_done = set()
+        qualified_count = 0
+
+    def _save_output():
+        for col_cells in ws_out.columns:
+            max_len    = max((len(str(c.value or "")) for c in col_cells), default=10)
+            col_letter = openpyxl.utils.get_column_letter(col_cells[0].column)
+            ws_out.column_dimensions[col_letter].width = min(max_len + 4, 80)
+        pain_col_idx = len(out_header)
+        for row_cells in ws_out.iter_rows(min_row=2, min_col=pain_col_idx, max_col=pain_col_idx):
+            for cell in row_cells:
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+        wb_out.save(output_path)
 
     for idx, row in enumerate(data_rows, 1):
         name   = (row[name_col] if name_col is not None else row[0]) or ""
@@ -485,6 +522,10 @@ def main():
 
         if not ig_url and not fb_url:
             print(f"[{idx}/{total}] SKIP (no social link): {safe_str(name)}")
+            continue
+
+        if str(name).strip() in already_done:
+            print(f"[{idx}/{total}] SKIP (already done): {safe_str(name)}")
             continue
 
         print(f"[{idx}/{total}] Analyzing: {safe_str(name)}")
@@ -498,7 +539,10 @@ def main():
             pain_point = result.get("pain_point", "")
             print(f"  QUALIFIED | Followers: {followers} | Triggers: {triggers}")
             print(f"  {safe_str(str(pain_point)[:120])}")
-            qualified.append((*row, pain_point))
+            ws_out.append(list(row) + [pain_point])
+            qualified_count += 1
+            already_done.add(str(name).strip())
+            _save_output()  # save immediately after each qualified lead
         elif qualifies is False:
             reason = result.get("disqualify_reason", "")
             print(f"  DISQUALIFIED | Followers: {followers} | {safe_str(reason)}")
@@ -510,44 +554,13 @@ def main():
         if idx < total:
             time.sleep(RATE_LIMIT_DELAY)
 
-    # ── Write output Excel ────────────────────────────────────────────────────
-    wb_out = openpyxl.Workbook()
-    ws_out = wb_out.active
-    ws_out.title = "Qualified Leads"
-
-    out_header = list(header) + ["Pain Point"]
-    ws_out.append(out_header)
-    for cell in ws_out[1]:
-        cell.font      = Font(bold=True, color="FFFFFF")
-        cell.fill      = PatternFill(fill_type="solid", fgColor="2E75B6")
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    for row in qualified:
-        ws_out.append(list(row))
-
-    for col_cells in ws_out.columns:
-        max_len    = max((len(str(c.value or "")) for c in col_cells), default=10)
-        col_letter = openpyxl.utils.get_column_letter(col_cells[0].column)
-        ws_out.column_dimensions[col_letter].width = min(max_len + 4, 80)
-
-    pain_col_idx = len(out_header)
-    for row_cells in ws_out.iter_rows(min_row=2, min_col=pain_col_idx, max_col=pain_col_idx):
-        for cell in row_cells:
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
-
-    os.makedirs(
-        os.path.dirname(output_path) if os.path.dirname(output_path) else ".",
-        exist_ok=True,
-    )
-    wb_out.save(output_path)
-
+    _save_output()
     print(f"\n{'='*50}")
-    print(f"Done. {len(qualified)}/{total} leads qualified.")
+    print(f"Done. {qualified_count} qualified leads saved to {output_path}")
     if errors:
         print(f"Errors ({len(errors)}):")
         for n, err in errors:
             print(f"  - {safe_str(n)}: {safe_str(str(err))}")
-    print(f"Output: {output_path}")
 
 
 if __name__ == "__main__":
