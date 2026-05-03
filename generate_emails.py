@@ -1,11 +1,16 @@
 import sys, io, json, urllib.request, os
+from dotenv import load_dotenv
 
 # Fix: force UTF-8 stdout so Chinese characters don't crash on Windows cp1252
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 import openpyxl
 
-API_KEY = "AIzaSyCGy_RgCsDXxxXSgGvGqtz3d4qBipNUTNE"
+load_dotenv()
+API_KEY = os.getenv("GEMINI_API_KEY", "")
+if not API_KEY:
+    print("ERROR: GEMINI_API_KEY not found in .env")
+    sys.exit(1)
 ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={API_KEY}"
 
 # Usage: py generate_emails.py <input_xlsx>
