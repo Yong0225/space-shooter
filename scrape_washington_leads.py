@@ -117,17 +117,18 @@ def save_excel(rows, path):
 
 
 def main():
-    query = "restaurants in Washington DC"
+    query = "restaurants cafes in Wyoming US"
     print(f"Searching: {query}")
     gmaps = googlemaps.Client(key=API_KEY)
-    places = search_places(gmaps, query, max_results=10)
-    print(f"Found {len(places)} places. Fetching details + scraping websites...\n")
+    places = search_places(gmaps, query, max_results=100)
+    total = len(places)
+    print(f"Found {total} places. Fetching details + scraping websites...\n")
 
     rows = []
     for i, p in enumerate(places, 1):
         name = p["name"]
         website = get_website(gmaps, p["place_id"])
-        print(f"[{i}/10] {name}")
+        print(f"[{i}/{total}] {name}")
         print(f"        Website: {website or '—'}")
         scraped = scrape_website(website)
         row = {
@@ -143,7 +144,7 @@ def main():
         print(f"        Email: {scraped['email'] or '—'}\n")
         time.sleep(0.5)
 
-    out = os.path.abspath("leads_output/washington_restaurants.xlsx")
+    out = os.path.abspath("leads_output/wyoming_restaurants_cafes.xlsx")
     save_excel(rows, out)
     print(f"Saved: {out}")
 
