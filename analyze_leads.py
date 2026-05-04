@@ -169,6 +169,11 @@ def ensure_facebook_login() -> bool:
         return False
 
 
+def _to_mbasic_url(url: str) -> str:
+    """Convert facebook.com URL to mbasic.facebook.com — no login popup, works without session."""
+    return re.sub(r'https?://(www\.)?facebook\.com', 'https://mbasic.facebook.com', url)
+
+
 def scrape_page(url: str) -> dict:
     try:
         from playwright.sync_api import sync_playwright
@@ -181,6 +186,11 @@ def scrape_page(url: str) -> dict:
         }
 
     platform = detect_platform(url)
+    use_mbasic = platform == "facebook" and not os.path.exists(FB_STATE_FILE)
+    if use_mbasic:
+        url = _to_mbasic_url(url)
+        print(f"    [FB] No session — using mbasic: {url[:70]}")
+
     result = {"screenshot_b64": None, "page_text": "", "platform": platform, "error": None}
 
     with sync_playwright() as pw:
@@ -204,7 +214,12 @@ def scrape_page(url: str) -> dict:
             page.goto(url, wait_until="domcontentloaded", timeout=30000)
             page.wait_for_timeout(3500)
 
-            if platform == "facebook":
+            if platform == "facebook" and use_mbasic:
+                # mbasic is text-only — just scroll and wait for content
+                page.evaluate("window.scrollBy(0, 600)")
+                page.wait_for_timeout(1500)
+
+            elif platform == "facebook" and not use_mbasic:
                 _dismiss_facebook_popups(page)
                 page.wait_for_timeout(1000)
                 page.evaluate("window.scrollBy(0, 480)")
@@ -233,8 +248,23 @@ def scrape_page(url: str) -> dict:
             except Exception:
                 result["page_text"] = ""
 
-            screenshot_bytes = page.screenshot(type="jpeg", quality=88)
-            result["screenshot_b64"] = base64.b64encode(screenshot_bytes).decode()
+            # Detect FB login-wall: if page is just the login screen, treat as failure
+            login_wall = False
+            if platform == "facebook":
+                pt_lower = result["page_text"].lower()
+                login_signals = [
+                    "log in to facebook", "log into facebook",
+                    "you must log in to continue", "join facebook",
+                    "email or phone number", "create new account",
+                ]
+                if any(s in pt_lower for s in login_signals) and "followers" not in pt_lower and "likes" not in pt_lower:
+                    print("    [FB] Login wall detected — will fall back to search")
+                    result["error"] = "login_required"
+                    login_wall = True
+
+            if not login_wall:
+                screenshot_bytes = page.screenshot(type="jpeg", quality=88)
+                result["screenshot_b64"] = base64.b64encode(screenshot_bytes).decode()
 
         except Exception as e:
             result["error"] = str(e)
