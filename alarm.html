@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>定时闹钟</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e0e1c;
+  --card: #17172c;
+  --border: #252544;
+  --accent: #5566ee;
+  --text: #e0e0f0;
+  --text2: #7788bb;
+  --text3: #3a3a66;
+  --danger: #dd4444;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', 'Microsoft YaHei UI', system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 16px 70px;
+}
+
+/* ── Header ── */
+.app-title {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+
+/* ── Live Clock ── */
+#clock {
+  font-size: clamp(3.8rem, 16vw, 5.8rem);
+  font-weight: 200;
+  letter-spacing: 0.06em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 50px rgba(85,102,238,0.45);
+  line-height: 1;
+}
+
+#date {
+  font-size: 0.85rem;
+  color: var(--text2);
+  margin-top: 10px;
+  margin-bottom: 30px;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px 24px;
+  width: 100%;
+  max-width: 440px;
+  margin-bottom: 20px;
+}
+
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+/* ── Form ── */
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.form-row > label {
+  font-size: 0.78rem;
+  color: var(--text2);
+  min-width: 42px;
+}
+
+input[type="time"],
+input[type="text"],
+select {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 9px 13px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="time"] {
+  font-size: 1.35rem;
+  font-weight: 200;
+  letter-spacing: 0.05em;
+  padding: 10px 14px;
+}
+
+input[type="time"]:focus,
+input[type="text"]:focus,
+select:focus { border-color: var(--accent); }
+
+select option { background: #1a1a30; }
+
+.sound-group {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+}
+
+.sound-group select { flex: 1; }
+
+.btn-preview {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  padding: 9px 13px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.btn-preview:hover { border-color: var(--accent); color: var(--text); }
+
+.btn-add {
+  width: 100%;
+  background: var(--accent);
+  border: none;
+  border-radius: 13px;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  margin-top: 6px;
+  padding: 13px;
+  transition: all 0.15s;
+}
+
+.btn-add:hover {
+  background: #6677ff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(85,102,238,0.38);
+}
+
+.btn-add:active { transform: none; }
+
+/* ── Alarm List ── */
+.alarms-wrapper {
+  width: 100%;
+  max-width: 440px;
+}
+
+.alarm-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 15px 18px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: opacity 0.25s, border-color 0.25s;
+}
+
+.alarm-card.on { border-color: #2e2e60; }
+.alarm-card.off { opacity: 0.4; }
+
+.alarm-time {
+  font-size: 2.1rem;
+  font-weight: 200;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  min-width: 88px;
+}
+
+.alarm-card.off .alarm-time { color: var(--text2); }
+
+.alarm-meta { flex: 1; min-width: 0; }
+
+.alarm-name {
+  font-size: 0.86rem;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alarm-sound-tag {
+  font-size: 0.72rem;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+.alarm-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #252544;
+  border-radius: 13px;
+  transition: background 0.25s;
+}
+
+.slider::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  background: #666;
+  border-radius: 50%;
+  transition: transform 0.25s, background 0.25s;
+}
+
+.toggle input:checked + .slider { background: var(--accent); }
+.toggle input:checked + .slider::before { transform: translateX(20px); background: #fff; }
+
+.btn-del {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.btn-del:hover { color: var(--danger); }
+
+.no-alarms {
+  text-align: center;
+  color: var(--text3);
+  font-size: 0.9rem;
+  padding: 26px;
+}
+
+/* ── Firing Overlay ── */
+#overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 4, 14, 0.97);
+  z-index: 999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.35s ease;
+}
+
+#overlay.show { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.ov-bell {
+  font-size: 5rem;
+  margin-bottom: 22px;
+  animation: ring 0.55s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+@keyframes ring {
+  0%   { transform: rotate(-18deg); }
+  25%  { transform: rotate(18deg); }
+  50%  { transform: rotate(-12deg); }
+  75%  { transform: rotate(12deg); }
+  100% { transform: rotate(-18deg); }
+}
+
+.ov-time {
+  font-size: clamp(4rem, 18vw, 6.5rem);
+  font-weight: 200;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 70px rgba(85,102,238,0.75);
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.ov-label {
+  font-size: 1.05rem;
+  color: var(--text2);
+  margin-bottom: 60px;
+  letter-spacing: 0.05em;
+}
+
+.ov-btns {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-snooze {
+  background: #1c1c3c;
+  border: 1px solid #3a3a88;
+  border-radius: 50px;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 14px 28px;
+  transition: all 0.15s;
+}
+
+.btn-snooze:hover { background: #282860; color: var(--text); }
+
+.btn-dismiss {
+  background: #cc3333;
+  border: none;
+  border-radius: 50px;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 14px 44px;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
+}
+
+.btn-dismiss:hover {
+  background: #ee4444;
+  box-shadow: 0 6px 24px rgba(200,50,50,0.55);
+}
+
+/* ── Audio notice ── */
+#notice {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a30;
+  border: 1px solid #333366;
+  border-radius: 10px;
+  color: var(--text2);
+  font-size: 0.78rem;
+  padding: 8px 18px;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+#notice.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<p class="app-title">定时闹钟</p>
+
+<div id="clock">00:00:00</div>
+<div id="date">载入中...</div>
+
+<!-- Add alarm -->
+<div class="card">
+  <div class="section-label">新增闹钟</div>
+
+  <div class="form-row">
+    <label>时间</label>
+    <input type="time" id="in-time" value="07:00">
+  </div>
+
+  <div class="form-row">
+    <label>名称</label>
+    <input type="text" id="in-label" placeholder="起床、早会、服药..." maxlength="20">
+  </div>
+
+  <div class="form-row">
+    <label>铃声</label>
+    <div class="sound-group">
+      <select id="in-sound">
+        <option value="classic">🔔 经典闹铃</option>
+        <option value="digital">📱 数字电子</option>
+        <option value="gentle">🎵 温柔旋律</option>
+        <option value="siren">🚨 尖锐警报</option>
+        <option value="school">🏫 学校铃声</option>
+        <option value="bird">🐦 鸟鸣晨起</option>
+        <option value="bugle">🎺 军号起床</option>
+        <option value="piano">🎹 钢琴音阶</option>
+      </select>
+      <button class="btn-preview" onclick="previewSound()">▶ 试听</button>
+    </div>
+  </div>
+
+  <button class="btn-add" onclick="addAlarm()">＋ 添加闹钟</button>
+</div>
+
+<!-- Alarm list -->
+<div class="alarms-wrapper">
+  <div class="section-label" style="padding:0 4px;margin-bottom:12px;">已设闹钟</div>
+  <div id="alarms-list"></div>
+</div>
+
+<!-- Firing overlay -->
+<div id="overlay">
+  <div class="ov-bell">⏰</div>
+  <div class="ov-time" id="ov-time">07:00</div>
+  <div class="ov-label" id="ov-label">闹钟响了！</div>
+  <div class="ov-btns">
+    <button class="btn-snooze" onclick="doSnooze()">💤 贪睡 5 分钟</button>
+    <button class="btn-dismiss" onclick="doDismiss()">✕ 关闭</button>
+  </div>
+</div>
+
+<div id="notice">🔔 请先点击页面以启用声音</div>
+
+<script>
+'use strict';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let alarms    = JSON.parse(localStorage.getItem('alarms_v2') || '[]');
+let audioCtx  = null;
+let stopFn    = null;
+let firingId  = null;
+let lastFired = ''; // HH:MM of last fired alarm, prevents double-trigger
+
+// ── Audio Context ─────────────────────────────────────────────────────────────
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+const notice = document.getElementById('notice');
+notice.classList.add('show');
+document.addEventListener('click', () => { getCtx(); notice.classList.remove('show'); },
+  { once: true, capture: true });
+
+// ── Sound Helpers ─────────────────────────────────────────────────────────────
+function tone(ctx, freq, start, dur, vol, type = 'sine') {
+  const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t + start);
+  g.gain.linearRampToValueAtTime(vol, t + start + 0.012);
+  g.gain.setValueAtTime(vol, t + start + Math.max(dur - 0.02, 0.01));
+  g.gain.linearRampToValueAtTime(0, t + start + dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t + start); o.stop(t + start + dur + 0.05);
+}
+
+function glide(ctx, f1, f2, start, dur, vol, type = 'sine') {
+  const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
+  o.type = type;
+  o.frequency.setValueAtTime(f1, t + start);
+  o.frequency.linearRampToValueAtTime(f2, t + start + dur);
+  g.gain.setValueAtTime(vol, t + start);
+  g.gain.setValueAtTime(vol, t + start + dur - 0.03);
+  g.gain.linearRampToValueAtTime(0, t + start + dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t + start); o.stop(t + start + dur + 0.05);
+}
+
+function bell(ctx, freq, vol, offset) {
+  const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + offset;
+  o.type = 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 1.3);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t + 1.35);
+}
+
+// ── 8 Sound Generators ────────────────────────────────────────────────────────
+const SOUNDS = {
+
+  // 1. 经典闹铃 — two bursts of sharp beeps
+  classic(ctx) {
+    [0, 0.22, 0.60, 0.82].forEach(s => tone(ctx, 880, s, 0.16, 0.32, 'square'));
+  },
+
+  // 2. 数字电子 — rapid alternating tones
+  digital(ctx) {
+    for (let i = 0; i < 8; i++)
+      tone(ctx, i % 2 === 0 ? 1047 : 784, i * 0.12, 0.10, 0.22, 'sine');
+  },
+
+  // 3. 温柔旋律 — pentatonic ascending (C D E G A C)
+  gentle(ctx) {
+    [523, 587, 659, 784, 880, 1047].forEach((f, i) =>
+      tone(ctx, f, i * 0.22, 0.20, 0.18, 'sine'));
+  },
+
+  // 4. 尖锐警报 — siren sweep up then down
+  siren(ctx) {
+    glide(ctx, 320, 1280, 0.0, 0.5, 0.28, 'sawtooth');
+    glide(ctx, 1280, 320, 0.5, 0.5, 0.28, 'sawtooth');
+  },
+
+  // 5. 学校铃声 — bell-like with harmonics, rings twice
+  school(ctx) {
+    const ring = (off) => [[698, 0.22], [1396, 0.09], [2094, 0.04]].forEach(
+      ([f, v]) => bell(ctx, f, v, off));
+    ring(0); ring(1.5);
+  },
+
+  // 6. 鸟鸣晨起 — chirping glides
+  bird(ctx) {
+    for (let i = 0; i < 5; i++) {
+      glide(ctx, 2200, 3500, i * 0.22, 0.08, 0.16, 'sine');
+      glide(ctx, 3500, 1900, i * 0.22 + 0.08, 0.07, 0.12, 'sine');
+    }
+  },
+
+  // 7. 军号起床 — simplified reveille in square wave
+  bugle(ctx) {
+    [[262,0,0.14],[330,0.14,0.14],[392,0.28,0.14],
+     [523,0.42,0.30],[392,0.72,0.10],[523,0.82,0.52]]
+      .forEach(([f,s,d]) => tone(ctx, f, s, d, 0.30, 'square'));
+  },
+
+  // 8. 钢琴音阶 — C major scale with piano-like decay
+  piano(ctx) {
+    [262,294,330,349,392,440,494,523].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      const t = ctx.currentTime + i * 0.17;
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.28, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + 0.78);
+    });
+  },
+};
+
+const SOUND_NAMES = {
+  classic:'经典闹铃', digital:'数字电子', gentle:'温柔旋律', siren:'尖锐警报',
+  school:'学校铃声',  bird:'鸟鸣晨起',   bugle:'军号起床',  piano:'钢琴音阶',
+};
+
+// ms between each loop cycle — should be >= sound duration
+const INTERVALS = {
+  classic:1400, digital:1100, gentle:1800, siren:1150,
+  school:3000,  bird:1350,    bugle:1900,  piano:1800,
+};
+
+// ── Alarm Playback ────────────────────────────────────────────────────────────
+function startAlarmSound(key) {
+  stopAlarmSound();
+  const fn  = SOUNDS[key] || SOUNDS.classic;
+  const gap = INTERVALS[key] || 1500;
+  const ctx = getCtx();
+  let live  = true;
+
+  (function loop() {
+    if (!live) return;
+    fn(ctx);
+    setTimeout(loop, gap);
+  })();
+
+  stopFn = () => { live = false; };
+}
+
+function stopAlarmSound() {
+  if (stopFn) { stopFn(); stopFn = null; }
+}
+
+function previewSound() {
+  const key = document.getElementById('in-sound').value;
+  (SOUNDS[key] || SOUNDS.classic)(getCtx());
+  notice.classList.remove('show');
+}
+
+// ── Clock ─────────────────────────────────────────────────────────────────────
+const DAYS = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+const pad  = n => String(n).padStart(2, '0');
+
+function tick() {
+  const now = new Date();
+  const h = pad(now.getHours()), m = pad(now.getMinutes()), s = pad(now.getSeconds());
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+  document.getElementById('date').textContent  =
+    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${DAYS[now.getDay()]}`;
+
+  if (firingId === null && s === '00') {
+    const hm = `${h}:${m}`;
+    if (hm !== lastFired) {
+      const hit = alarms.find(a => a.enabled && a.time === hm);
+      if (hit) { lastFired = hm; fireAlarm(hit); }
+    }
+  }
+}
+
+// ── CRUD ──────────────────────────────────────────────────────────────────────
+function save() { localStorage.setItem('alarms_v2', JSON.stringify(alarms)); }
+
+function addAlarm() {
+  const time  = document.getElementById('in-time').value;
+  const label = document.getElementById('in-label').value.trim() || '闹钟';
+  const sound = document.getElementById('in-sound').value;
+  if (!time) { alert('请先选择时间'); return; }
+  alarms.push({ id: Date.now(), time, label, sound, enabled: true });
+  alarms.sort((a, b) => a.time.localeCompare(b.time));
+  save(); renderAlarms();
+  document.getElementById('in-label').value = '';
+}
+
+function deleteAlarm(id) {
+  alarms = alarms.filter(a => a.id !== id);
+  save(); renderAlarms();
+}
+
+function toggleAlarm(id) {
+  const a = alarms.find(a => a.id === id);
+  if (a) { a.enabled = !a.enabled; save(); renderAlarms(); }
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderAlarms() {
+  const el = document.getElementById('alarms-list');
+  if (!alarms.length) { el.innerHTML = '<p class="no-alarms">还没有闹钟 — 上方新增一个吧</p>'; return; }
+  el.innerHTML = alarms.map(a => `
+    <div class="alarm-card ${a.enabled ? 'on' : 'off'}">
+      <div class="alarm-time">${esc(a.time)}</div>
+      <div class="alarm-meta">
+        <div class="alarm-name">${esc(a.label)}</div>
+        <div class="alarm-sound-tag">${esc(SOUND_NAMES[a.sound] || a.sound)}</div>
+      </div>
+      <div class="alarm-controls">
+        <label class="toggle">
+          <input type="checkbox" ${a.enabled ? 'checked' : ''} onchange="toggleAlarm(${a.id})">
+          <span class="slider"></span>
+        </label>
+        <button class="btn-del" onclick="deleteAlarm(${a.id})" title="删除">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── Overlay ───────────────────────────────────────────────────────────────────
+function fireAlarm(alarm) {
+  firingId = alarm.id;
+  document.getElementById('ov-time').textContent  = alarm.time;
+  document.getElementById('ov-label').textContent = alarm.label;
+  document.getElementById('overlay').classList.add('show');
+  startAlarmSound(alarm.sound);
+}
+
+function doDismiss() {
+  stopAlarmSound();
+  firingId = null;
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function doSnooze() {
+  const orig = alarms.find(a => a.id === firingId);
+  stopAlarmSound();
+  document.getElementById('overlay').classList.remove('show');
+  firingId = null;
+
+  if (orig) {
+    const d = new Date(Date.now() + 5 * 60 * 1000);
+    alarms.push({
+      id: Date.now(),
+      time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+      label: orig.label + ' (贪睡)',
+      sound: orig.sound,
+      enabled: true,
+    });
+    alarms.sort((a, b) => a.time.localeCompare(b.time));
+    save(); renderAlarms();
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderAlarms();
+setInterval(tick, 500);
+tick();
+</script>
+</body>
+</html>
