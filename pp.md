@@ -2,7 +2,7 @@
 
 ## 任务目标
 
-读取一份包含餐厅/咖啡馆名单的 Excel 文件，根据 ICP.md 的标准自动筛选 leads，并为符合条件的商家生成个人化 pain point 描述（中文），输出新的 Excel 文件。
+读取一份包含餐厅/咖啡馆名单的 Excel 文件，根据 icp.md 的标准自动筛选 leads，并为符合条件的商家生成个人化 pain point 描述（中文），输出新的 Excel 文件。
 
 ---
 
@@ -141,7 +141,7 @@ Instagram 对所有自动访问工具（requests、instaloader、headless browse
 Claude Project/
 ├── analyze_leads.py          ← 主脚本，每次执行这个
 ├── pp.md                     ← 本流程手册
-├── ICP.md                    ← ICP 标准完整版（脚本 prompt 基于此）
+├── icp.md                    ← ICP 标准完整版（脚本 prompt 基于此）
 ├── .env                      ← GEMINI_API_KEY（不提交 git）
 └── leads_output/
     ├── <城市>_cafe_restaurant.xlsx     ← 输入：原始名单
