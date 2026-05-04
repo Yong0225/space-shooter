@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 OTR Leads Scraper
-Collects 350 restaurant/cafe leads from Over-the-Rhine, Cincinnati, OH
+Collects restaurant/cafe leads from Over-the-Rhine, Cincinnati, OH
 Output: OTR leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
 Resume-safe: writes to Excel + otr_progress.json after EVERY lead.
-Run: py otr_scraper.py
-      py otr_scraper.py --reset   # clear progress and restart
+Run: py scrap.py
+      py scrap.py --reset   # clear progress and restart
 """
 
 import re, json, time, random, sys, argparse, io
@@ -20,12 +20,12 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
-TARGET      = 350
+TARGET      = 150
 OUTPUT      = "OTR leads.xlsx"
-PROGRESS    = "otr_progress.json"
+PROGRESS    = "otr_progress_extra.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Multiple queries so we get well past 350 unique places (Maps caps at ~60 each)
+# Multiple queries so we get well past 150 unique NEW places
 SEARCH_QUERIES = [
     "restaurants Over-the-Rhine Cincinnati Ohio",
     "cafe Over-the-Rhine Cincinnati Ohio",
@@ -41,7 +41,6 @@ SEARCH_QUERIES = [
     "italian restaurant Over-the-Rhine Cincinnati Ohio",
     "burger Over-the-Rhine Cincinnati Ohio",
     "breakfast Over-the-Rhine Cincinnati Ohio",
-    # --- Round 2: more specific categories ---
     "wine bar Over-the-Rhine Cincinnati Ohio",
     "cocktail bar Over-the-Rhine Cincinnati Ohio",
     "gastropub Over-the-Rhine Cincinnati Ohio",
@@ -101,6 +100,37 @@ HEADERS      = ["Name", "Website", "Email", "Instagram", "Facebook"]
 HDR_BG       = "2E4057"
 ROW_BG       = ["FFFFFF", "EDF2F7"]
 EMAIL_BG     = "C6F6D5"   # green tint if email found
+
+def load_existing_names():
+    """Read business names already in the Excel to skip duplicates."""
+    p = Path(OUTPUT)
+    if not p.exists():
+        return set()
+    try:
+        wb = openpyxl.load_workbook(OUTPUT, read_only=True)
+        ws = wb.active
+        names = set()
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row and row[0]:
+                names.add(str(row[0]).lower().strip())
+        wb.close()
+        return names
+    except Exception:
+        return set()
+
+def count_existing_rows():
+    """Return current number of data rows (excluding header) in the Excel."""
+    p = Path(OUTPUT)
+    if not p.exists():
+        return 0
+    try:
+        wb = openpyxl.load_workbook(OUTPUT, read_only=True)
+        ws = wb.active
+        count = ws.max_row - 1  # subtract header row
+        wb.close()
+        return max(count, 0)
+    except Exception:
+        return 0
 
 def init_excel():
     wb = openpyxl.Workbook()
@@ -226,7 +256,6 @@ def scrape_maps_query(page, query):
                     href = 'https:' + href
                 elif href.startswith('/'):
                     href = 'https://www.google.com' + href
-                # Strip any trailing cruft after the CID/data block
                 places.append({'name': name, 'maps_url': href})
             except Exception:
                 continue
@@ -333,28 +362,35 @@ def scrape_fb_email(page, fb_url):
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--reset', action='store_true', help='Clear all progress and restart')
+    parser.add_argument('--reset', action='store_true', help='Clear progress for this extra run and restart')
     args = parser.parse_args()
 
     if args.reset:
         for f in [PROGRESS, PROGRESS + ".tmp"]:
             Path(f).unlink(missing_ok=True)
-        Path(OUTPUT).unlink(missing_ok=True)
-        print("[Reset] Progress cleared.")
+        print("[Reset] Extra-run progress cleared (existing OTR leads.xlsx preserved).")
 
-    prog  = load_progress()
-    leads = prog.get("leads", [])
-    done  = set(prog.get("done_urls", []))
+    # Load names already in the Excel so we never add duplicates
+    existing_names = load_existing_names()
+    existing_count = count_existing_rows()
+    print(f"[Dedup] {existing_count} leads already in {OUTPUT} — will skip any matches")
+
+    prog   = load_progress()
+    leads  = prog.get("leads", [])
+    done   = set(prog.get("done_urls", []))
     places = prog.get("places", [])
     q_idx  = prog.get("query_idx", 0)
 
+    # Merge names from this run's in-progress leads into the dedup set
+    for lead in leads:
+        existing_names.add(lead['name'].lower().strip())
+
     if not Path(OUTPUT).exists():
         init_excel()
-        # Re-write existing leads if resuming
         for lead in leads:
             append_lead_to_excel(lead)
 
-    print(f"[Start] {len(leads)} leads done | {len(places)} places collected | query #{q_idx}")
+    print(f"[Start] {len(leads)} new leads done this run | {len(places)} places collected | query #{q_idx}")
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch(
@@ -373,14 +409,14 @@ def main():
 
         # ── Phase 1: Collect places from Google Maps ─────────────────────────
         print("\n=== Phase 1: Collecting places from Google Maps ===")
-        while len(places) < TARGET + 80 and q_idx < len(SEARCH_QUERIES):
+        while len(places) < TARGET + 150 and q_idx < len(SEARCH_QUERIES):
             new_places = scrape_maps_query(page, SEARCH_QUERIES[q_idx])
-            existing_names = {p['name'].lower() for p in places}
+            existing_place_names = {p['name'].lower() for p in places}
             added = 0
             for p in new_places:
-                if p['name'].lower() not in existing_names:
+                if p['name'].lower() not in existing_place_names:
                     places.append(p)
-                    existing_names.add(p['name'].lower())
+                    existing_place_names.add(p['name'].lower())
                     added += 1
             print(f"  +{added} new unique | total {len(places)}")
             q_idx += 1
@@ -401,7 +437,14 @@ def main():
             maps_url = place['maps_url']
             name     = place['name']
 
+            # Skip already processed in this run
             if maps_url in done:
+                continue
+
+            # Skip already in the master Excel
+            if name.lower().strip() in existing_names:
+                print(f"  [skip duplicate] {name}")
+                done.add(maps_url)
                 continue
 
             print(f"\n[{ts()}] [{len(leads)+1}/{TARGET}] {name}")
@@ -436,6 +479,7 @@ def main():
 
             # Save immediately
             leads.append(lead)
+            existing_names.add(name.lower().strip())
             done.add(maps_url)
             prog.update({"leads": leads, "done_urls": list(done)})
             save_progress(prog)
@@ -453,12 +497,13 @@ def main():
 
     print(f"""
 === Done ===
-Total leads    : {len(leads)}
-With website   : {with_website}
-With email     : {with_email}
-With Facebook  : {with_fb}
-With Instagram : {with_ig}
-Saved to       : {OUTPUT}
+New leads added : {len(leads)}
+With website    : {with_website}
+With email      : {with_email}
+With Facebook   : {with_fb}
+With Instagram  : {with_ig}
+Total in file   : {existing_count + len(leads)}
+Saved to        : {OUTPUT}
 """)
 
 if __name__ == "__main__":
