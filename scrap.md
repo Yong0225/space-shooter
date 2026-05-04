@@ -4,18 +4,18 @@ Scrapes Google Maps for restaurant/cafe leads in any neighborhood and outputs an
 
 ## Script
 
-`otr_scraper.py` — reuse this file every time. Just change the config at the top.
+`scrap.py` — reuse this file every time. Just change the config at the top.
 
 ## How to run
 
 ```
-py otr_scraper.py              # start or resume
-py otr_scraper.py --reset      # wipe progress and restart fresh
+py scrap.py              # start or resume
+py scrap.py --reset      # wipe progress and restart fresh
 ```
 
 ## What to change for a new location / campaign
 
-Open `otr_scraper.py` and edit these three things at the top:
+Open `scrap.py` and edit these three things at the top:
 
 ### 1. Output file name
 ```python
@@ -77,7 +77,7 @@ Green rows = email found. White/blue alternating = no email.
 
 ## Resume / crash recovery
 
-Progress is saved to `otr_progress.json` after every single lead. If the script crashes or you close it, just run `py otr_scraper.py` again — it picks up exactly where it stopped.
+Progress is saved to `otr_progress.json` after every single lead. If the script crashes or you close it, just run `py scrap.py` again — it picks up exactly where it stopped.
 
 ## Dependencies
 
