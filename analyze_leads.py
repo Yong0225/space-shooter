@@ -586,6 +586,15 @@ def main():
         already_done = set()
         qualified_count = 0
 
+    progress_file = args.output + ".progress.json"
+    if os.path.exists(progress_file):
+        with open(progress_file, "r", encoding="utf-8") as _pf:
+            _prev = set(json.load(_pf))
+        extras = _prev - already_done
+        if extras:
+            print(f"  (+{len(extras)} disqualified/errored from previous run — will skip)")
+        already_done |= _prev
+
     def _finalize():
         for col_cells in ws_out.columns:
             max_len    = max((len(str(c.value or "")) for c in col_cells), default=10)
@@ -629,7 +638,6 @@ def main():
             print(f"  {safe_str(str(pain_point)[:120])}")
             ws_out.append([row[i] if i < len(row) else None for i in out_col_indices] + [pain_point])
             qualified_count += 1
-            already_done.add(str(name).strip())
             wb_out.save(args.output)  # quick save for resume; column widths set once at end
         elif qualifies is False:
             print(f"  DISQUALIFIED | Followers: {followers} | {safe_str(result.get('disqualify_reason', ''))}")
@@ -637,6 +645,9 @@ def main():
             err = result.get("error", "unknown")
             print(f"  ERROR: {safe_str(str(err))}")
             errors.append((name, err))
+        already_done.add(str(name).strip())
+        with open(progress_file, "w", encoding="utf-8") as _pf:
+            json.dump(list(already_done), _pf, ensure_ascii=False)
 
         if idx < total:
             time.sleep(RATE_LIMIT_DELAY)

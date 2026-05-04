@@ -110,7 +110,11 @@ for row_idx in range(2, ws.max_row + 1):
     subject = f"Hi {first_name}" if first_name else f"{biz_name} x Y-Studio"
 
     print(f"[{row_idx-1}/{total}] Generating: {biz_name} ...")
-    v1, v2 = call_gemini(biz_name, pain_point)
+    try:
+        v1, v2 = call_gemini(biz_name, pain_point)
+    except Exception as e:
+        print(f"  ERROR: {e} — skipping, will retry on next run")
+        continue
 
     ws.cell(row=row_idx, column=subject_col, value=subject)
     ws.cell(row=row_idx, column=v1_col, value=v1)
