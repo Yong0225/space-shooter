@@ -265,6 +265,7 @@ DISQUALIFYING CRITERIA — exclude if ANY apply:
 - Never posted any food content at all
 - Feed is all Reels AND followers >= 20,000
 - Not an F&B business (e.g. training school, non-food business)
+- Last post was more than 6 months ago (account is effectively abandoned)
 
 ──────────────────────────────
 BUSINESS INFO:
@@ -333,6 +334,7 @@ DISQUALIFYING CRITERIA (exclude if ANY apply):
 - Never posted any food content at all
 - Feed is all Reels AND followers >= 20,000
 - Not an F&B business
+- Last post was more than 6 months ago (account is effectively abandoned)
 
 Use Google Search to find information about this business's social media presence.
 

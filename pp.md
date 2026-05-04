@@ -131,6 +131,7 @@ Instagram 对所有自动访问工具（requests、instaloader、headless browse
 - 完全没有发过食物内容
 - Feed 全是 Reels 且粉丝 ≥ 20,000
 - 不是 F&B 商家（如培训学校、非餐饮业）
+- 超过 6 个月没有发新帖（账号已实质性废弃）
 
 ---
 
