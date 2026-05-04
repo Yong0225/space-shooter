@@ -156,6 +156,7 @@ Claude Project/
 | 2026-05-03 | mount_austin_cafe_restaurant.xlsx | 4 | 3 | mount_austin_qualified.xlsx |
 | 2026-05-03 | johor_jaya_cafe.xlsx | 6 | 2 | johor_jaya_qualified.xlsx |
 | 2026-05-03 | Wyoming list 1.xlsx | 59 | 15 | wyoming_qualified.xlsx |
+| 2026-05-04 | Wyoming list 2.xlsx | rows 108–150 (43 rows) | 17 new (84 total) | wyoming2_qualified.xlsx |
 
 ---
 

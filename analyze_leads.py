@@ -164,7 +164,24 @@ def ensure_facebook_login() -> bool:
                 print("[FB] Could not find password input — scraping without login")
                 browser.close()
                 return False
-            page.click('[name="login"]')
+            # Try multiple submit selectors; fall back to pressing Enter
+            login_clicked = False
+            for login_sel in [
+                '[data-testid="royal_login_button"]',
+                'button[name="login"]',
+                '#loginbutton',
+                'button[type="submit"]',
+            ]:
+                try:
+                    loc = page.locator(login_sel).first
+                    if loc.is_visible(timeout=3000):
+                        loc.click()
+                        login_clicked = True
+                        break
+                except Exception:
+                    continue
+            if not login_clicked:
+                page.keyboard.press("Enter")
             page.wait_for_timeout(6000)
             current_url = page.url
             if "checkpoint" in current_url or "/login" in current_url:
