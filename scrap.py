@@ -20,47 +20,43 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
-TARGET      = 150
-OUTPUT      = "OTR leads.xlsx"
-PROGRESS    = "otr_progress_extra.json"
+TARGET      = 200
+OUTPUT      = "Asiatown leads.xlsx"
+PROGRESS    = "asiatown_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Multiple queries so we get well past 150 unique NEW places
+# Multiple queries for AsiaTown Cleveland Ohio (E 30th St area)
 SEARCH_QUERIES = [
-    "restaurants Over-the-Rhine Cincinnati Ohio",
-    "cafe Over-the-Rhine Cincinnati Ohio",
-    "coffee shop Over-the-Rhine Cincinnati Ohio",
-    "bar Over-the-Rhine Cincinnati Ohio",
-    "brewery Over-the-Rhine Cincinnati Ohio",
-    "brunch Over-the-Rhine Cincinnati Ohio",
-    "pizza Over-the-Rhine Cincinnati Ohio",
-    "food Over-the-Rhine Cincinnati Ohio",
-    "bakery dessert Over-the-Rhine Cincinnati Ohio",
-    "sushi Over-the-Rhine Cincinnati Ohio",
-    "mexican restaurant Over-the-Rhine Cincinnati Ohio",
-    "italian restaurant Over-the-Rhine Cincinnati Ohio",
-    "burger Over-the-Rhine Cincinnati Ohio",
-    "breakfast Over-the-Rhine Cincinnati Ohio",
-    "wine bar Over-the-Rhine Cincinnati Ohio",
-    "cocktail bar Over-the-Rhine Cincinnati Ohio",
-    "gastropub Over-the-Rhine Cincinnati Ohio",
-    "sandwich shop Over-the-Rhine Cincinnati Ohio",
-    "ice cream Over-the-Rhine Cincinnati Ohio",
-    "ramen noodles Over-the-Rhine Cincinnati Ohio",
-    "thai restaurant Over-the-Rhine Cincinnati Ohio",
-    "indian restaurant Over-the-Rhine Cincinnati Ohio",
-    "chinese restaurant Over-the-Rhine Cincinnati Ohio",
-    "vegan vegetarian Over-the-Rhine Cincinnati Ohio",
-    "soul food Over-the-Rhine Cincinnati Ohio",
-    "seafood Over-the-Rhine Cincinnati Ohio",
-    "steakhouse Over-the-Rhine Cincinnati Ohio",
-    "tapas Over-the-Rhine Cincinnati Ohio",
-    "diner OTR Cincinnati Ohio",
-    "lunch spot OTR Cincinnati Ohio",
-    "happy hour OTR Cincinnati Ohio",
-    "food Cincinnati Ohio 45202",
-    "restaurant Cincinnati Ohio 45202",
-    "cafe Cincinnati Ohio 45202",
+    "restaurants AsiaTown Cleveland Ohio",
+    "cafe AsiaTown Cleveland Ohio",
+    "coffee shop AsiaTown Cleveland Ohio",
+    "chinese restaurant AsiaTown Cleveland Ohio",
+    "vietnamese restaurant AsiaTown Cleveland Ohio",
+    "korean restaurant AsiaTown Cleveland Ohio",
+    "japanese restaurant AsiaTown Cleveland Ohio",
+    "thai restaurant AsiaTown Cleveland Ohio",
+    "asian food AsiaTown Cleveland Ohio",
+    "bubble tea AsiaTown Cleveland Ohio",
+    "dim sum AsiaTown Cleveland Ohio",
+    "pho AsiaTown Cleveland Ohio",
+    "ramen AsiaTown Cleveland Ohio",
+    "sushi AsiaTown Cleveland Ohio",
+    "hot pot AsiaTown Cleveland Ohio",
+    "bakery AsiaTown Cleveland Ohio",
+    "dessert AsiaTown Cleveland Ohio",
+    "bar AsiaTown Cleveland Ohio",
+    "food AsiaTown Cleveland Ohio",
+    "restaurant E 30th St Cleveland Ohio",
+    "restaurant Payne Ave Cleveland Ohio",
+    "restaurant St Clair Ave Cleveland Ohio",
+    "food Cleveland Ohio 44114",
+    "restaurant Cleveland Ohio 44114",
+    "asian restaurant Cleveland Ohio 44114",
+    "chinese food Cleveland Ohio 44114",
+    "vietnamese Cleveland Ohio 44114",
+    "korean food Cleveland Ohio 44114",
+    "restaurant Superior Ave Cleveland Ohio",
+    "food E 40th St Cleveland Ohio",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -368,7 +364,7 @@ def main():
     if args.reset:
         for f in [PROGRESS, PROGRESS + ".tmp"]:
             Path(f).unlink(missing_ok=True)
-        print("[Reset] Extra-run progress cleared (existing OTR leads.xlsx preserved).")
+        print("[Reset] Progress cleared.")
 
     # Load names already in the Excel so we never add duplicates
     existing_names = load_existing_names()
