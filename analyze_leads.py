@@ -588,12 +588,15 @@ def main():
 
     progress_file = args.output + ".progress.json"
     if os.path.exists(progress_file):
-        with open(progress_file, "r", encoding="utf-8") as _pf:
-            _prev = set(json.load(_pf))
-        extras = _prev - already_done
-        if extras:
-            print(f"  (+{len(extras)} disqualified/errored from previous run — will skip)")
-        already_done |= _prev
+        try:
+            with open(progress_file, "r", encoding="utf-8") as _pf:
+                _prev = set(json.load(_pf))
+            extras = _prev - already_done
+            if extras:
+                print(f"  (+{len(extras)} disqualified/errored from previous run — will skip)")
+            already_done |= _prev
+        except Exception:
+            print(f"  (progress file corrupted — ignoring, will reprocess previous non-qualified leads)")
 
     def _finalize():
         for col_cells in ws_out.columns:
@@ -645,9 +648,11 @@ def main():
             err = result.get("error", "unknown")
             print(f"  ERROR: {safe_str(str(err))}")
             errors.append((name, err))
-        already_done.add(str(name).strip())
-        with open(progress_file, "w", encoding="utf-8") as _pf:
-            json.dump(list(already_done), _pf, ensure_ascii=False)
+        name_key = str(name).strip()
+        if name_key:
+            already_done.add(name_key)
+            with open(progress_file, "w", encoding="utf-8") as _pf:
+                json.dump(list(already_done), _pf, ensure_ascii=False)
 
         if idx < total:
             time.sleep(RATE_LIMIT_DELAY)
