@@ -334,16 +334,17 @@ Return ONLY valid JSON — no markdown, no code fences, no extra text:
 The pain_point field MUST:
 - Be Simplified Chinese, 1-2 sentences max — short, direct, specific
 - Reference what you ACTUALLY SAW in the screenshot (e.g. specific visual observations)
-- Include concrete data from page text where available (follower count, last post date, like counts)
+- Do NOT mention follower count under any circumstances
+- Only mention posting frequency/recency if the account genuinely posts infrequently (last post was more than 1 month ago); if they've posted recently, ignore recency entirely and focus on content quality issues instead
 - Use NO second-person address (no 您/你/你们). State facts only.
 - NOT be a generic template
 
 Good examples (style reference only — write based on actual observations):
 - "Feed 以手机随拍为主，构图随意、光线不均，没有任何设计海报。"
-- "最近一次发帖是三个月前，粉丝 1,200，帖子互动基本为零。"
+- "最近一次发帖是两个月前，发帖频率极低，内容输出很不稳定。"
 - "有发食物海报，但设计明显是套 Canva 模板，字体混乱，整体视觉很廉价。"
-- "Feed 全是 Reels，没有任何食物照片或海报，粉丝仅 800 人。"
-- "每周都在更新，但图片都是随手拍，打光和构图都很粗糙，没有品牌感。"
+- "Feed 全是 Reels，没有任何食物照片或设计海报。"
+- "虽然持续有更新，但图片都是随手拍，打光和构图都很粗糙，没有品牌感。"
 """
 
 ICP_SEARCH_PROMPT = """
@@ -382,7 +383,7 @@ Return ONLY valid JSON — no markdown, no code fences:
   "pain_point": "1-2 sentence personalized pain point in Simplified Chinese if qualifies=true, else null"
 }}
 
-The pain_point must be specific to this account, mention real observed details, and use no second-person address.
+The pain_point must be specific to this account, mention real observed details, use no second-person address, NOT mention follower count, and only reference posting frequency if the account genuinely posts infrequently (last post more than 1 month ago).
 """
 
 
