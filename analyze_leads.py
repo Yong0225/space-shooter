@@ -42,7 +42,7 @@ GEMINI_URL = (
 RATE_LIMIT_DELAY = 3
 
 
-# ─── Playwright page scraping ────────────────────────────────────────────────
+# ─── Playwright helpers ───────────────────────────────────────────────────────
 
 def detect_platform(url: str) -> str:
     if "instagram.com" in url:
@@ -52,56 +52,57 @@ def detect_platform(url: str) -> str:
     return "unknown"
 
 
+def _try_click_first_visible(page, selectors, timeout=3000, delay=600, fallback=None):
+    for sel in selectors:
+        try:
+            loc = page.locator(sel).first
+            if loc.is_visible(timeout=timeout):
+                loc.click()
+                page.wait_for_timeout(delay)
+                return True
+        except Exception:
+            pass
+    if fallback:
+        fallback()
+    return False
+
+
+def _fill_first_visible(page, selectors, value, timeout=3000):
+    for sel in selectors:
+        try:
+            loc = page.locator(sel).first
+            if loc.is_visible(timeout=timeout):
+                loc.fill(value)
+                return True
+        except Exception:
+            continue
+    return False
+
+
 def _dismiss_facebook_popups(page):
-    """Click Accept/Allow on Facebook's cookie consent banner."""
-    selectors = [
+    return _try_click_first_visible(page, [
         '[data-cookiebanner="accept_button"]',
         'div[aria-label="Allow all cookies"]',
         'button[title="Allow all cookies"]',
         'div[aria-label="Accept all"]',
         'button[aria-label="Accept all"]',
-    ]
-    for sel in selectors:
-        try:
-            loc = page.locator(sel).first
-            if loc.is_visible(timeout=2000):
-                loc.click()
-                page.wait_for_timeout(1200)
-                return True
-        except Exception:
-            pass
-    return False
+    ], timeout=2000, delay=1200)
 
 
 def _dismiss_instagram_popups(page):
-    """Close Instagram's login modal."""
-    close_selectors = [
+    if not _try_click_first_visible(page, [
         'div[role="dialog"] button[aria-label="Close"]',
         'div[role="dialog"] svg[aria-label="Close"]',
         'button[aria-label="Close"]',
-    ]
-    for sel in close_selectors:
+    ]):
         try:
-            loc = page.locator(sel).first
-            if loc.is_visible(timeout=3000):
-                loc.click()
-                page.wait_for_timeout(600)
-                return True
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(600)
         except Exception:
             pass
-    try:
-        page.keyboard.press("Escape")
-        page.wait_for_timeout(600)
-    except Exception:
-        pass
-    return False
 
 
 def ensure_facebook_login() -> bool:
-    """
-    Log into Facebook once and save session state for reuse across all scrapes.
-    Subsequent calls reuse the saved state file without re-logging in.
-    """
     if not FB_EMAIL or not FB_PASSWORD:
         return False
     if os.path.exists(FB_STATE_FILE):
@@ -129,62 +130,33 @@ def ensure_facebook_login() -> bool:
             page = ctx.new_page()
             page.goto("https://www.facebook.com/login", wait_until="domcontentloaded", timeout=30000)
             page.wait_for_timeout(3000)
-            # Dismiss cookie/consent banners first so they don't block the form
             _dismiss_facebook_popups(page)
             page.wait_for_timeout(1500)
-            # Try multiple selectors for the email input
-            email_selectors = ["#email", 'input[name="email"]', 'input[type="email"]', '[autocomplete="email"]']
-            email_filled = False
-            for sel in email_selectors:
-                try:
-                    loc = page.locator(sel).first
-                    if loc.is_visible(timeout=5000):
-                        loc.fill(FB_EMAIL)
-                        email_filled = True
-                        break
-                except Exception:
-                    continue
-            if not email_filled:
+
+            if not _fill_first_visible(page,
+                ["#email", 'input[name="email"]', 'input[type="email"]', '[autocomplete="email"]'],
+                FB_EMAIL, timeout=5000):
                 print("[FB] Could not find email input — scraping without login")
                 browser.close()
                 return False
-            # Fill password
-            pass_selectors = ["#pass", 'input[name="pass"]', 'input[type="password"]']
-            pass_filled = False
-            for sel in pass_selectors:
-                try:
-                    loc = page.locator(sel).first
-                    if loc.is_visible(timeout=3000):
-                        loc.fill(FB_PASSWORD)
-                        pass_filled = True
-                        break
-                except Exception:
-                    continue
-            if not pass_filled:
+
+            if not _fill_first_visible(page,
+                ["#pass", 'input[name="pass"]', 'input[type="password"]'],
+                FB_PASSWORD):
                 print("[FB] Could not find password input — scraping without login")
                 browser.close()
                 return False
-            # Try multiple submit selectors; fall back to pressing Enter
-            login_clicked = False
-            for login_sel in [
+
+            if not _try_click_first_visible(page, [
                 '[data-testid="royal_login_button"]',
                 'button[name="login"]',
                 '#loginbutton',
                 'button[type="submit"]',
-            ]:
-                try:
-                    loc = page.locator(login_sel).first
-                    if loc.is_visible(timeout=3000):
-                        loc.click()
-                        login_clicked = True
-                        break
-                except Exception:
-                    continue
-            if not login_clicked:
+            ]):
                 page.keyboard.press("Enter")
             page.wait_for_timeout(6000)
-            current_url = page.url
-            if "checkpoint" in current_url or "/login" in current_url:
+
+            if "checkpoint" in page.url or "/login" in page.url:
                 print("[FB] Login needs verification or failed — scraping without login")
                 browser.close()
                 return False
@@ -198,13 +170,8 @@ def ensure_facebook_login() -> bool:
 
 
 def scrape_page(url: str) -> dict:
-    """
-    Open the social media URL with a real (headless) browser.
-    For Facebook: uses saved login session if available to bypass login walls.
-    Returns: { screenshot_b64, page_text, platform, error }
-    """
     try:
-        from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+        from playwright.sync_api import sync_playwright
     except ImportError:
         return {
             "screenshot_b64": None,
@@ -218,7 +185,6 @@ def scrape_page(url: str) -> dict:
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch(headless=True)
-
         ctx_kwargs = dict(
             viewport={"width": 1366, "height": 900},
             user_agent=(
@@ -228,7 +194,6 @@ def scrape_page(url: str) -> dict:
             ),
             locale="en-US",
         )
-        # Use saved FB session to avoid login walls
         if platform == "facebook" and os.path.exists(FB_STATE_FILE):
             ctx_kwargs["storage_state"] = FB_STATE_FILE
 
@@ -389,8 +354,16 @@ The pain_point must be specific to this account, mention real observed details, 
 """
 
 
+def _extract_gemini_text(data: dict, context: str) -> str:
+    candidate = data["candidates"][0]
+    parts = candidate.get("content", {}).get("parts", [])
+    text_parts = [p["text"] for p in parts if "text" in p]
+    if not text_parts:
+        raise ValueError(f"No text in {context} (finishReason={candidate.get('finishReason')})")
+    return text_parts[-1].strip()
+
+
 def call_gemini_vision(prompt: str, screenshot_b64: str) -> str:
-    """Send screenshot + text prompt to Gemini Vision. No search grounding."""
     payload = {
         "contents": [{
             "parts": [
@@ -402,17 +375,10 @@ def call_gemini_vision(prompt: str, screenshot_b64: str) -> str:
     }
     r = requests.post(GEMINI_URL, json=payload, timeout=90)
     r.raise_for_status()
-    data = r.json()
-    candidate = data["candidates"][0]
-    parts = candidate.get("content", {}).get("parts", [])
-    text_parts = [p["text"] for p in parts if "text" in p]
-    if not text_parts:
-        raise ValueError(f"No text in vision response (finishReason={candidate.get('finishReason')})")
-    return text_parts[-1].strip()
+    return _extract_gemini_text(r.json(), "vision")
 
 
 def call_gemini_search(prompt: str) -> str:
-    """Call Gemini with Google Search grounding (fallback path)."""
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "tools": [{"google_search": {}}],
@@ -420,13 +386,7 @@ def call_gemini_search(prompt: str) -> str:
     }
     r = requests.post(GEMINI_URL, json=payload, timeout=90)
     r.raise_for_status()
-    data = r.json()
-    candidate = data["candidates"][0]
-    parts = candidate.get("content", {}).get("parts", [])
-    text_parts = [p["text"] for p in parts if "text" in p]
-    if not text_parts:
-        raise ValueError(f"No text in search response (finishReason={candidate.get('finishReason')})")
-    return text_parts[-1].strip()
+    return _extract_gemini_text(r.json(), "search")
 
 
 def parse_json_response(text: str) -> dict:
@@ -439,12 +399,6 @@ def parse_json_response(text: str) -> dict:
 
 
 def analyze_lead(name: str, ig_url: str, fb_url: str) -> dict:
-    """
-    Analyze one lead.
-    Primary: Playwright scrape → Gemini Vision (screenshot + page text)
-    Fallback: Google Search grounding
-    Facebook is tried before Instagram (more accessible, login session available).
-    """
     scrape_result = None
     url_used = None
 
@@ -458,34 +412,26 @@ def analyze_lead(name: str, ig_url: str, fb_url: str) -> dict:
             url_used = url
             break
 
-    if scrape_result and scrape_result.get("screenshot_b64"):
+    if scrape_result:
         platform = scrape_result["platform"]
         page_text = scrape_result.get("page_text", "")
         print(f"    Vision analysis ({platform}) — {url_used[:55]}")
-
         prompt = ICP_VISION_PROMPT.format(
             name=name,
             platform=platform,
             url=url_used,
             page_text=page_text[:4000] if page_text else "(page text unavailable)",
         )
-
         try:
-            raw = call_gemini_vision(prompt, scrape_result["screenshot_b64"])
-            return parse_json_response(raw)
+            return parse_json_response(call_gemini_vision(prompt, scrape_result["screenshot_b64"]))
         except Exception as e:
             print(f"    Vision call failed: {e} — falling back to search")
 
-    print(f"    Search grounding fallback")
-    prompt = ICP_SEARCH_PROMPT.format(
-        name=name,
-        ig_url=ig_url or "N/A",
-        fb_url=fb_url or "N/A",
-    )
+    print("    Search grounding fallback")
+    prompt = ICP_SEARCH_PROMPT.format(name=name, ig_url=ig_url or "N/A", fb_url=fb_url or "N/A")
 
     try:
-        raw = call_gemini_search(prompt)
-        return parse_json_response(raw)
+        return parse_json_response(call_gemini_search(prompt))
     except json.JSONDecodeError:
         try:
             payload = {
@@ -494,8 +440,7 @@ def analyze_lead(name: str, ig_url: str, fb_url: str) -> dict:
             }
             r = requests.post(GEMINI_URL, json=payload, timeout=90)
             r.raise_for_status()
-            raw2 = r.json()["candidates"][0]["content"]["parts"][0]["text"]
-            return parse_json_response(raw2)
+            return parse_json_response(r.json()["candidates"][0]["content"]["parts"][0]["text"])
         except Exception as e2:
             return {"qualifies": None, "error": f"JSON parse failed after retry: {e2}"}
     except requests.HTTPError as e:
@@ -511,63 +456,61 @@ def analyze_lead(name: str, ig_url: str, fb_url: str) -> dict:
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+def _auto_detect_column(data_rows, patterns, label):
+    for row in data_rows[:10]:
+        for ci, val in enumerate(row):
+            if val and isinstance(val, str) and any(p in val for p in patterns):
+                print(f"Auto-detected {label} column at index {ci}")
+                return ci
+    return None
+
+
 def safe_str(s) -> str:
     if s is None:
         return ""
     return str(s).encode("cp1252", "replace").decode("cp1252")
 
 
-# ─── Main ─────────────────────────────────────────────────────────────────────
+# ─── Main ────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Lead qualifier — ICP pain point analyzer")
-    parser.add_argument("input", nargs="?", default="leads_output/mount_austin_cafe_restaurant.xlsx",
-                        help="Input Excel file")
-    parser.add_argument("output", nargs="?", default="leads_output/mount_austin_qualified.xlsx",
-                        help="Output Excel file")
+    parser.add_argument("input", nargs="?", default="leads_output/mount_austin_cafe_restaurant.xlsx")
+    parser.add_argument("output", nargs="?", default="leads_output/mount_austin_qualified.xlsx")
     parser.add_argument("--start", type=int, default=None,
                         help="First data row to process (1-indexed, inclusive)")
     parser.add_argument("--end", type=int, default=None,
                         help="Last data row to process (1-indexed, inclusive)")
     args = parser.parse_args()
 
-    input_path = args.input
-    output_path = args.output
-
-    if not os.path.exists(input_path):
-        print(f"ERROR: Input file not found: {input_path}")
+    if not os.path.exists(args.input):
+        print(f"ERROR: Input file not found: {args.input}")
         sys.exit(1)
 
-    wb_in = openpyxl.load_workbook(input_path)
-    ws_in = wb_in.active
-    rows = list(ws_in.iter_rows(values_only=True))
+    wb_in = openpyxl.load_workbook(args.input)
+    rows = list(wb_in.active.iter_rows(values_only=True))
 
-    # Detect whether the first row is a real header or actual data
     HEADER_KEYWORDS = {"restaurant name", "name", "instagram", "facebook", "email", "website", "phone"}
-    first_row_lower = {str(v).strip().lower() for v in rows[0] if v}
-    has_real_header = bool(first_row_lower & HEADER_KEYWORDS)
+    has_real_header = bool({str(v).strip().lower() for v in rows[0] if v} & HEADER_KEYWORDS)
 
     if has_real_header:
         header = rows[0]
         data_rows = [r for r in rows[1:] if r[0]]
     else:
-        # No header row — all rows are data; assign standard column names positionally
         n_cols = len(rows[0]) if rows else 0
         std_names = ["Restaurant Name", "Website", "Google Reviews", "Email", "Facebook"]
         header = tuple(std_names[i] if i < len(std_names) else None for i in range(n_cols))
         data_rows = [r for r in rows if r[0]]
 
-    total_all = len(data_rows)
-    print(f"Loaded {total_all} data rows from {input_path}")
+    n_total = len(data_rows)
+    print(f"Loaded {n_total} data rows from {args.input}")
 
-    # Apply row range filter
     if args.start is not None or args.end is not None:
         s = (args.start - 1) if args.start else 0
-        e = args.end if args.end else total_all
+        e = args.end if args.end else n_total
         data_rows = data_rows[s:e]
-        print(f"Row filter: {args.start or 1}–{args.end or total_all} ({len(data_rows)} rows)")
+        print(f"Row filter: {args.start or 1}–{args.end or n_total} ({len(data_rows)} rows)")
 
-    # Build column map
     col_map = {str(v).strip(): i for i, v in enumerate(header) if v is not None}
 
     def get_col(keys, default=None):
@@ -580,49 +523,24 @@ def main():
     ig_col   = get_col(["Instagram", "instagram", "instagram/facebook"])
     fb_col   = get_col(["Facebook", "facebook"])
 
-    # Auto-detect Facebook column by URL pattern when not found via header
     if fb_col is None:
-        for sample_row in (data_rows[:10] if data_rows else []):
-            for ci, val in enumerate(sample_row):
-                if val and isinstance(val, str) and ("facebook.com" in val or "fb.com" in val):
-                    fb_col = ci
-                    break
-            if fb_col is not None:
-                break
-        if fb_col is not None:
-            print(f"Auto-detected Facebook column at index {fb_col}")
-
-    # Auto-detect Instagram column similarly
+        fb_col = _auto_detect_column(data_rows, ["facebook.com", "fb.com"], "Facebook")
     if ig_col is None:
-        for sample_row in (data_rows[:10] if data_rows else []):
-            for ci, val in enumerate(sample_row):
-                if val and isinstance(val, str) and "instagram.com" in val:
-                    ig_col = ci
-                    break
-            if ig_col is not None:
-                break
+        ig_col = _auto_detect_column(data_rows, ["instagram.com"], "Instagram")
 
-    # Build clean output header (exclude None-named columns)
-    meaningful = [(i, h) for i, h in enumerate(header) if h is not None]
+    meaningful    = [(i, h) for i, h in enumerate(header) if h is not None]
     out_col_indices = [i for i, h in meaningful]
-    out_col_names   = [h for i, h in meaningful]
-    out_header = out_col_names + ["Pain Point"]
+    out_header    = [h for i, h in meaningful] + ["Pain Point"]
 
-    errors = []
+    os.makedirs(os.path.dirname(args.output) if os.path.dirname(args.output) else ".", exist_ok=True)
 
-    # Resume: load already-processed names from existing output
-    os.makedirs(
-        os.path.dirname(output_path) if os.path.dirname(output_path) else ".",
-        exist_ok=True,
-    )
-
-    if os.path.exists(output_path):
-        wb_out = openpyxl.load_workbook(output_path)
+    if os.path.exists(args.output):
+        wb_out = openpyxl.load_workbook(args.output)
         ws_out = wb_out.active
         existing_rows = list(ws_out.iter_rows(min_row=2, values_only=True))
         already_done = {str(r[0]).strip() for r in existing_rows if r[0]}
         qualified_count = len(existing_rows)
-        print(f"Resuming — {qualified_count} already saved in {output_path}")
+        print(f"Resuming — {qualified_count} already saved in {args.output}")
     else:
         wb_out = openpyxl.Workbook()
         ws_out = wb_out.active
@@ -632,11 +550,11 @@ def main():
             cell.font      = Font(bold=True, color="FFFFFF")
             cell.fill      = PatternFill(fill_type="solid", fgColor="2E75B6")
             cell.alignment = Alignment(horizontal="center", vertical="center")
-        wb_out.save(output_path)
+        wb_out.save(args.output)
         already_done = set()
         qualified_count = 0
 
-    def _save_output():
+    def _finalize():
         for col_cells in ws_out.columns:
             max_len    = max((len(str(c.value or "")) for c in col_cells), default=10)
             col_letter = openpyxl.utils.get_column_letter(col_cells[0].column)
@@ -645,11 +563,11 @@ def main():
         for row_cells in ws_out.iter_rows(min_row=2, min_col=pain_col_idx, max_col=pain_col_idx):
             for cell in row_cells:
                 cell.alignment = Alignment(wrap_text=True, vertical="top")
-        wb_out.save(output_path)
+        wb_out.save(args.output)
 
-    # Facebook login (once, before main loop)
     ensure_facebook_login()
 
+    errors = []
     total = len(data_rows)
     for idx, row in enumerate(data_rows, 1):
         name   = (row[name_col] if name_col is not None else row[0]) or ""
@@ -677,14 +595,12 @@ def main():
             pain_point = result.get("pain_point", "")
             print(f"  QUALIFIED | Followers: {followers} | Triggers: {triggers}")
             print(f"  {safe_str(str(pain_point)[:120])}")
-            filtered_row = [row[i] if i < len(row) else None for i in out_col_indices]
-            ws_out.append(filtered_row + [pain_point])
+            ws_out.append([row[i] if i < len(row) else None for i in out_col_indices] + [pain_point])
             qualified_count += 1
             already_done.add(str(name).strip())
-            _save_output()
+            wb_out.save(args.output)  # quick save for resume; column widths set once at end
         elif qualifies is False:
-            reason = result.get("disqualify_reason", "")
-            print(f"  DISQUALIFIED | Followers: {followers} | {safe_str(reason)}")
+            print(f"  DISQUALIFIED | Followers: {followers} | {safe_str(result.get('disqualify_reason', ''))}")
         else:
             err = result.get("error", "unknown")
             print(f"  ERROR: {safe_str(str(err))}")
@@ -693,9 +609,9 @@ def main():
         if idx < total:
             time.sleep(RATE_LIMIT_DELAY)
 
-    _save_output()
+    _finalize()
     print(f"\n{'='*50}")
-    print(f"Done. {qualified_count} qualified leads saved to {output_path}")
+    print(f"Done. {qualified_count} qualified leads saved to {args.output}")
     if errors:
         print(f"Errors ({len(errors)}):")
         for n, err in errors:
