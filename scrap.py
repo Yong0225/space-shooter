@@ -20,7 +20,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
-TARGET      = 200
+TARGET      = 9999
 OUTPUT      = "Asiatown leads.xlsx"
 PROGRESS    = "asiatown_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
@@ -57,6 +57,44 @@ SEARCH_QUERIES = [
     "korean food Cleveland Ohio 44114",
     "restaurant Superior Ave Cleveland Ohio",
     "food E 40th St Cleveland Ohio",
+    # ── Round 2: more streets + categories ──
+    "restaurant E 55th St Cleveland Ohio",
+    "restaurant Euclid Ave Cleveland Ohio",
+    "food Chinatown Cleveland Ohio",
+    "restaurant Midtown Cleveland Ohio",
+    "cafe Midtown Cleveland Ohio",
+    "bar Midtown Cleveland Ohio",
+    "food E 30th St Cleveland Ohio",
+    "restaurant E 36th St Cleveland Ohio",
+    "restaurant Prospect Ave Cleveland Ohio",
+    "food Chester Ave Cleveland Ohio",
+    "restaurant Carnegie Ave Cleveland Ohio",
+    "chinese food Cleveland Ohio 44115",
+    "restaurant Cleveland Ohio 44115",
+    "food Cleveland Ohio 44103",
+    "restaurant Cleveland Ohio 44103",
+    "pizza Cleveland Ohio 44114",
+    "burger Cleveland Ohio 44114",
+    "brunch Cleveland Ohio 44114",
+    "breakfast Cleveland Ohio 44114",
+    "soul food Cleveland Ohio 44114",
+    "wings Cleveland Ohio 44114",
+    "sandwich Cleveland Ohio 44114",
+    "seafood Cleveland Ohio 44114",
+    "mediterranean Cleveland Ohio 44114",
+    "ethiopian restaurant Cleveland Ohio",
+    "african restaurant Cleveland Ohio 44114",
+    "peruvian restaurant Cleveland Ohio",
+    "colombian restaurant Cleveland Ohio",
+    "mexican restaurant Cleveland Ohio 44114",
+    "indian restaurant Cleveland Ohio 44114",
+    "halal food Cleveland Ohio 44114",
+    "vegan restaurant Cleveland Ohio 44114",
+    "brewery Cleveland Ohio 44114",
+    "wine bar Cleveland Ohio 44114",
+    "cocktail bar Cleveland Ohio 44114",
+    "late night food Cleveland Ohio 44114",
+    "food truck Cleveland Ohio 44114",
 ]
 
 BAD_EMAIL_DOMAINS = {
