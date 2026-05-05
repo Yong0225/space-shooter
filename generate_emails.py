@@ -1,4 +1,4 @@
-import sys, io, json, urllib.request, os
+import sys, io, json, urllib.request, urllib.error, os, time
 from dotenv import load_dotenv
 
 # Fix: force UTF-8 stdout so Chinese characters don't crash on Windows cp1252
@@ -11,7 +11,11 @@ API_KEY = os.getenv("GEMINI_API_KEY", "")
 if not API_KEY:
     print("ERROR: GEMINI_API_KEY not found in .env")
     sys.exit(1)
-ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={API_KEY}"
+
+MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+]
 
 # Usage: py generate_emails.py <input_xlsx>
 # Output file is auto-named: <input_basename>_emails.xlsx in the same folder
@@ -51,15 +55,29 @@ Return ONLY the 2 email bodies separated by "---", no labels, no numbering, no e
         "contents": [{"parts": [{"text": prompt}]}]
     }).encode("utf-8")
 
-    req = urllib.request.Request(ENDPOINT, data=payload, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req) as resp:
-        result = json.loads(resp.read())
+    for model in MODELS:
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={API_KEY}"
+        for attempt in range(3):
+            try:
+                req = urllib.request.Request(endpoint, data=payload, headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    result = json.loads(resp.read())
+                text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+                parts = text.split("---")
+                v1 = parts[0].strip() if len(parts) >= 1 else ""
+                v2 = parts[1].strip() if len(parts) >= 2 else ""
+                return v1, v2
+            except urllib.error.HTTPError as e:
+                wait = 5 * (attempt + 1)
+                print(f"  [{model}] attempt {attempt+1} failed ({e.code}) — retry in {wait}s")
+                time.sleep(wait)
+            except Exception as e:
+                wait = 5 * (attempt + 1)
+                print(f"  [{model}] attempt {attempt+1} failed ({type(e).__name__}) — retry in {wait}s")
+                time.sleep(wait)
+        print(f"  [{model}] all attempts failed, trying next model...")
 
-    text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
-    parts = text.split("---")
-    v1 = parts[0].strip() if len(parts) >= 1 else ""
-    v2 = parts[1].strip() if len(parts) >= 2 else ""
-    return v1, v2
+    raise RuntimeError("All models exhausted")
 
 
 # Resume: load OUTPUT_FILE if exists, else start from INPUT_FILE
@@ -98,8 +116,9 @@ for row_idx in range(2, ws.max_row + 1):
     if not biz_name or not pain_point:
         continue
 
-    # Skip if Email v1 already filled (resume checkpoint)
-    if ws.cell(row=row_idx, column=v1_col).value:
+    # Skip if Email v1 already filled with a real email (resume checkpoint)
+    existing_v1 = ws.cell(row=row_idx, column=v1_col).value or ""
+    if existing_v1 and existing_v1.startswith("Hi "):
         skipped += 1
         print(f"[{row_idx-1}/{total}] SKIP (already done): {biz_name}")
         continue
@@ -126,5 +145,6 @@ for row_idx in range(2, ws.max_row + 1):
     print(f"  Subject: {subject}")
     print(f"  v1: {v1[:80]}...")
     print(f"  v2: {v2[:80]}...")
+    time.sleep(3)  # avoid rate-limiting
 
 print(f"\nDone. {done} generated, {skipped} skipped. Output: {OUTPUT_FILE}")
