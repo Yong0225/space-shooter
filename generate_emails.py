@@ -100,7 +100,7 @@ for col_name in ["Subject", "Email v1", "Email v2"]:
 subject_col = headers.index("Subject") + 1
 v1_col = headers.index("Email v1") + 1
 v2_col = headers.index("Email v2") + 1
-name_col_key = "Restaurant Name" if "Restaurant Name" in headers else "name"
+name_col_key = next((k for k in ["Restaurant Name", "Name", "name"] if k in headers), headers[0])
 name_col = headers.index(name_col_key) + 1
 pain_col = headers.index("Pain Point") + 1
 # Owner column is optional — used for subject line if present
