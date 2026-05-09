@@ -29,25 +29,31 @@ OUTPUT_FILE = base + "_emails" + ext
 
 
 def call_gemini(business_name, pain_point):
-    prompt = f"""You are an expert cold email copywriter for a social media marketing agency called Y-Studio.
+    prompt = f"""You are a casual, sharp cold email writer for a content studio called Y-Studio that creates high-end visual content for restaurants and cafes.
 Write 2 different cold EMAIL versions for a restaurant/cafe called "{business_name}".
 
 The observed pain point is: {pain_point}
 
-Use the PEC formula for both versions:
-- P (Pain/Fear): Open with "I noticed..." referencing the pain point, then highlight the fear or desire behind it — what they are losing or missing out on.
-- E (Evidence): Mention that you designed a demo specifically for {business_name} and what result it could drive (more walk-ins, more sales, more leads, or stronger engagement).
-- C (CTA): End with a soft, one-line ask — invite them to see the demo.
+Each email must follow this exact 4-part structure:
 
-Rules:
+1. HOOK (1 sentence) — Lead with the Ask. Open with a punchy, direct question that puts the value or problem front and center. The reader must know exactly why they're reading within 5 seconds. Focus on what they gain. Example style: "Are you open to fixing your [pain area] this week?" or "Quick question — would it bother you if [pain area] kept going unnoticed?" Vary the phrasing between v1 and v2.
+
+2. VALUE (2–3 sentences) — First, give a genuine compliment about something specific to {business_name} (e.g., their concept, vibe, or menu quality). Then reference the pain point ({pain_point}) in a specific, empathetic way — not generic, not critical. Express genuine regret that it might be holding them back. Then apply Competitor-Based FOMO: note that similar spots nearby are investing in polished visual content to pull local attention, and you'd hate for {business_name}'s quality to get overlooked because of it. Be observational, not aggressive. Example: "I noticed the [competitor type] around the corner are really leveling up their visuals lately — I'd hate to see your place get passed over because of something fixable."
+
+3. GIFT (1 sentence) — Casually mention that you put together a demo for them as a small gift, purely for their reference. Make it feel zero-pressure — they don't have to do anything with it.
+
+4. OPEN LOOP CTA (1 sentence) — Do NOT ask for a call, a meeting, or permission to send anything. Instead, end with a curiosity gap that makes them want to reply. Example: "I had one specific idea in mind for your [specific area from the pain point] — not sure if it's right for you yet." Stop there. Do not close the loop.
+
+Global rules:
 - Format: cold EMAIL body only (no subject line, no sign-off)
 - Salutation: start with "Hi {business_name},"
-- Tone: casual, direct, human — like a real person reaching out, not a pitch deck
-- Length: 60–90 words each
-- No hashtags, no emojis, no salesy buzzwords
-- Never use words like "free", "guaranteed", "limited offer", "marketing agency", "social media services"
-- The 2 versions must feel noticeably different — vary the fear angle, the evidence framing, or the CTA wording
-- Do not use the word "just" or "I wanted to"
+- Tone: casual, real, grounded — like a person texting a business owner, not a corporate pitch
+- Total word count: 50–85 words (strict — count carefully)
+- No hashtags, no emojis, no buzzwords
+- Never say: "free", "guaranteed", "limited offer", "marketing agency", "social media services", "just", "I wanted to", "reach out"
+- Do NOT mention specific food items in the demo or gift sentence — just say "demo"
+- The 2 versions must feel clearly different — vary the hook angle, the compliment, the FOMO framing, and the open loop ending
+- Sound like a real human, not a template
 
 Return ONLY the 2 email bodies separated by "---", no labels, no numbering, no extra text."""
 
