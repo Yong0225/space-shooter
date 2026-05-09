@@ -36,7 +36,7 @@ The observed pain point is: {pain_point}
 
 Each email must follow this exact 4-part structure:
 
-1. HOOK (1 sentence) — Lead with the Ask. Open with a punchy, direct question that puts the value or problem front and center. The reader must know exactly why they're reading within 5 seconds. Focus on what they gain. Example style: "Are you open to fixing your [pain area] this week?" or "Quick question — would it bother you if [pain area] kept going unnoticed?" Vary the phrasing between v1 and v2.
+1. HOOK (1 sentence) — Always start with "Are you open to..." followed by a desirable positive outcome for the business (e.g. getting more walk-ins, getting more bookings, filling more tables, pulling more local attention). Do NOT ask about their pain or problems here — focus purely on the upside they want. Vary the positive outcome between v1 and v2. Examples: "Are you open to getting more walk-ins this month?" / "Are you open to pulling more local attention to Burger & Bear?"
 
 2. VALUE (2–3 sentences) — First, give a genuine compliment about something specific to {business_name} (e.g., their concept, vibe, or menu quality). Then reference the pain point ({pain_point}) in a specific, empathetic way — not generic, not critical. Express genuine regret that it might be holding them back. Then apply Competitor-Based FOMO: note that similar spots nearby are investing in high-quality poster content to pull local attention, and you'd hate for {business_name}'s quality to get overlooked because of it. Be observational, not aggressive. Example: "I noticed the [competitor type] around the corner are really leveling up their posters lately — I'd hate to see your place get passed over because of something fixable."
 
