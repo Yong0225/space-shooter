@@ -38,7 +38,7 @@ Each email must follow this exact 4-part structure:
 
 1. HOOK (1 sentence) — Always start with "Are you open to..." followed by a desirable positive outcome for the business (e.g. getting more walk-ins, getting more bookings, filling more tables, pulling more local attention). Do NOT ask about their pain or problems here — focus purely on the upside they want. Vary the positive outcome between v1 and v2. Examples: "Are you open to getting more walk-ins this month?" / "Are you open to pulling more local attention to Burger & Bear?"
 
-2. VALUE (2–3 sentences) — First, give a genuine compliment about something specific to {business_name} (e.g., their concept, vibe, or menu quality). Then reference the pain point ({pain_point}) in a specific, empathetic way — not generic, not critical. Express genuine regret that it might be holding them back. Then apply Competitor-Based FOMO: note that similar spots nearby are investing in high-quality poster content to pull local attention, and you'd hate for {business_name}'s quality to get overlooked because of it. Be observational, not aggressive. Example: "I noticed the [competitor type] around the corner are really leveling up their posters lately — I'd hate to see your place get passed over because of something fixable."
+2. VALUE (2 sentences max — keep tight) — One sentence: genuine compliment + specific pain point with empathy, woven together. One sentence: Competitor-Based FOMO — similar spots nearby are leveling up their poster content and you'd hate for {business_name} to get overlooked. Be observational, not aggressive. Target ~30 words for this section.
 
 3. GIFT (1 sentence) — Casually mention that you put together a poster demo for them as a small gift, purely for their reference. Make it feel zero-pressure — they don't have to do anything with it.
 
@@ -48,7 +48,7 @@ Global rules:
 - Format: cold EMAIL body only (no subject line, no sign-off)
 - Salutation: start with "Hi {business_name},"
 - Tone: casual, real, grounded — like a person texting a business owner, not a corporate pitch
-- Total word count: 70–85 words (strict — count carefully)
+- Total word count: 70–85 words. Count every word before finalising. If over 85, cut sentences. This is a hard limit — do not exceed it.
 - No hashtags, no emojis, no buzzwords
 - Never say: "free", "guaranteed", "limited offer", "marketing agency", "social media services", "just", "I wanted to", "reach out", "visual", "visuals"
 - Use "poster" or "poster demo" instead of "visual" or "visual demo" — we make food posters, not generic visuals
