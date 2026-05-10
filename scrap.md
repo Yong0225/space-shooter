@@ -106,6 +106,26 @@ Restaurants and bars that also serve food (e.g. "bar & grill", "sports bar", "br
 
 To add more skip terms, edit `ALCOHOL_SKIP_KEYWORDS` in `scrap.py`.
 
+## Global deduplication (cross-session)
+
+Every time the script starts, it scans **all Excel files** in these folders before scraping anything:
+
+| Folder | Contents |
+|--------|----------|
+| `已发送的leads\` | Previously sent leads |
+| `未处理的leads\` | Collected but not yet sent |
+| `leads_output\` | Analyzed/qualified leads |
+| `.` (root) | Current session output files |
+
+Two checks happen per lead:
+
+1. **Name check** — skipped before visiting the place page (saves time)
+2. **Email check** — skipped after scraping, if the email appears in any past file
+
+This prevents ever emailing the same address twice, which protects sender domain reputation.
+
+No extra config needed — it runs automatically every time.
+
 ## Tips
 
 - If Maps returns fewer places than expected (< 50 per query), Google may be rate-limiting. Wait 10–15 min and re-run — progress is saved.

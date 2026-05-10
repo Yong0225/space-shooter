@@ -102,8 +102,56 @@ HDR_BG       = "2E4057"
 ROW_BG       = ["FFFFFF", "EDF2F7"]
 EMAIL_BG     = "C6F6D5"   # green tint if email found
 
+# Folders scanned for global deduplication across all past scraping sessions
+GLOBAL_SEEN_DIRS = ["已发送的leads", "未处理的leads", "leads_output", "."]
+
+def load_global_seen():
+    """Scan all Excel files across known lead folders and return (seen_names, seen_emails).
+
+    This prevents re-scraping the same business and, more critically, prevents
+    emailing the same address twice (which would damage sender domain reputation).
+    """
+    seen_names  = set()
+    seen_emails = set()
+    scanned     = []
+
+    for d in GLOBAL_SEEN_DIRS:
+        dp = Path(d)
+        if not dp.exists():
+            continue
+        for xlsx in dp.glob("*.xlsx"):
+            try:
+                wb = openpyxl.load_workbook(xlsx, read_only=True, data_only=True)
+                ws = wb.active
+                headers = [c.value for c in next(ws.iter_rows(min_row=1, max_row=1))]
+                name_col = email_col = None
+                for i, h in enumerate(headers):
+                    if h and str(h).strip().lower() == "name":
+                        name_col = i
+                    if h and str(h).strip().lower() == "email":
+                        email_col = i
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    if not row:
+                        continue
+                    if name_col is not None and row[name_col]:
+                        seen_names.add(str(row[name_col]).lower().strip())
+                    if email_col is not None and row[email_col]:
+                        e = str(row[email_col]).lower().strip()
+                        if "@" in e:
+                            seen_emails.add(e)
+                wb.close()
+                scanned.append(str(xlsx))
+            except Exception:
+                continue
+
+    print(f"[GlobalDedup] Scanned {len(scanned)} file(s):")
+    for f in scanned:
+        print(f"              {f}")
+    print(f"[GlobalDedup] {len(seen_names)} unique businesses | {len(seen_emails)} unique emails — these will be skipped")
+    return seen_names, seen_emails
+
 def load_existing_names():
-    """Read business names already in the Excel to skip duplicates."""
+    """Read business names already in the current OUTPUT Excel to skip duplicates."""
     p = Path(OUTPUT)
     if not p.exists():
         return set()
@@ -371,10 +419,17 @@ def main():
             Path(f).unlink(missing_ok=True)
         print("[Reset] Progress cleared.")
 
-    # Load names already in the Excel so we never add duplicates
+    # ── Global dedup: scan all past Excel files across all lead folders ──────
+    global_seen_names, global_seen_emails = load_global_seen()
+
+    # Load names already in the current OUTPUT Excel (current scraping session)
     existing_names = load_existing_names()
     existing_count = count_existing_rows()
     print(f"[Dedup] {existing_count} leads already in {OUTPUT} — will skip any matches")
+
+    # Merge global seen into local sets
+    existing_names.update(global_seen_names)
+    existing_emails = set(global_seen_emails)
 
     prog   = load_progress()
     leads  = prog.get("leads", [])
@@ -382,9 +437,11 @@ def main():
     places = prog.get("places", [])
     q_idx  = prog.get("query_idx", 0)
 
-    # Merge names from this run's in-progress leads into the dedup set
+    # Merge names/emails from this run's in-progress leads into the dedup sets
     for lead in leads:
         existing_names.add(lead['name'].lower().strip())
+        if lead.get('email'):
+            existing_emails.add(lead['email'].lower().strip())
 
     if not Path(OUTPUT).exists():
         init_excel()
@@ -445,9 +502,9 @@ def main():
             if maps_url in done:
                 continue
 
-            # Skip already in the master Excel
+            # Skip if name already seen (current file or any past scrape)
             if name.lower().strip() in existing_names:
-                print(f"  [skip duplicate] {name}")
+                print(f"  [skip seen name] {name}")
                 done.add(maps_url)
                 continue
 
@@ -481,9 +538,17 @@ def main():
                         lead['email'] = fb_email
                         print(f"  -> FB email found: {fb_email}")
 
+            # Skip if this email was already seen in any past scrape / sent file
+            if lead['email'] and lead['email'].lower().strip() in existing_emails:
+                print(f"  [skip dup email] {name} — {lead['email']} already recorded")
+                done.add(maps_url)
+                continue
+
             # Save immediately
             leads.append(lead)
             existing_names.add(name.lower().strip())
+            if lead['email']:
+                existing_emails.add(lead['email'].lower().strip())
             done.add(maps_url)
             prog.update({"leads": leads, "done_urls": list(done)})
             save_progress(prog)
