@@ -96,6 +96,16 @@ No API keys needed. Browser runs in headed (visible) mode so you can solve CAPTC
 | Phase 2 – scrape each website | ~30–45 min for 350 leads |
 | Total | ~45–60 min for 350 leads |
 
+## Filtering: alcohol-only venues
+
+Places are automatically skipped if their name contains any of these phrases (case-insensitive):
+
+`cocktail bar`, `cocktail lounge`, `cocktail room`, `wine bar`, `wine lounge`, `whiskey bar`, `whiskey lounge`, `bourbon bar`, `spirits bar`, `spirits lounge`, `speakeasy`
+
+Restaurants and bars that also serve food (e.g. "bar & grill", "sports bar", "brewery") are **not** filtered — only venues that are clearly alcohol/cocktail focused.
+
+To add more skip terms, edit `ALCOHOL_SKIP_KEYWORDS` in `scrap.py`.
+
 ## Tips
 
 - If Maps returns fewer places than expected (< 50 per query), Google may be rate-limiting. Wait 10–15 min and re-run — progress is saved.

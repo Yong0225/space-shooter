@@ -123,7 +123,20 @@ BAD_EMAIL_DOMAINS = {
 }
 BAD_EMAIL_PREFIXES = {'noreply', 'no-reply', 'donotreply', 'info@example', 'test@'}
 
+# Names containing these phrases are skipped — places that primarily sell alcohol/cocktails
+ALCOHOL_SKIP_KEYWORDS = [
+    'cocktail bar', 'cocktail lounge', 'cocktail room',
+    'wine bar', 'wine lounge',
+    'whiskey bar', 'whiskey lounge', 'bourbon bar',
+    'spirits bar', 'spirits lounge',
+    'speakeasy',
+]
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
+def is_alcohol_only(name):
+    n = name.lower()
+    return any(kw in n for kw in ALCOHOL_SKIP_KEYWORDS)
+
 def sleep(mn=1.2, mx=2.8):
     time.sleep(random.uniform(mn, mx))
 
@@ -467,6 +480,9 @@ def main():
             added = 0
             for p in new_places:
                 if p['name'].lower() not in existing_place_names:
+                    if is_alcohol_only(p['name']):
+                        print(f"  [skip alcohol] {p['name']}")
+                        continue
                     places.append(p)
                     existing_place_names.add(p['name'].lower())
                     added += 1
