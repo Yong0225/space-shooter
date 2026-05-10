@@ -22,31 +22,33 @@ from openpyxl.styles import Font, PatternFill, Alignment
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
 OUTPUT      = "Little Italy leads.xlsx"
-PROGRESS    = "little_italy_progress.json"
+PROGRESS    = "university_circle_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Little Italy, Cleveland, Ohio (Murray Hill neighborhood)
+# Queries for University Circle, Cleveland, Ohio
 SEARCH_QUERIES = [
-    "restaurants Little Italy Cleveland Ohio",
-    "cafe Little Italy Cleveland Ohio",
-    "coffee shop Little Italy Cleveland Ohio",
-    "italian restaurant Little Italy Cleveland Ohio",
-    "pizza Little Italy Cleveland Ohio",
-    "bakery Little Italy Cleveland Ohio",
-    "brunch Little Italy Cleveland Ohio",
-    "breakfast Little Italy Cleveland Ohio",
-    "food Little Italy Cleveland Ohio",
-    "dessert Little Italy Cleveland Ohio",
-    "gelato Little Italy Cleveland Ohio",
-    "restaurant Murray Hill Cleveland Ohio",
-    "cafe Murray Hill Cleveland Ohio",
-    "food Murray Hill Cleveland Ohio",
+    "restaurants University Circle Cleveland Ohio",
+    "cafe University Circle Cleveland Ohio",
+    "coffee shop University Circle Cleveland Ohio",
+    "food University Circle Cleveland Ohio",
+    "brunch University Circle Cleveland Ohio",
+    "breakfast University Circle Cleveland Ohio",
+    "pizza University Circle Cleveland Ohio",
+    "bakery University Circle Cleveland Ohio",
+    "sandwich University Circle Cleveland Ohio",
+    "dessert University Circle Cleveland Ohio",
+    "asian restaurant University Circle Cleveland Ohio",
+    "mediterranean University Circle Cleveland Ohio",
+    "restaurant Euclid Avenue Cleveland Ohio University Circle",
+    "cafe Euclid Avenue Cleveland Ohio",
+    "food East Cleveland Ohio University Circle",
     "restaurant Cleveland Ohio 44106",
     "cafe Cleveland Ohio 44106",
     "food Cleveland Ohio 44106",
-    "restaurant Little Italy Murray Hill Road Cleveland",
-    "sandwich Little Italy Cleveland Ohio",
-    "deli Little Italy Cleveland Ohio",
+    "restaurant Uptown Cleveland Ohio",
+    "cafe Uptown Cleveland Ohio",
+    "food Uptown Cleveland Ohio",
+    "brunch Uptown Cleveland Ohio",
 ]
 
 BAD_EMAIL_DOMAINS = {
