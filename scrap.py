@@ -102,20 +102,17 @@ HDR_BG       = "2E4057"
 ROW_BG       = ["FFFFFF", "EDF2F7"]
 EMAIL_BG     = "C6F6D5"   # green tint if email found
 
-# Folders scanned for global deduplication across all past scraping sessions
-GLOBAL_SEEN_DIRS = ["已发送的leads", "未处理的leads", "leads_output", "."]
+# Persistent seen database — records every lead ever scraped so we never duplicate
+# across sessions regardless of whether the Excel files still exist.
+SEEN_FILE = "scraped_seen.json"
 
-def load_global_seen():
-    """Scan all Excel files across known lead folders and return (seen_names, seen_emails).
+# Folders used ONCE to bootstrap SEEN_FILE if it doesn't exist yet
+_BOOTSTRAP_DIRS = ["已发送的leads", "未处理的leads", "leads_output", "."]
 
-    This prevents re-scraping the same business and, more critically, prevents
-    emailing the same address twice (which would damage sender domain reputation).
-    """
-    seen_names  = set()
-    seen_emails = set()
-    scanned     = []
-
-    for d in GLOBAL_SEEN_DIRS:
+def _read_excels_for_seen(dirs):
+    """Helper: scan xlsx files in given dirs, return (names_set, emails_set)."""
+    names, emails, scanned = set(), set(), []
+    for d in dirs:
         dp = Path(d)
         if not dp.exists():
             continue
@@ -134,21 +131,51 @@ def load_global_seen():
                     if not row:
                         continue
                     if name_col is not None and row[name_col]:
-                        seen_names.add(str(row[name_col]).lower().strip())
+                        names.add(str(row[name_col]).lower().strip())
                     if email_col is not None and row[email_col]:
                         e = str(row[email_col]).lower().strip()
                         if "@" in e:
-                            seen_emails.add(e)
+                            emails.add(e)
                 wb.close()
                 scanned.append(str(xlsx))
             except Exception:
                 continue
+    return names, emails, scanned
 
-    print(f"[GlobalDedup] Scanned {len(scanned)} file(s):")
-    for f in scanned:
-        print(f"              {f}")
-    print(f"[GlobalDedup] {len(seen_names)} unique businesses | {len(seen_emails)} unique emails — these will be skipped")
-    return seen_names, seen_emails
+def _save_seen_db(names, emails):
+    """Atomically persist the seen database."""
+    tmp = SEEN_FILE + ".tmp"
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump({"names": sorted(names), "emails": sorted(emails)}, f,
+                  ensure_ascii=False, indent=2)
+    Path(tmp).replace(SEEN_FILE)
+
+def load_seen_db():
+    """Load the persistent seen database.
+
+    If scraped_seen.json exists, use it directly.
+    If not (first run), bootstrap once from existing Excel files then save.
+    --reset never wipes this file — it is permanent record of all scraped leads.
+    """
+    p = Path(SEEN_FILE)
+    if p.exists():
+        try:
+            with open(p, encoding='utf-8') as f:
+                data = json.load(f)
+            names  = set(data.get("names",  []))
+            emails = set(data.get("emails", []))
+            print(f"[SeenDB] {len(names)} names | {len(emails)} emails — loaded from {SEEN_FILE}")
+            return names, emails
+        except Exception:
+            pass
+
+    # First-ever run: bootstrap from whatever Excel files exist right now
+    print(f"[SeenDB] {SEEN_FILE} not found — bootstrapping from existing lead files (one-time)...")
+    names, emails, scanned = _read_excels_for_seen(_BOOTSTRAP_DIRS)
+    print(f"[SeenDB] Bootstrapped from {len(scanned)} file(s): {len(names)} names | {len(emails)} emails")
+    _save_seen_db(names, emails)
+    print(f"[SeenDB] Saved to {SEEN_FILE} — future runs will use this file only")
+    return names, emails
 
 def load_existing_names():
     """Read business names already in the current OUTPUT Excel to skip duplicates."""
@@ -419,17 +446,17 @@ def main():
             Path(f).unlink(missing_ok=True)
         print("[Reset] Progress cleared.")
 
-    # ── Global dedup: scan all past Excel files across all lead folders ──────
-    global_seen_names, global_seen_emails = load_global_seen()
+    # ── Persistent seen database (never wiped by --reset) ────────────────────
+    seen_names, seen_emails = load_seen_db()
 
-    # Load names already in the current OUTPUT Excel (current scraping session)
+    # Also load names in the current OUTPUT Excel (handles mid-run resume)
     existing_names = load_existing_names()
     existing_count = count_existing_rows()
-    print(f"[Dedup] {existing_count} leads already in {OUTPUT} — will skip any matches")
+    print(f"[Dedup] {existing_count} leads already in {OUTPUT}")
 
-    # Merge global seen into local sets
-    existing_names.update(global_seen_names)
-    existing_emails = set(global_seen_emails)
+    # Merge all known names/emails into working sets
+    existing_names.update(seen_names)
+    existing_emails = set(seen_emails)
 
     prog   = load_progress()
     leads  = prog.get("leads", [])
@@ -437,7 +464,7 @@ def main():
     places = prog.get("places", [])
     q_idx  = prog.get("query_idx", 0)
 
-    # Merge names/emails from this run's in-progress leads into the dedup sets
+    # Merge in-progress leads from this run (crash-resume safety)
     for lead in leads:
         existing_names.add(lead['name'].lower().strip())
         if lead.get('email'):
@@ -544,7 +571,7 @@ def main():
                 done.add(maps_url)
                 continue
 
-            # Save immediately
+            # Save immediately — update Excel, progress file, and seen database
             leads.append(lead)
             existing_names.add(name.lower().strip())
             if lead['email']:
@@ -553,6 +580,7 @@ def main():
             prog.update({"leads": leads, "done_urls": list(done)})
             save_progress(prog)
             append_lead_to_excel(lead)
+            _save_seen_db(existing_names, existing_emails)
 
             sleep(1.5, 3.0)
 

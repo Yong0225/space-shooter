@@ -108,23 +108,18 @@ To add more skip terms, edit `ALCOHOL_SKIP_KEYWORDS` in `scrap.py`.
 
 ## Global deduplication (cross-session)
 
-Every time the script starts, it scans **all Excel files** in these folders before scraping anything:
+The script maintains a permanent file `scraped_seen.json` in the project root. Every lead that is scraped is recorded in this file immediately, regardless of what happens to the Excel files later.
 
-| Folder | Contents |
-|--------|----------|
-| `已发送的leads\` | Previously sent leads |
-| `未处理的leads\` | Collected but not yet sent |
-| `leads_output\` | Analyzed/qualified leads |
-| `.` (root) | Current session output files |
+**First run only:** if `scraped_seen.json` doesn't exist yet, it is bootstrapped once from all Excel files in `已发送的leads\`, `未处理的leads\`, `leads_output\`, and the root directory. After that the Excel files are no longer needed for dedup — you can delete or move them freely.
 
-Two checks happen per lead:
+Two checks happen per lead on every run:
 
-1. **Name check** — skipped before visiting the place page (saves time)
-2. **Email check** — skipped after scraping, if the email appears in any past file
+1. **Name check** — before visiting the place page (saves time if already scraped)
+2. **Email check** — after scraping the website, if the email is in the seen DB it is skipped
 
 This prevents ever emailing the same address twice, which protects sender domain reputation.
 
-No extra config needed — it runs automatically every time.
+`--reset` clears the session progress file only. It never touches `scraped_seen.json`.
 
 ## Tips
 
