@@ -50,7 +50,7 @@ Global rules:
 - Tone: casual, real, grounded — like a person texting a business owner, not a corporate pitch
 - Total word count: 70–85 words. Count every word before finalising. If over 85, cut sentences. This is a hard limit — do not exceed it.
 - No hashtags, no emojis, no buzzwords
-- Punctuation: use ONLY commas and periods. No dashes, colons, semicolons, exclamation marks, question marks, parentheses, or any other punctuation symbols whatsoever.
+- Punctuation: use ONLY commas, periods, and question marks. No dashes, colons, semicolons, exclamation marks, parentheses, or any other punctuation symbols whatsoever.
 - Never say: "free", "guaranteed", "limited offer", "marketing agency", "social media services", "just", "I wanted to", "reach out", "visual", "visuals"
 - Use "poster" or "poster demo" instead of "visual" or "visual demo" — we make food posters, not generic visuals
 - Do NOT mention specific food items in the demo or gift sentence — just say "poster demo"
@@ -90,7 +90,7 @@ Return ONLY the 2 email bodies separated by "---", no labels, no numbering, no e
 
 def clean_body(text):
     # Strip everything except letters, digits, whitespace, commas, periods, apostrophes
-    cleaned = re.sub(r"[^a-zA-Z0-9\s,.\']", "", text)
+    cleaned = re.sub(r"[^a-zA-Z0-9\s,.?\']", "", text)
     cleaned = re.sub(r" {2,}", " ", cleaned)
     return cleaned.strip()
 
