@@ -21,98 +21,32 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "High Street leads.xlsx"
-PROGRESS    = "highstreet_progress.json"
+OUTPUT      = "Little Italy leads.xlsx"
+PROGRESS    = "little_italy_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Multiple queries for High Street, Columbus, Ohio
+# Queries for Little Italy, Cleveland, Ohio (Murray Hill neighborhood)
 SEARCH_QUERIES = [
-    # Short North (most dense restaurant stretch)
-    "restaurants Short North Columbus Ohio",
-    "cafe Short North Columbus Ohio",
-    "coffee shop Short North Columbus Ohio",
-    "bar Short North Columbus Ohio",
-    "brewery Short North Columbus Ohio",
-    "brunch Short North Columbus Ohio",
-    "pizza Short North Columbus Ohio",
-    "food Short North Columbus Ohio",
-    "bakery Short North Columbus Ohio",
-    "sushi Short North Columbus Ohio",
-    "mexican restaurant Short North Columbus Ohio",
-    "italian restaurant Short North Columbus Ohio",
-    "burger Short North Columbus Ohio",
-    "breakfast Short North Columbus Ohio",
-    "wine bar Short North Columbus Ohio",
-    "cocktail bar Short North Columbus Ohio",
-    "seafood Short North Columbus Ohio",
-    "vegan Short North Columbus Ohio",
-    "dessert Short North Columbus Ohio",
-    "restaurant High Street Short North Columbus",
-    # High Street general
-    "restaurants High Street Columbus Ohio",
-    "cafe High Street Columbus Ohio",
-    "food High Street Columbus Ohio",
-    "bar High Street Columbus Ohio",
-    "restaurant N High St Columbus Ohio",
-    # Italian Village / Victorian Village
-    "restaurants Italian Village Columbus Ohio",
-    "cafe Italian Village Columbus Ohio",
-    "bar Italian Village Columbus Ohio",
-    "food Victorian Village Columbus Ohio",
-    "restaurant Victorian Village Columbus Ohio",
-    # University District / Campus
-    "restaurants Ohio State University Columbus Ohio",
-    "cafe OSU campus Columbus Ohio",
-    "food University District Columbus Ohio",
-    "bar campus Columbus Ohio",
-    "pizza OSU Columbus Ohio",
-    "food High Street Columbus Ohio 43201",
-    "restaurant Columbus Ohio 43201",
-    # Clintonville
-    "restaurants Clintonville Columbus Ohio",
-    "cafe Clintonville Columbus Ohio",
-    "bar Clintonville Columbus Ohio",
-    "food Clintonville Columbus Ohio",
-    "restaurant High Street Clintonville Columbus",
-    "brunch Clintonville Columbus Ohio",
-    # Downtown Columbus
-    "restaurants downtown Columbus Ohio",
-    "cafe downtown Columbus Ohio",
-    "bar downtown Columbus Ohio",
-    "restaurant Columbus Ohio 43215",
-    "food Columbus Ohio 43215",
-    # Zip code sweeps
-    "restaurant Columbus Ohio 43202",
-    "food Columbus Ohio 43202",
-    "restaurant Columbus Ohio 43214",
-    "food Columbus Ohio 43214",
-    "restaurant Columbus Ohio 43210",
-    "food Columbus Ohio 43210",
-    # Food categories along High St corridor
-    "chinese restaurant Columbus Ohio High Street",
-    "japanese restaurant Short North Columbus Ohio",
-    "korean restaurant Columbus Ohio",
-    "thai restaurant Columbus Ohio High Street",
-    "indian restaurant Columbus Ohio High Street",
-    "vietnamese restaurant Columbus Ohio",
-    "ethiopian restaurant Columbus Ohio",
-    "mediterranean Columbus Ohio High Street",
-    "halal food Columbus Ohio",
-    "soul food Columbus Ohio High Street",
-    "wings Columbus Ohio High Street",
-    "sandwich Columbus Ohio High Street",
-    "ramen Columbus Ohio",
-    "pho Columbus Ohio",
-    "bubble tea Columbus Ohio High Street",
-    "ice cream Columbus Ohio High Street",
-    "food truck Columbus Ohio High Street",
-    "late night food Columbus Ohio High Street",
-    "sports bar Columbus Ohio High Street",
-    "rooftop bar Columbus Ohio",
-    "gastropub Columbus Ohio High Street",
-    "steakhouse Columbus Ohio High Street",
-    "tapas Columbus Ohio",
-    "vegetarian restaurant Columbus Ohio High Street",
+    "restaurants Little Italy Cleveland Ohio",
+    "cafe Little Italy Cleveland Ohio",
+    "coffee shop Little Italy Cleveland Ohio",
+    "italian restaurant Little Italy Cleveland Ohio",
+    "pizza Little Italy Cleveland Ohio",
+    "bakery Little Italy Cleveland Ohio",
+    "brunch Little Italy Cleveland Ohio",
+    "breakfast Little Italy Cleveland Ohio",
+    "food Little Italy Cleveland Ohio",
+    "dessert Little Italy Cleveland Ohio",
+    "gelato Little Italy Cleveland Ohio",
+    "restaurant Murray Hill Cleveland Ohio",
+    "cafe Murray Hill Cleveland Ohio",
+    "food Murray Hill Cleveland Ohio",
+    "restaurant Cleveland Ohio 44106",
+    "cafe Cleveland Ohio 44106",
+    "food Cleveland Ohio 44106",
+    "restaurant Little Italy Murray Hill Road Cleveland",
+    "sandwich Little Italy Cleveland Ohio",
+    "deli Little Italy Cleveland Ohio",
 ]
 
 BAD_EMAIL_DOMAINS = {
