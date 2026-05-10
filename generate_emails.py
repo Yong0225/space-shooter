@@ -1,4 +1,4 @@
-import sys, io, json, urllib.request, urllib.error, os, time
+import sys, io, json, urllib.request, urllib.error, os, time, re
 from dotenv import load_dotenv
 
 # Fix: force UTF-8 stdout so Chinese characters don't crash on Windows cp1252
@@ -50,6 +50,7 @@ Global rules:
 - Tone: casual, real, grounded — like a person texting a business owner, not a corporate pitch
 - Total word count: 70–85 words. Count every word before finalising. If over 85, cut sentences. This is a hard limit — do not exceed it.
 - No hashtags, no emojis, no buzzwords
+- Punctuation: use ONLY commas and periods. No dashes, colons, semicolons, exclamation marks, question marks, parentheses, or any other punctuation symbols whatsoever.
 - Never say: "free", "guaranteed", "limited offer", "marketing agency", "social media services", "just", "I wanted to", "reach out", "visual", "visuals"
 - Use "poster" or "poster demo" instead of "visual" or "visual demo" — we make food posters, not generic visuals
 - Do NOT mention specific food items in the demo or gift sentence — just say "poster demo"
@@ -85,6 +86,13 @@ Return ONLY the 2 email bodies separated by "---", no labels, no numbering, no e
         print(f"  [{model}] all attempts failed, trying next model...")
 
     raise RuntimeError("All models exhausted")
+
+
+def clean_body(text):
+    # Strip everything except letters, digits, whitespace, commas, periods, apostrophes
+    cleaned = re.sub(r"[^a-zA-Z0-9\s,.\']", "", text)
+    cleaned = re.sub(r" {2,}", " ", cleaned)
+    return cleaned.strip()
 
 
 # Resume: load OUTPUT_FILE if exists, else start from INPUT_FILE
@@ -130,10 +138,7 @@ for row_idx in range(2, ws.max_row + 1):
         print(f"[{row_idx-1}/{total}] SKIP (already done): {biz_name}")
         continue
 
-    # Subject priority: owner first name > business name
-    owner = ws.cell(row=row_idx, column=owner_col).value if owner_col else None
-    first_name = owner.strip().split()[0] if owner and str(owner).strip() else None
-    subject = f"Hi {first_name}" if first_name else f"{biz_name} x Y-Studio"
+    subject = f"Hi {biz_name}"
 
     print(f"[{row_idx-1}/{total}] Generating: {biz_name} ...")
     try:
@@ -141,6 +146,9 @@ for row_idx in range(2, ws.max_row + 1):
     except Exception as e:
         print(f"  ERROR: {e} — skipping, will retry on next run")
         continue
+
+    v1 = clean_body(v1)
+    v2 = clean_body(v2)
 
     ws.cell(row=row_idx, column=subject_col, value=subject)
     ws.cell(row=row_idx, column=v1_col, value=v1)
