@@ -21,34 +21,42 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Little Italy leads.xlsx"
-PROGRESS    = "university_circle_progress.json"
+OUTPUT      = "Dublin leads.xlsx"
+PROGRESS    = "dublin_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for University Circle, Cleveland, Ohio
+# Queries for Dublin, Ohio
 SEARCH_QUERIES = [
-    "restaurants University Circle Cleveland Ohio",
-    "cafe University Circle Cleveland Ohio",
-    "coffee shop University Circle Cleveland Ohio",
-    "food University Circle Cleveland Ohio",
-    "brunch University Circle Cleveland Ohio",
-    "breakfast University Circle Cleveland Ohio",
-    "pizza University Circle Cleveland Ohio",
-    "bakery University Circle Cleveland Ohio",
-    "sandwich University Circle Cleveland Ohio",
-    "dessert University Circle Cleveland Ohio",
-    "asian restaurant University Circle Cleveland Ohio",
-    "mediterranean University Circle Cleveland Ohio",
-    "restaurant Euclid Avenue Cleveland Ohio University Circle",
-    "cafe Euclid Avenue Cleveland Ohio",
-    "food East Cleveland Ohio University Circle",
-    "restaurant Cleveland Ohio 44106",
-    "cafe Cleveland Ohio 44106",
-    "food Cleveland Ohio 44106",
-    "restaurant Uptown Cleveland Ohio",
-    "cafe Uptown Cleveland Ohio",
-    "food Uptown Cleveland Ohio",
-    "brunch Uptown Cleveland Ohio",
+    "restaurants Dublin Ohio",
+    "cafe Dublin Ohio",
+    "coffee shop Dublin Ohio",
+    "food Dublin Ohio",
+    "brunch Dublin Ohio",
+    "breakfast Dublin Ohio",
+    "pizza Dublin Ohio",
+    "bakery Dublin Ohio",
+    "sandwich Dublin Ohio",
+    "dessert Dublin Ohio",
+    "asian restaurant Dublin Ohio",
+    "mediterranean Dublin Ohio",
+    "mexican restaurant Dublin Ohio",
+    "italian restaurant Dublin Ohio",
+    "sushi Dublin Ohio",
+    "burger Dublin Ohio",
+    "bar and grill Dublin Ohio",
+    "brewery Dublin Ohio",
+    "seafood Dublin Ohio",
+    "vegan Dublin Ohio",
+    "restaurant Bridge Street Dublin Ohio",
+    "cafe Bridge Street Dublin Ohio",
+    "restaurant Historic Dublin Ohio",
+    "food Historic Dublin Ohio",
+    "restaurant Dublin Ohio 43016",
+    "cafe Dublin Ohio 43016",
+    "food Dublin Ohio 43016",
+    "restaurant Dublin Ohio 43017",
+    "cafe Dublin Ohio 43017",
+    "food Dublin Ohio 43017",
 ]
 
 BAD_EMAIL_DOMAINS = {
