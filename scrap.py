@@ -25,35 +25,63 @@ OUTPUT      = "Downtown Detroit leads.xlsx"
 PROGRESS    = "downtown_detroit_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Downtown Detroit, Michigan
+# Queries for Downtown Detroit, Michigan — broad multi-neighborhood coverage
 SEARCH_QUERIES = [
+    # Downtown core
     "restaurants Downtown Detroit Michigan",
     "cafe Downtown Detroit Michigan",
     "coffee shop Downtown Detroit Michigan",
-    "food Downtown Detroit Michigan",
     "brunch Downtown Detroit Michigan",
     "breakfast Downtown Detroit Michigan",
-    "pizza Downtown Detroit Michigan",
-    "bakery Downtown Detroit Michigan",
-    "sandwich Downtown Detroit Michigan",
-    "dessert Downtown Detroit Michigan",
     "bar and grill Downtown Detroit Michigan",
     "brewery Downtown Detroit Michigan",
     "burger Downtown Detroit Michigan",
-    "mexican restaurant Downtown Detroit Michigan",
-    "italian restaurant Downtown Detroit Michigan",
-    "sushi Downtown Detroit Michigan",
-    "asian restaurant Downtown Detroit Michigan",
-    "seafood Downtown Detroit Michigan",
+    "pizza Downtown Detroit Michigan",
+    "bakery Downtown Detroit Michigan",
     "vegan Downtown Detroit Michigan",
     "steakhouse Downtown Detroit Michigan",
-    "restaurant Greektown Detroit Michigan",
-    "restaurant Midtown Detroit Michigan",
+    "seafood Downtown Detroit Michigan",
+    "sushi Downtown Detroit Michigan",
+    # Midtown
+    "restaurants Midtown Detroit Michigan",
     "cafe Midtown Detroit Michigan",
-    "restaurant New Center Detroit Michigan",
-    "restaurant Campus Martius Detroit Michigan",
+    "coffee shop Midtown Detroit Michigan",
+    "brunch Midtown Detroit Michigan",
+    "bar Midtown Detroit Michigan",
+    "bakery Midtown Detroit Michigan",
+    "food Midtown Detroit Michigan",
+    # Greektown
+    "restaurants Greektown Detroit Michigan",
+    "cafe Greektown Detroit Michigan",
+    "food Greektown Detroit Michigan",
+    # Eastern Market
+    "restaurants Eastern Market Detroit Michigan",
+    "cafe Eastern Market Detroit Michigan",
+    "food Eastern Market Detroit Michigan",
+    "brunch Eastern Market Detroit Michigan",
+    "coffee Eastern Market Detroit Michigan",
+    # New Center
+    "restaurants New Center Detroit Michigan",
+    "cafe New Center Detroit Michigan",
+    "food New Center Detroit Michigan",
+    # Rivertown / East Riverfront
+    "restaurants Rivertown Detroit Michigan",
+    "cafe Rivertown Detroit Michigan",
+    "food East Riverfront Detroit Michigan",
+    # West Village / Indian Village
+    "restaurants West Village Detroit Michigan",
+    "cafe West Village Detroit Michigan",
+    "restaurants Indian Village Detroit Michigan",
+    # Woodbridge
+    "restaurants Woodbridge Detroit Michigan",
+    "cafe Woodbridge Detroit Michigan",
+    # Key streets
     "restaurant Woodward Ave Detroit Michigan",
     "cafe Woodward Ave Detroit Michigan",
+    "restaurant Jefferson Ave Detroit Michigan",
+    "restaurant Michigan Ave Detroit Michigan",
+    "restaurant Gratiot Ave Detroit Michigan",
+    # Zip codes
     "restaurant Detroit Michigan 48226",
     "cafe Detroit Michigan 48226",
     "food Detroit Michigan 48226",
@@ -63,9 +91,17 @@ SEARCH_QUERIES = [
     "restaurant Detroit Michigan 48202",
     "cafe Detroit Michigan 48202",
     "food Detroit Michigan 48202",
+    "restaurant Detroit Michigan 48207",
+    "cafe Detroit Michigan 48207",
+    "food Detroit Michigan 48207",
+    "restaurant Detroit Michigan 48214",
+    "cafe Detroit Michigan 48214",
+    "food Detroit Michigan 48214",
+    "restaurant Detroit Michigan 48208",
+    "cafe Detroit Michigan 48208",
+    "food Detroit Michigan 48208",
     "restaurant Detroit Michigan 48243",
     "cafe Detroit Michigan 48243",
-    "food Detroit Michigan 48243",
 ]
 
 BAD_EMAIL_DOMAINS = {
