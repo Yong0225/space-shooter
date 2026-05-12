@@ -21,38 +21,51 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Corktown leads.xlsx"
-PROGRESS    = "corktown_progress.json"
+OUTPUT      = "Downtown Detroit leads.xlsx"
+PROGRESS    = "downtown_detroit_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Corktown, Detroit, Michigan
+# Queries for Downtown Detroit, Michigan
 SEARCH_QUERIES = [
-    "restaurants Corktown Detroit Michigan",
-    "cafe Corktown Detroit Michigan",
-    "coffee shop Corktown Detroit Michigan",
-    "food Corktown Detroit Michigan",
-    "brunch Corktown Detroit Michigan",
-    "breakfast Corktown Detroit Michigan",
-    "pizza Corktown Detroit Michigan",
-    "bakery Corktown Detroit Michigan",
-    "sandwich Corktown Detroit Michigan",
-    "dessert Corktown Detroit Michigan",
-    "bar and grill Corktown Detroit Michigan",
-    "brewery Corktown Detroit Michigan",
-    "burger Corktown Detroit Michigan",
-    "mexican restaurant Corktown Detroit Michigan",
-    "italian restaurant Corktown Detroit Michigan",
-    "vegan Corktown Detroit Michigan",
-    "brunch Michigan Ave Detroit Michigan",
-    "restaurant Michigan Ave Detroit 48216",
-    "cafe Michigan Ave Detroit 48216",
-    "food Michigan Ave Detroit 48216",
-    "restaurant Corktown Detroit Michigan 48216",
-    "cafe Corktown Detroit Michigan 48216",
-    "food Corktown Detroit Michigan 48216",
-    "restaurant Detroit Michigan 48216",
-    "cafe Detroit Michigan 48216",
-    "food Detroit Michigan 48216",
+    "restaurants Downtown Detroit Michigan",
+    "cafe Downtown Detroit Michigan",
+    "coffee shop Downtown Detroit Michigan",
+    "food Downtown Detroit Michigan",
+    "brunch Downtown Detroit Michigan",
+    "breakfast Downtown Detroit Michigan",
+    "pizza Downtown Detroit Michigan",
+    "bakery Downtown Detroit Michigan",
+    "sandwich Downtown Detroit Michigan",
+    "dessert Downtown Detroit Michigan",
+    "bar and grill Downtown Detroit Michigan",
+    "brewery Downtown Detroit Michigan",
+    "burger Downtown Detroit Michigan",
+    "mexican restaurant Downtown Detroit Michigan",
+    "italian restaurant Downtown Detroit Michigan",
+    "sushi Downtown Detroit Michigan",
+    "asian restaurant Downtown Detroit Michigan",
+    "seafood Downtown Detroit Michigan",
+    "vegan Downtown Detroit Michigan",
+    "steakhouse Downtown Detroit Michigan",
+    "restaurant Greektown Detroit Michigan",
+    "restaurant Midtown Detroit Michigan",
+    "cafe Midtown Detroit Michigan",
+    "restaurant New Center Detroit Michigan",
+    "restaurant Campus Martius Detroit Michigan",
+    "restaurant Woodward Ave Detroit Michigan",
+    "cafe Woodward Ave Detroit Michigan",
+    "restaurant Detroit Michigan 48226",
+    "cafe Detroit Michigan 48226",
+    "food Detroit Michigan 48226",
+    "restaurant Detroit Michigan 48201",
+    "cafe Detroit Michigan 48201",
+    "food Detroit Michigan 48201",
+    "restaurant Detroit Michigan 48202",
+    "cafe Detroit Michigan 48202",
+    "food Detroit Michigan 48202",
+    "restaurant Detroit Michigan 48243",
+    "cafe Detroit Michigan 48243",
+    "food Detroit Michigan 48243",
 ]
 
 BAD_EMAIL_DOMAINS = {
