@@ -21,87 +21,78 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Downtown Detroit leads.xlsx"
-PROGRESS    = "downtown_detroit_progress.json"
+OUTPUT      = "Plymouth Road leads.xlsx"
+PROGRESS    = "plymouth_road_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Downtown Detroit, Michigan — broad multi-neighborhood coverage
+# Queries for Plymouth Road corridor, Michigan — Plymouth, Canton, Livonia, Northville
 SEARCH_QUERIES = [
-    # Downtown core
-    "restaurants Downtown Detroit Michigan",
-    "cafe Downtown Detroit Michigan",
-    "coffee shop Downtown Detroit Michigan",
-    "brunch Downtown Detroit Michigan",
-    "breakfast Downtown Detroit Michigan",
-    "bar and grill Downtown Detroit Michigan",
-    "brewery Downtown Detroit Michigan",
-    "burger Downtown Detroit Michigan",
-    "pizza Downtown Detroit Michigan",
-    "bakery Downtown Detroit Michigan",
-    "vegan Downtown Detroit Michigan",
-    "steakhouse Downtown Detroit Michigan",
-    "seafood Downtown Detroit Michigan",
-    "sushi Downtown Detroit Michigan",
-    # Midtown
-    "restaurants Midtown Detroit Michigan",
-    "cafe Midtown Detroit Michigan",
-    "coffee shop Midtown Detroit Michigan",
-    "brunch Midtown Detroit Michigan",
-    "bar Midtown Detroit Michigan",
-    "bakery Midtown Detroit Michigan",
-    "food Midtown Detroit Michigan",
-    # Greektown
-    "restaurants Greektown Detroit Michigan",
-    "cafe Greektown Detroit Michigan",
-    "food Greektown Detroit Michigan",
-    # Eastern Market
-    "restaurants Eastern Market Detroit Michigan",
-    "cafe Eastern Market Detroit Michigan",
-    "food Eastern Market Detroit Michigan",
-    "brunch Eastern Market Detroit Michigan",
-    "coffee Eastern Market Detroit Michigan",
-    # New Center
-    "restaurants New Center Detroit Michigan",
-    "cafe New Center Detroit Michigan",
-    "food New Center Detroit Michigan",
-    # Rivertown / East Riverfront
-    "restaurants Rivertown Detroit Michigan",
-    "cafe Rivertown Detroit Michigan",
-    "food East Riverfront Detroit Michigan",
-    # West Village / Indian Village
-    "restaurants West Village Detroit Michigan",
-    "cafe West Village Detroit Michigan",
-    "restaurants Indian Village Detroit Michigan",
-    # Woodbridge
-    "restaurants Woodbridge Detroit Michigan",
-    "cafe Woodbridge Detroit Michigan",
-    # Key streets
-    "restaurant Woodward Ave Detroit Michigan",
-    "cafe Woodward Ave Detroit Michigan",
-    "restaurant Jefferson Ave Detroit Michigan",
-    "restaurant Michigan Ave Detroit Michigan",
-    "restaurant Gratiot Ave Detroit Michigan",
+    # Plymouth city
+    "restaurants Plymouth Michigan",
+    "cafe Plymouth Michigan",
+    "coffee shop Plymouth Michigan",
+    "brunch Plymouth Michigan",
+    "breakfast Plymouth Michigan",
+    "bar and grill Plymouth Michigan",
+    "brewery Plymouth Michigan",
+    "burger Plymouth Michigan",
+    "pizza Plymouth Michigan",
+    "bakery Plymouth Michigan",
+    "sushi Plymouth Michigan",
+    "food Plymouth Michigan",
+    # Canton Township
+    "restaurants Canton Michigan",
+    "cafe Canton Michigan",
+    "coffee shop Canton Michigan",
+    "brunch Canton Michigan",
+    "breakfast Canton Michigan",
+    "bar and grill Canton Michigan",
+    "burger Canton Michigan",
+    "pizza Canton Michigan",
+    "bakery Canton Michigan",
+    "food Canton Michigan",
+    # Livonia
+    "restaurants Livonia Michigan",
+    "cafe Livonia Michigan",
+    "coffee shop Livonia Michigan",
+    "brunch Livonia Michigan",
+    "breakfast Livonia Michigan",
+    "bar and grill Livonia Michigan",
+    "burger Livonia Michigan",
+    "pizza Livonia Michigan",
+    "bakery Livonia Michigan",
+    "food Livonia Michigan",
+    # Northville
+    "restaurants Northville Michigan",
+    "cafe Northville Michigan",
+    "coffee shop Northville Michigan",
+    "brunch Northville Michigan",
+    "food Northville Michigan",
+    # Plymouth Road corridor (key street)
+    "restaurant Plymouth Road Michigan",
+    "cafe Plymouth Road Michigan",
+    "food Plymouth Road Michigan",
     # Zip codes
-    "restaurant Detroit Michigan 48226",
-    "cafe Detroit Michigan 48226",
-    "food Detroit Michigan 48226",
-    "restaurant Detroit Michigan 48201",
-    "cafe Detroit Michigan 48201",
-    "food Detroit Michigan 48201",
-    "restaurant Detroit Michigan 48202",
-    "cafe Detroit Michigan 48202",
-    "food Detroit Michigan 48202",
-    "restaurant Detroit Michigan 48207",
-    "cafe Detroit Michigan 48207",
-    "food Detroit Michigan 48207",
-    "restaurant Detroit Michigan 48214",
-    "cafe Detroit Michigan 48214",
-    "food Detroit Michigan 48214",
-    "restaurant Detroit Michigan 48208",
-    "cafe Detroit Michigan 48208",
-    "food Detroit Michigan 48208",
-    "restaurant Detroit Michigan 48243",
-    "cafe Detroit Michigan 48243",
+    "restaurant Plymouth Michigan 48170",
+    "cafe Plymouth Michigan 48170",
+    "food Plymouth Michigan 48170",
+    "restaurant Canton Michigan 48187",
+    "cafe Canton Michigan 48187",
+    "food Canton Michigan 48187",
+    "restaurant Canton Michigan 48188",
+    "cafe Canton Michigan 48188",
+    "restaurant Livonia Michigan 48150",
+    "cafe Livonia Michigan 48150",
+    "food Livonia Michigan 48150",
+    "restaurant Livonia Michigan 48152",
+    "cafe Livonia Michigan 48152",
+    "food Livonia Michigan 48152",
+    "restaurant Livonia Michigan 48154",
+    "cafe Livonia Michigan 48154",
+    "restaurant Northville Michigan 48167",
+    "cafe Northville Michigan 48167",
+    "restaurant Northville Michigan 48168",
+    "cafe Northville Michigan 48168",
 ]
 
 BAD_EMAIL_DOMAINS = {
