@@ -21,78 +21,61 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Plymouth Road leads.xlsx"
-PROGRESS    = "plymouth_road_progress.json"
+OUTPUT      = "South University Ave leads.xlsx"
+PROGRESS    = "south_university_ave_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Plymouth Road corridor, Michigan — Plymouth, Canton, Livonia, Northville
+# Queries for South University Ave corridor, Ann Arbor, Michigan
 SEARCH_QUERIES = [
-    # Plymouth city
-    "restaurants Plymouth Michigan",
-    "cafe Plymouth Michigan",
-    "coffee shop Plymouth Michigan",
-    "brunch Plymouth Michigan",
-    "breakfast Plymouth Michigan",
-    "bar and grill Plymouth Michigan",
-    "brewery Plymouth Michigan",
-    "burger Plymouth Michigan",
-    "pizza Plymouth Michigan",
-    "bakery Plymouth Michigan",
-    "sushi Plymouth Michigan",
-    "food Plymouth Michigan",
-    # Canton Township
-    "restaurants Canton Michigan",
-    "cafe Canton Michigan",
-    "coffee shop Canton Michigan",
-    "brunch Canton Michigan",
-    "breakfast Canton Michigan",
-    "bar and grill Canton Michigan",
-    "burger Canton Michigan",
-    "pizza Canton Michigan",
-    "bakery Canton Michigan",
-    "food Canton Michigan",
-    # Livonia
-    "restaurants Livonia Michigan",
-    "cafe Livonia Michigan",
-    "coffee shop Livonia Michigan",
-    "brunch Livonia Michigan",
-    "breakfast Livonia Michigan",
-    "bar and grill Livonia Michigan",
-    "burger Livonia Michigan",
-    "pizza Livonia Michigan",
-    "bakery Livonia Michigan",
-    "food Livonia Michigan",
-    # Northville
-    "restaurants Northville Michigan",
-    "cafe Northville Michigan",
-    "coffee shop Northville Michigan",
-    "brunch Northville Michigan",
-    "food Northville Michigan",
-    # Plymouth Road corridor (key street)
-    "restaurant Plymouth Road Michigan",
-    "cafe Plymouth Road Michigan",
-    "food Plymouth Road Michigan",
-    # Zip codes
-    "restaurant Plymouth Michigan 48170",
-    "cafe Plymouth Michigan 48170",
-    "food Plymouth Michigan 48170",
-    "restaurant Canton Michigan 48187",
-    "cafe Canton Michigan 48187",
-    "food Canton Michigan 48187",
-    "restaurant Canton Michigan 48188",
-    "cafe Canton Michigan 48188",
-    "restaurant Livonia Michigan 48150",
-    "cafe Livonia Michigan 48150",
-    "food Livonia Michigan 48150",
-    "restaurant Livonia Michigan 48152",
-    "cafe Livonia Michigan 48152",
-    "food Livonia Michigan 48152",
-    "restaurant Livonia Michigan 48154",
-    "cafe Livonia Michigan 48154",
-    "restaurant Northville Michigan 48167",
-    "cafe Northville Michigan 48167",
-    "restaurant Northville Michigan 48168",
-    "cafe Northville Michigan 48168",
+    # South University Ave — the main street
+    "restaurants South University Ave Ann Arbor Michigan",
+    "cafe South University Ave Ann Arbor Michigan",
+    "coffee shop South University Ave Ann Arbor Michigan",
+    "food South University Ave Ann Arbor Michigan",
+    "brunch South University Ave Ann Arbor Michigan",
+    "breakfast South University Ave Ann Arbor Michigan",
+    "pizza South University Ave Ann Arbor Michigan",
+    "bakery South University Ave Ann Arbor Michigan",
+    # University of Michigan campus area
+    "restaurants University of Michigan Ann Arbor Michigan",
+    "cafe University of Michigan Ann Arbor Michigan",
+    "coffee shop near University of Michigan Ann Arbor",
+    "food near University of Michigan Ann Arbor",
+    "brunch University of Michigan Ann Arbor Michigan",
+    "breakfast University of Michigan Ann Arbor Michigan",
+    # State Street (adjacent main corridor)
+    "restaurants State Street Ann Arbor Michigan",
+    "cafe State Street Ann Arbor Michigan",
+    "food State Street Ann Arbor Michigan",
+    "brunch State Street Ann Arbor Michigan",
+    "coffee shop State Street Ann Arbor Michigan",
+    # East University / Forest Ave area
+    "restaurant East University Ave Ann Arbor Michigan",
+    "cafe East University Ave Ann Arbor Michigan",
+    "food Forest Ave Ann Arbor Michigan",
+    # Downtown Ann Arbor (nearby)
+    "restaurants downtown Ann Arbor Michigan",
+    "cafe downtown Ann Arbor Michigan",
+    "coffee shop downtown Ann Arbor Michigan",
+    "brunch downtown Ann Arbor Michigan",
+    "breakfast downtown Ann Arbor Michigan",
+    "burger downtown Ann Arbor Michigan",
+    "pizza downtown Ann Arbor Michigan",
+    "bakery downtown Ann Arbor Michigan",
+    "sushi downtown Ann Arbor Michigan",
+    "food downtown Ann Arbor Michigan",
+    "bar and grill Ann Arbor Michigan",
+    "brewery Ann Arbor Michigan",
+    # Zip codes covering South University area
+    "restaurant Ann Arbor Michigan 48104",
+    "cafe Ann Arbor Michigan 48104",
+    "food Ann Arbor Michigan 48104",
+    "restaurant Ann Arbor Michigan 48109",
+    "cafe Ann Arbor Michigan 48109",
+    "food Ann Arbor Michigan 48109",
+    "restaurant Ann Arbor Michigan 48103",
+    "cafe Ann Arbor Michigan 48103",
+    "food Ann Arbor Michigan 48103",
 ]
 
 BAD_EMAIL_DOMAINS = {
