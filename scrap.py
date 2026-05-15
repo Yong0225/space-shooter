@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-OTR Leads Scraper
-Collects restaurant/cafe leads from Over-the-Rhine, Cincinnati, OH
-Output: OTR leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+Asheville Leads Scraper
+Collects restaurant/cafe leads from Asheville, North Carolina
+Output: Asheville leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + otr_progress.json after EVERY lead.
+Resume-safe: writes to Excel + asheville_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,61 +21,78 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "South University Ave leads.xlsx"
-PROGRESS    = "south_university_ave_progress.json"
+OUTPUT      = "Asheville leads.xlsx"
+PROGRESS    = "asheville_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for South University Ave corridor, Ann Arbor, Michigan
+# Queries for Asheville, North Carolina
 SEARCH_QUERIES = [
-    # South University Ave — the main street
-    "restaurants South University Ave Ann Arbor Michigan",
-    "cafe South University Ave Ann Arbor Michigan",
-    "coffee shop South University Ave Ann Arbor Michigan",
-    "food South University Ave Ann Arbor Michigan",
-    "brunch South University Ave Ann Arbor Michigan",
-    "breakfast South University Ave Ann Arbor Michigan",
-    "pizza South University Ave Ann Arbor Michigan",
-    "bakery South University Ave Ann Arbor Michigan",
-    # University of Michigan campus area
-    "restaurants University of Michigan Ann Arbor Michigan",
-    "cafe University of Michigan Ann Arbor Michigan",
-    "coffee shop near University of Michigan Ann Arbor",
-    "food near University of Michigan Ann Arbor",
-    "brunch University of Michigan Ann Arbor Michigan",
-    "breakfast University of Michigan Ann Arbor Michigan",
-    # State Street (adjacent main corridor)
-    "restaurants State Street Ann Arbor Michigan",
-    "cafe State Street Ann Arbor Michigan",
-    "food State Street Ann Arbor Michigan",
-    "brunch State Street Ann Arbor Michigan",
-    "coffee shop State Street Ann Arbor Michigan",
-    # East University / Forest Ave area
-    "restaurant East University Ave Ann Arbor Michigan",
-    "cafe East University Ave Ann Arbor Michigan",
-    "food Forest Ave Ann Arbor Michigan",
-    # Downtown Ann Arbor (nearby)
-    "restaurants downtown Ann Arbor Michigan",
-    "cafe downtown Ann Arbor Michigan",
-    "coffee shop downtown Ann Arbor Michigan",
-    "brunch downtown Ann Arbor Michigan",
-    "breakfast downtown Ann Arbor Michigan",
-    "burger downtown Ann Arbor Michigan",
-    "pizza downtown Ann Arbor Michigan",
-    "bakery downtown Ann Arbor Michigan",
-    "sushi downtown Ann Arbor Michigan",
-    "food downtown Ann Arbor Michigan",
-    "bar and grill Ann Arbor Michigan",
-    "brewery Ann Arbor Michigan",
-    # Zip codes covering South University area
-    "restaurant Ann Arbor Michigan 48104",
-    "cafe Ann Arbor Michigan 48104",
-    "food Ann Arbor Michigan 48104",
-    "restaurant Ann Arbor Michigan 48109",
-    "cafe Ann Arbor Michigan 48109",
-    "food Ann Arbor Michigan 48109",
-    "restaurant Ann Arbor Michigan 48103",
-    "cafe Ann Arbor Michigan 48103",
-    "food Ann Arbor Michigan 48103",
+    # Downtown Asheville
+    "restaurants downtown Asheville North Carolina",
+    "cafe downtown Asheville North Carolina",
+    "coffee shop downtown Asheville North Carolina",
+    "brunch downtown Asheville North Carolina",
+    "breakfast downtown Asheville North Carolina",
+    "food downtown Asheville North Carolina",
+    "bakery downtown Asheville North Carolina",
+    "pizza downtown Asheville North Carolina",
+    "burger downtown Asheville North Carolina",
+    "sushi downtown Asheville North Carolina",
+    "brewery downtown Asheville North Carolina",
+    # River Arts District
+    "restaurant River Arts District Asheville North Carolina",
+    "cafe River Arts District Asheville North Carolina",
+    "food River Arts District Asheville North Carolina",
+    "brunch River Arts District Asheville North Carolina",
+    # West Asheville
+    "restaurants West Asheville North Carolina",
+    "cafe West Asheville North Carolina",
+    "coffee shop West Asheville North Carolina",
+    "food West Asheville North Carolina",
+    "brunch West Asheville North Carolina",
+    "bakery West Asheville North Carolina",
+    # North Asheville / Merrimon Ave
+    "restaurants North Asheville North Carolina",
+    "cafe Merrimon Ave Asheville North Carolina",
+    "coffee shop North Asheville North Carolina",
+    "food North Asheville North Carolina",
+    # Biltmore Village
+    "restaurants Biltmore Village Asheville North Carolina",
+    "cafe Biltmore Village Asheville North Carolina",
+    "food Biltmore Village Asheville North Carolina",
+    # South Asheville
+    "restaurants South Asheville North Carolina",
+    "cafe South Asheville North Carolina",
+    "food South Asheville North Carolina",
+    # East Asheville
+    "restaurants East Asheville North Carolina",
+    "cafe East Asheville North Carolina",
+    "food East Asheville North Carolina",
+    # General Asheville
+    "restaurant Asheville North Carolina",
+    "cafe Asheville North Carolina",
+    "coffee shop Asheville North Carolina",
+    "brunch Asheville North Carolina",
+    "breakfast Asheville North Carolina",
+    "vegan Asheville North Carolina",
+    "farm to table Asheville North Carolina",
+    "seafood Asheville North Carolina",
+    "italian restaurant Asheville North Carolina",
+    "mexican restaurant Asheville North Carolina",
+    "bar and grill Asheville North Carolina",
+    # Zip codes
+    "restaurant Asheville North Carolina 28801",
+    "cafe Asheville North Carolina 28801",
+    "food Asheville North Carolina 28801",
+    "restaurant Asheville North Carolina 28803",
+    "cafe Asheville North Carolina 28803",
+    "food Asheville North Carolina 28803",
+    "restaurant Asheville North Carolina 28804",
+    "cafe Asheville North Carolina 28804",
+    "food Asheville North Carolina 28804",
+    "restaurant Asheville North Carolina 28806",
+    "cafe Asheville North Carolina 28806",
+    "food Asheville North Carolina 28806",
 ]
 
 BAD_EMAIL_DOMAINS = {
