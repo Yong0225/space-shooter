@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Asheville Leads Scraper
-Collects restaurant/cafe leads from Asheville, North Carolina
-Output: Asheville leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+Raleigh Leads Scraper
+Collects restaurant/cafe leads from Raleigh, North Carolina
+Output: Raleigh leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + asheville_progress.json after EVERY lead.
+Resume-safe: writes to Excel + raleigh_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,78 +21,86 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Asheville leads.xlsx"
-PROGRESS    = "asheville_progress.json"
+OUTPUT      = "Raleigh leads.xlsx"
+PROGRESS    = "raleigh_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Asheville, North Carolina
+# Queries for Raleigh, North Carolina
 SEARCH_QUERIES = [
-    # Downtown Asheville
-    "restaurants downtown Asheville North Carolina",
-    "cafe downtown Asheville North Carolina",
-    "coffee shop downtown Asheville North Carolina",
-    "brunch downtown Asheville North Carolina",
-    "breakfast downtown Asheville North Carolina",
-    "food downtown Asheville North Carolina",
-    "bakery downtown Asheville North Carolina",
-    "pizza downtown Asheville North Carolina",
-    "burger downtown Asheville North Carolina",
-    "sushi downtown Asheville North Carolina",
-    "brewery downtown Asheville North Carolina",
-    # River Arts District
-    "restaurant River Arts District Asheville North Carolina",
-    "cafe River Arts District Asheville North Carolina",
-    "food River Arts District Asheville North Carolina",
-    "brunch River Arts District Asheville North Carolina",
-    # West Asheville
-    "restaurants West Asheville North Carolina",
-    "cafe West Asheville North Carolina",
-    "coffee shop West Asheville North Carolina",
-    "food West Asheville North Carolina",
-    "brunch West Asheville North Carolina",
-    "bakery West Asheville North Carolina",
-    # North Asheville / Merrimon Ave
-    "restaurants North Asheville North Carolina",
-    "cafe Merrimon Ave Asheville North Carolina",
-    "coffee shop North Asheville North Carolina",
-    "food North Asheville North Carolina",
-    # Biltmore Village
-    "restaurants Biltmore Village Asheville North Carolina",
-    "cafe Biltmore Village Asheville North Carolina",
-    "food Biltmore Village Asheville North Carolina",
-    # South Asheville
-    "restaurants South Asheville North Carolina",
-    "cafe South Asheville North Carolina",
-    "food South Asheville North Carolina",
-    # East Asheville
-    "restaurants East Asheville North Carolina",
-    "cafe East Asheville North Carolina",
-    "food East Asheville North Carolina",
-    # General Asheville
-    "restaurant Asheville North Carolina",
-    "cafe Asheville North Carolina",
-    "coffee shop Asheville North Carolina",
-    "brunch Asheville North Carolina",
-    "breakfast Asheville North Carolina",
-    "vegan Asheville North Carolina",
-    "farm to table Asheville North Carolina",
-    "seafood Asheville North Carolina",
-    "italian restaurant Asheville North Carolina",
-    "mexican restaurant Asheville North Carolina",
-    "bar and grill Asheville North Carolina",
+    # Downtown Raleigh
+    "restaurants downtown Raleigh North Carolina",
+    "cafe downtown Raleigh North Carolina",
+    "coffee shop downtown Raleigh North Carolina",
+    "brunch downtown Raleigh North Carolina",
+    "breakfast downtown Raleigh North Carolina",
+    "food downtown Raleigh North Carolina",
+    "bakery downtown Raleigh North Carolina",
+    "pizza downtown Raleigh North Carolina",
+    "burger downtown Raleigh North Carolina",
+    "sushi downtown Raleigh North Carolina",
+    "brewery downtown Raleigh North Carolina",
+    # Glenwood South
+    "restaurants Glenwood South Raleigh North Carolina",
+    "cafe Glenwood South Raleigh North Carolina",
+    "food Glenwood South Raleigh North Carolina",
+    "brunch Glenwood South Raleigh North Carolina",
+    "bar and grill Glenwood South Raleigh North Carolina",
+    # Five Points
+    "restaurants Five Points Raleigh North Carolina",
+    "cafe Five Points Raleigh North Carolina",
+    "coffee shop Five Points Raleigh North Carolina",
+    "food Five Points Raleigh North Carolina",
+    # Cameron Village / Oberlin Road
+    "restaurants Cameron Village Raleigh North Carolina",
+    "cafe Cameron Village Raleigh North Carolina",
+    "food Cameron Village Raleigh North Carolina",
+    "restaurant Oberlin Road Raleigh North Carolina",
+    # North Hills
+    "restaurants North Hills Raleigh North Carolina",
+    "cafe North Hills Raleigh North Carolina",
+    "food North Hills Raleigh North Carolina",
+    "brunch North Hills Raleigh North Carolina",
+    # Midtown Raleigh
+    "restaurants Midtown Raleigh North Carolina",
+    "cafe Midtown Raleigh North Carolina",
+    "food Midtown Raleigh North Carolina",
+    # Brier Creek
+    "restaurants Brier Creek Raleigh North Carolina",
+    "cafe Brier Creek Raleigh North Carolina",
+    "food Brier Creek Raleigh North Carolina",
+    # General Raleigh
+    "restaurant Raleigh North Carolina",
+    "cafe Raleigh North Carolina",
+    "coffee shop Raleigh North Carolina",
+    "brunch Raleigh North Carolina",
+    "breakfast Raleigh North Carolina",
+    "vegan Raleigh North Carolina",
+    "seafood Raleigh North Carolina",
+    "italian restaurant Raleigh North Carolina",
+    "mexican restaurant Raleigh North Carolina",
+    "korean restaurant Raleigh North Carolina",
+    "thai restaurant Raleigh North Carolina",
+    "bar and grill Raleigh North Carolina",
+    "food truck Raleigh North Carolina",
     # Zip codes
-    "restaurant Asheville North Carolina 28801",
-    "cafe Asheville North Carolina 28801",
-    "food Asheville North Carolina 28801",
-    "restaurant Asheville North Carolina 28803",
-    "cafe Asheville North Carolina 28803",
-    "food Asheville North Carolina 28803",
-    "restaurant Asheville North Carolina 28804",
-    "cafe Asheville North Carolina 28804",
-    "food Asheville North Carolina 28804",
-    "restaurant Asheville North Carolina 28806",
-    "cafe Asheville North Carolina 28806",
-    "food Asheville North Carolina 28806",
+    "restaurant Raleigh North Carolina 27601",
+    "cafe Raleigh North Carolina 27601",
+    "food Raleigh North Carolina 27601",
+    "restaurant Raleigh North Carolina 27603",
+    "cafe Raleigh North Carolina 27603",
+    "food Raleigh North Carolina 27603",
+    "restaurant Raleigh North Carolina 27605",
+    "cafe Raleigh North Carolina 27605",
+    "food Raleigh North Carolina 27605",
+    "restaurant Raleigh North Carolina 27607",
+    "cafe Raleigh North Carolina 27607",
+    "food Raleigh North Carolina 27607",
+    "restaurant Raleigh North Carolina 27608",
+    "cafe Raleigh North Carolina 27608",
+    "food Raleigh North Carolina 27608",
+    "restaurant Raleigh North Carolina 27609",
+    "cafe Raleigh North Carolina 27609",
+    "food Raleigh North Carolina 27609",
 ]
 
 BAD_EMAIL_DOMAINS = {
