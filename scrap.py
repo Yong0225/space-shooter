@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Cary Leads Scraper
-Collects restaurant/cafe leads from Cary, North Carolina
-Output: Cary leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+The Triangle Leads Scraper
+Collects restaurant/cafe leads from The Triangle, North Carolina (Durham, Chapel Hill, Carrboro, Apex, Holly Springs, etc.)
+Output: The Triangle leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + cary_progress.json after EVERY lead.
+Resume-safe: writes to Excel + triangle_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,77 +21,133 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Cary leads.xlsx"
-PROGRESS    = "cary_progress.json"
+OUTPUT      = "The Triangle leads.xlsx"
+PROGRESS    = "triangle_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Cary, North Carolina
+# Queries for The Triangle, North Carolina (Durham, Chapel Hill, Carrboro, Apex, Holly Springs, etc.)
 SEARCH_QUERIES = [
-    # Downtown Cary
-    "restaurants downtown Cary North Carolina",
-    "cafe downtown Cary North Carolina",
-    "coffee shop downtown Cary North Carolina",
-    "brunch downtown Cary North Carolina",
-    "breakfast downtown Cary North Carolina",
-    "food downtown Cary North Carolina",
-    "bakery downtown Cary North Carolina",
-    # Crossroads / Cary Towne Center area
-    "restaurants Crossroads Cary North Carolina",
-    "cafe Crossroads Cary North Carolina",
-    "food Crossroads Cary North Carolina",
-    "restaurant Cary Towne Center North Carolina",
-    "cafe Cary Towne Center North Carolina",
-    # Waverly Place
-    "restaurants Waverly Place Cary North Carolina",
-    "cafe Waverly Place Cary North Carolina",
-    "food Waverly Place Cary North Carolina",
-    # Kildaire Farm Road / MacGregor Village
-    "restaurants Kildaire Farm Road Cary North Carolina",
-    "cafe Kildaire Farm Road Cary North Carolina",
-    "restaurant MacGregor Village Cary North Carolina",
-    "cafe MacGregor Village Cary North Carolina",
-    # Preston / NW Cary
-    "restaurants Preston Cary North Carolina",
-    "cafe Preston Cary North Carolina",
-    "food Preston Cary North Carolina",
-    # Carpenter Village / Morrisville border
-    "restaurants Carpenter Village Cary North Carolina",
-    "cafe Carpenter Village Cary North Carolina",
+    # Downtown Durham
+    "restaurants downtown Durham North Carolina",
+    "cafe downtown Durham North Carolina",
+    "coffee shop downtown Durham North Carolina",
+    "brunch downtown Durham North Carolina",
+    "breakfast downtown Durham North Carolina",
+    "food downtown Durham North Carolina",
+    "bakery downtown Durham North Carolina",
+    # Durham neighborhoods
+    "restaurants Ninth Street Durham North Carolina",
+    "cafe Ninth Street Durham North Carolina",
+    "restaurants American Tobacco Durham North Carolina",
+    "food American Tobacco Durham North Carolina",
+    "restaurant Durham Bulls Athletic Park North Carolina",
+    "restaurants Duke University Durham North Carolina",
+    "cafe Duke University Durham North Carolina",
+    "restaurants Brightleaf Square Durham North Carolina",
+    "food Brightleaf Square Durham North Carolina",
+    "restaurants South Square Durham North Carolina",
+    "restaurants Northgate Durham North Carolina",
+    "cafe Northgate Durham North Carolina",
+    "restaurants Trinity Park Durham North Carolina",
+    "restaurants Lakewood Durham North Carolina",
+    # General Durham
+    "restaurant Durham North Carolina",
+    "cafe Durham North Carolina",
+    "coffee shop Durham North Carolina",
+    "brunch Durham North Carolina",
+    "pizza Durham North Carolina",
+    "burger Durham North Carolina",
+    "sushi Durham North Carolina",
+    "vegan Durham North Carolina",
+    "seafood Durham North Carolina",
+    "italian restaurant Durham North Carolina",
+    "mexican restaurant Durham North Carolina",
+    "korean restaurant Durham North Carolina",
+    "thai restaurant Durham North Carolina",
+    "indian restaurant Durham North Carolina",
+    "chinese restaurant Durham North Carolina",
+    "bar and grill Durham North Carolina",
+    "brewery Durham North Carolina",
+    "food truck Durham North Carolina",
+    # Durham zip codes
+    "restaurant Durham North Carolina 27701",
+    "cafe Durham North Carolina 27701",
+    "food Durham North Carolina 27701",
+    "restaurant Durham North Carolina 27703",
+    "cafe Durham North Carolina 27703",
+    "food Durham North Carolina 27703",
+    "restaurant Durham North Carolina 27705",
+    "cafe Durham North Carolina 27705",
+    "food Durham North Carolina 27705",
+    "restaurant Durham North Carolina 27707",
+    "cafe Durham North Carolina 27707",
+    "food Durham North Carolina 27707",
+    # Chapel Hill
+    "restaurants Chapel Hill North Carolina",
+    "cafe Chapel Hill North Carolina",
+    "coffee shop Chapel Hill North Carolina",
+    "brunch Chapel Hill North Carolina",
+    "breakfast Chapel Hill North Carolina",
+    "food Chapel Hill North Carolina",
+    "pizza Chapel Hill North Carolina",
+    "burger Chapel Hill North Carolina",
+    "vegan Chapel Hill North Carolina",
+    "italian restaurant Chapel Hill North Carolina",
+    "mexican restaurant Chapel Hill North Carolina",
+    "sushi Chapel Hill North Carolina",
+    "brewery Chapel Hill North Carolina",
+    "restaurant Franklin Street Chapel Hill North Carolina",
+    "cafe Franklin Street Chapel Hill North Carolina",
+    "restaurant UNC Chapel Hill North Carolina",
+    # Chapel Hill zip codes
+    "restaurant Chapel Hill North Carolina 27514",
+    "cafe Chapel Hill North Carolina 27514",
+    "food Chapel Hill North Carolina 27514",
+    "restaurant Chapel Hill North Carolina 27516",
+    "cafe Chapel Hill North Carolina 27516",
+    # Carrboro
+    "restaurants Carrboro North Carolina",
+    "cafe Carrboro North Carolina",
+    "coffee shop Carrboro North Carolina",
+    "brunch Carrboro North Carolina",
+    "food Carrboro North Carolina",
+    "brewery Carrboro North Carolina",
+    "vegan Carrboro North Carolina",
+    "restaurant Carrboro North Carolina 27510",
+    "cafe Carrboro North Carolina 27510",
+    # Apex
+    "restaurants Apex North Carolina",
+    "cafe Apex North Carolina",
+    "coffee shop Apex North Carolina",
+    "food Apex North Carolina",
+    "brunch Apex North Carolina",
+    "restaurant downtown Apex North Carolina",
+    "restaurant Apex North Carolina 27502",
+    "cafe Apex North Carolina 27502",
+    "restaurant Apex North Carolina 27539",
+    # Holly Springs
+    "restaurants Holly Springs North Carolina",
+    "cafe Holly Springs North Carolina",
+    "coffee shop Holly Springs North Carolina",
+    "food Holly Springs North Carolina",
+    "restaurant Holly Springs North Carolina 27540",
+    "cafe Holly Springs North Carolina 27540",
+    # Fuquay-Varina
+    "restaurants Fuquay-Varina North Carolina",
+    "cafe Fuquay-Varina North Carolina",
+    "food Fuquay-Varina North Carolina",
+    "restaurant Fuquay-Varina North Carolina 27526",
+    # Pittsboro / Hillsborough
+    "restaurants Pittsboro North Carolina",
+    "cafe Pittsboro North Carolina",
+    "food Pittsboro North Carolina",
+    "restaurants Hillsborough North Carolina",
+    "cafe Hillsborough North Carolina",
+    "food Hillsborough North Carolina",
+    # Morrisville
     "restaurant Morrisville North Carolina",
     "cafe Morrisville North Carolina",
-    # General Cary
-    "restaurant Cary North Carolina",
-    "cafe Cary North Carolina",
-    "coffee shop Cary North Carolina",
-    "brunch Cary North Carolina",
-    "breakfast Cary North Carolina",
-    "pizza Cary North Carolina",
-    "burger Cary North Carolina",
-    "sushi Cary North Carolina",
-    "vegan Cary North Carolina",
-    "seafood Cary North Carolina",
-    "italian restaurant Cary North Carolina",
-    "mexican restaurant Cary North Carolina",
-    "korean restaurant Cary North Carolina",
-    "thai restaurant Cary North Carolina",
-    "indian restaurant Cary North Carolina",
-    "chinese restaurant Cary North Carolina",
-    "bar and grill Cary North Carolina",
-    "brewery Cary North Carolina",
-    "food truck Cary North Carolina",
-    # Zip codes
-    "restaurant Cary North Carolina 27511",
-    "cafe Cary North Carolina 27511",
-    "food Cary North Carolina 27511",
-    "restaurant Cary North Carolina 27513",
-    "cafe Cary North Carolina 27513",
-    "food Cary North Carolina 27513",
-    "restaurant Cary North Carolina 27518",
-    "cafe Cary North Carolina 27518",
-    "food Cary North Carolina 27518",
-    "restaurant Cary North Carolina 27519",
-    "cafe Cary North Carolina 27519",
-    "food Cary North Carolina 27519",
+    "food Morrisville North Carolina",
 ]
 
 BAD_EMAIL_DOMAINS = {
