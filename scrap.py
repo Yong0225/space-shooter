@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Raleigh Leads Scraper
-Collects restaurant/cafe leads from Raleigh, North Carolina
-Output: Raleigh leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+Cary Leads Scraper
+Collects restaurant/cafe leads from Cary, North Carolina
+Output: Cary leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + raleigh_progress.json after EVERY lead.
+Resume-safe: writes to Excel + cary_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,86 +21,77 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Raleigh leads.xlsx"
-PROGRESS    = "raleigh_progress.json"
+OUTPUT      = "Cary leads.xlsx"
+PROGRESS    = "cary_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Raleigh, North Carolina
+# Queries for Cary, North Carolina
 SEARCH_QUERIES = [
-    # Downtown Raleigh
-    "restaurants downtown Raleigh North Carolina",
-    "cafe downtown Raleigh North Carolina",
-    "coffee shop downtown Raleigh North Carolina",
-    "brunch downtown Raleigh North Carolina",
-    "breakfast downtown Raleigh North Carolina",
-    "food downtown Raleigh North Carolina",
-    "bakery downtown Raleigh North Carolina",
-    "pizza downtown Raleigh North Carolina",
-    "burger downtown Raleigh North Carolina",
-    "sushi downtown Raleigh North Carolina",
-    "brewery downtown Raleigh North Carolina",
-    # Glenwood South
-    "restaurants Glenwood South Raleigh North Carolina",
-    "cafe Glenwood South Raleigh North Carolina",
-    "food Glenwood South Raleigh North Carolina",
-    "brunch Glenwood South Raleigh North Carolina",
-    "bar and grill Glenwood South Raleigh North Carolina",
-    # Five Points
-    "restaurants Five Points Raleigh North Carolina",
-    "cafe Five Points Raleigh North Carolina",
-    "coffee shop Five Points Raleigh North Carolina",
-    "food Five Points Raleigh North Carolina",
-    # Cameron Village / Oberlin Road
-    "restaurants Cameron Village Raleigh North Carolina",
-    "cafe Cameron Village Raleigh North Carolina",
-    "food Cameron Village Raleigh North Carolina",
-    "restaurant Oberlin Road Raleigh North Carolina",
-    # North Hills
-    "restaurants North Hills Raleigh North Carolina",
-    "cafe North Hills Raleigh North Carolina",
-    "food North Hills Raleigh North Carolina",
-    "brunch North Hills Raleigh North Carolina",
-    # Midtown Raleigh
-    "restaurants Midtown Raleigh North Carolina",
-    "cafe Midtown Raleigh North Carolina",
-    "food Midtown Raleigh North Carolina",
-    # Brier Creek
-    "restaurants Brier Creek Raleigh North Carolina",
-    "cafe Brier Creek Raleigh North Carolina",
-    "food Brier Creek Raleigh North Carolina",
-    # General Raleigh
-    "restaurant Raleigh North Carolina",
-    "cafe Raleigh North Carolina",
-    "coffee shop Raleigh North Carolina",
-    "brunch Raleigh North Carolina",
-    "breakfast Raleigh North Carolina",
-    "vegan Raleigh North Carolina",
-    "seafood Raleigh North Carolina",
-    "italian restaurant Raleigh North Carolina",
-    "mexican restaurant Raleigh North Carolina",
-    "korean restaurant Raleigh North Carolina",
-    "thai restaurant Raleigh North Carolina",
-    "bar and grill Raleigh North Carolina",
-    "food truck Raleigh North Carolina",
+    # Downtown Cary
+    "restaurants downtown Cary North Carolina",
+    "cafe downtown Cary North Carolina",
+    "coffee shop downtown Cary North Carolina",
+    "brunch downtown Cary North Carolina",
+    "breakfast downtown Cary North Carolina",
+    "food downtown Cary North Carolina",
+    "bakery downtown Cary North Carolina",
+    # Crossroads / Cary Towne Center area
+    "restaurants Crossroads Cary North Carolina",
+    "cafe Crossroads Cary North Carolina",
+    "food Crossroads Cary North Carolina",
+    "restaurant Cary Towne Center North Carolina",
+    "cafe Cary Towne Center North Carolina",
+    # Waverly Place
+    "restaurants Waverly Place Cary North Carolina",
+    "cafe Waverly Place Cary North Carolina",
+    "food Waverly Place Cary North Carolina",
+    # Kildaire Farm Road / MacGregor Village
+    "restaurants Kildaire Farm Road Cary North Carolina",
+    "cafe Kildaire Farm Road Cary North Carolina",
+    "restaurant MacGregor Village Cary North Carolina",
+    "cafe MacGregor Village Cary North Carolina",
+    # Preston / NW Cary
+    "restaurants Preston Cary North Carolina",
+    "cafe Preston Cary North Carolina",
+    "food Preston Cary North Carolina",
+    # Carpenter Village / Morrisville border
+    "restaurants Carpenter Village Cary North Carolina",
+    "cafe Carpenter Village Cary North Carolina",
+    "restaurant Morrisville North Carolina",
+    "cafe Morrisville North Carolina",
+    # General Cary
+    "restaurant Cary North Carolina",
+    "cafe Cary North Carolina",
+    "coffee shop Cary North Carolina",
+    "brunch Cary North Carolina",
+    "breakfast Cary North Carolina",
+    "pizza Cary North Carolina",
+    "burger Cary North Carolina",
+    "sushi Cary North Carolina",
+    "vegan Cary North Carolina",
+    "seafood Cary North Carolina",
+    "italian restaurant Cary North Carolina",
+    "mexican restaurant Cary North Carolina",
+    "korean restaurant Cary North Carolina",
+    "thai restaurant Cary North Carolina",
+    "indian restaurant Cary North Carolina",
+    "chinese restaurant Cary North Carolina",
+    "bar and grill Cary North Carolina",
+    "brewery Cary North Carolina",
+    "food truck Cary North Carolina",
     # Zip codes
-    "restaurant Raleigh North Carolina 27601",
-    "cafe Raleigh North Carolina 27601",
-    "food Raleigh North Carolina 27601",
-    "restaurant Raleigh North Carolina 27603",
-    "cafe Raleigh North Carolina 27603",
-    "food Raleigh North Carolina 27603",
-    "restaurant Raleigh North Carolina 27605",
-    "cafe Raleigh North Carolina 27605",
-    "food Raleigh North Carolina 27605",
-    "restaurant Raleigh North Carolina 27607",
-    "cafe Raleigh North Carolina 27607",
-    "food Raleigh North Carolina 27607",
-    "restaurant Raleigh North Carolina 27608",
-    "cafe Raleigh North Carolina 27608",
-    "food Raleigh North Carolina 27608",
-    "restaurant Raleigh North Carolina 27609",
-    "cafe Raleigh North Carolina 27609",
-    "food Raleigh North Carolina 27609",
+    "restaurant Cary North Carolina 27511",
+    "cafe Cary North Carolina 27511",
+    "food Cary North Carolina 27511",
+    "restaurant Cary North Carolina 27513",
+    "cafe Cary North Carolina 27513",
+    "food Cary North Carolina 27513",
+    "restaurant Cary North Carolina 27518",
+    "cafe Cary North Carolina 27518",
+    "food Cary North Carolina 27518",
+    "restaurant Cary North Carolina 27519",
+    "cafe Cary North Carolina 27519",
+    "food Cary North Carolina 27519",
 ]
 
 BAD_EMAIL_DOMAINS = {
