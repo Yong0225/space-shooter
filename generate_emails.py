@@ -34,27 +34,23 @@ Write 2 different cold EMAIL versions for a restaurant/cafe called "{business_na
 
 The observed pain point is: {pain_point}
 
-Each email must follow this exact 4-part structure:
+Each email must follow this exact 3-part structure:
 
 1. HOOK (1 sentence) — Always start with "Are you open to..." followed by a desirable positive outcome for the business (e.g. getting more walk-ins, getting more bookings, filling more tables, pulling more local attention). Do NOT ask about their pain or problems here — focus purely on the upside they want. Vary the positive outcome between v1 and v2. Examples: "Are you open to getting more walk-ins this month?" / "Are you open to pulling more local attention to Burger & Bear?"
 
 2. VALUE (2 sentences max — keep tight) — One sentence: genuine compliment + specific pain point with empathy, woven together. One sentence: Competitor-Based FOMO — similar spots nearby are leveling up their poster content and you'd hate for {business_name} to get overlooked. Be observational, not aggressive. Target ~30 words for this section.
 
-3. GIFT (1 sentence) — Casually mention that you put together a poster demo for them as a small gift, purely for their reference. Make it feel zero-pressure — they don't have to do anything with it.
-
-4. OPEN LOOP CTA (1 sentence) — Do NOT ask for a call, a meeting, or permission to send anything. Instead, end with a curiosity gap that makes them want to reply. Example: "I had one specific idea in mind for your [specific area from the pain point] — not sure if it's right for you yet." Stop there. Do not close the loop.
+3. PORTFOLIO CTA (2 sentences) — First sentence: naturally introduce your recent work with the exact anchor text phrase "click here to view our recent work" embedded in a real sentence (e.g. "You can click here to view our recent work" or "Here is a look at what we do, click here to view our recent work"). Second sentence: softly ask if they would be curious to hear how you could help them with their foot traffic, bookings, walk-ins, or engagement — pick whichever fits their pain point. Tone must feel zero-pressure, like you are genuinely curious whether it is relevant to them, not pushing for a reply.
 
 Global rules:
 - Format: cold EMAIL body only (no subject line, no sign-off)
 - Salutation: start with "Hi {business_name},"
 - Tone: casual, real, grounded — like a person texting a business owner, not a corporate pitch
-- Total word count: 70–85 words. Count every word before finalising. If over 85, cut sentences. This is a hard limit — do not exceed it.
+- Total word count: 60–75 words. Count every word before finalising. If over 75, cut sentences. This is a hard limit — do not exceed it.
 - No hashtags, no emojis, no buzzwords
 - Punctuation: use ONLY commas, periods, and question marks. No dashes, colons, semicolons, exclamation marks, parentheses, or any other punctuation symbols whatsoever.
 - Never say: "free", "guaranteed", "limited offer", "marketing agency", "social media services", "just", "I wanted to", "reach out", "visual", "visuals"
-- Use "poster" or "poster demo" instead of "visual" or "visual demo" — we make food posters, not generic visuals
-- Do NOT mention specific food items in the demo or gift sentence — just say "poster demo"
-- The 2 versions must feel clearly different — vary the hook angle, the compliment, the FOMO framing, and the open loop ending
+- The 2 versions must feel clearly different — vary the hook angle, the compliment, the FOMO framing, and the CTA phrasing
 - Sound like a real human, not a template
 
 Return ONLY the 2 email bodies separated by "---", no labels, no numbering, no extra text."""
