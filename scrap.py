@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-The Triangle Leads Scraper
-Collects restaurant/cafe leads from The Triangle, North Carolina (Durham, Chapel Hill, Carrboro, Apex, Holly Springs, etc.)
-Output: The Triangle leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+South End & Plaza Midwood Leads Scraper
+Collects restaurant/cafe leads from South End & Plaza Midwood, Charlotte, North Carolina
+Output: South End & Plaza Midwood leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + triangle_progress.json after EVERY lead.
+Resume-safe: writes to Excel + southend_plazamidwood_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,133 +21,73 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "The Triangle leads.xlsx"
-PROGRESS    = "triangle_progress.json"
+OUTPUT      = "South End & Plaza Midwood leads.xlsx"
+PROGRESS    = "southend_plazamidwood_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for The Triangle, North Carolina (Durham, Chapel Hill, Carrboro, Apex, Holly Springs, etc.)
+# Queries for South End & Plaza Midwood, Charlotte, North Carolina
 SEARCH_QUERIES = [
-    # Downtown Durham
-    "restaurants downtown Durham North Carolina",
-    "cafe downtown Durham North Carolina",
-    "coffee shop downtown Durham North Carolina",
-    "brunch downtown Durham North Carolina",
-    "breakfast downtown Durham North Carolina",
-    "food downtown Durham North Carolina",
-    "bakery downtown Durham North Carolina",
-    # Durham neighborhoods
-    "restaurants Ninth Street Durham North Carolina",
-    "cafe Ninth Street Durham North Carolina",
-    "restaurants American Tobacco Durham North Carolina",
-    "food American Tobacco Durham North Carolina",
-    "restaurant Durham Bulls Athletic Park North Carolina",
-    "restaurants Duke University Durham North Carolina",
-    "cafe Duke University Durham North Carolina",
-    "restaurants Brightleaf Square Durham North Carolina",
-    "food Brightleaf Square Durham North Carolina",
-    "restaurants South Square Durham North Carolina",
-    "restaurants Northgate Durham North Carolina",
-    "cafe Northgate Durham North Carolina",
-    "restaurants Trinity Park Durham North Carolina",
-    "restaurants Lakewood Durham North Carolina",
-    # General Durham
-    "restaurant Durham North Carolina",
-    "cafe Durham North Carolina",
-    "coffee shop Durham North Carolina",
-    "brunch Durham North Carolina",
-    "pizza Durham North Carolina",
-    "burger Durham North Carolina",
-    "sushi Durham North Carolina",
-    "vegan Durham North Carolina",
-    "seafood Durham North Carolina",
-    "italian restaurant Durham North Carolina",
-    "mexican restaurant Durham North Carolina",
-    "korean restaurant Durham North Carolina",
-    "thai restaurant Durham North Carolina",
-    "indian restaurant Durham North Carolina",
-    "chinese restaurant Durham North Carolina",
-    "bar and grill Durham North Carolina",
-    "brewery Durham North Carolina",
-    "food truck Durham North Carolina",
-    # Durham zip codes
-    "restaurant Durham North Carolina 27701",
-    "cafe Durham North Carolina 27701",
-    "food Durham North Carolina 27701",
-    "restaurant Durham North Carolina 27703",
-    "cafe Durham North Carolina 27703",
-    "food Durham North Carolina 27703",
-    "restaurant Durham North Carolina 27705",
-    "cafe Durham North Carolina 27705",
-    "food Durham North Carolina 27705",
-    "restaurant Durham North Carolina 27707",
-    "cafe Durham North Carolina 27707",
-    "food Durham North Carolina 27707",
-    # Chapel Hill
-    "restaurants Chapel Hill North Carolina",
-    "cafe Chapel Hill North Carolina",
-    "coffee shop Chapel Hill North Carolina",
-    "brunch Chapel Hill North Carolina",
-    "breakfast Chapel Hill North Carolina",
-    "food Chapel Hill North Carolina",
-    "pizza Chapel Hill North Carolina",
-    "burger Chapel Hill North Carolina",
-    "vegan Chapel Hill North Carolina",
-    "italian restaurant Chapel Hill North Carolina",
-    "mexican restaurant Chapel Hill North Carolina",
-    "sushi Chapel Hill North Carolina",
-    "brewery Chapel Hill North Carolina",
-    "restaurant Franklin Street Chapel Hill North Carolina",
-    "cafe Franklin Street Chapel Hill North Carolina",
-    "restaurant UNC Chapel Hill North Carolina",
-    # Chapel Hill zip codes
-    "restaurant Chapel Hill North Carolina 27514",
-    "cafe Chapel Hill North Carolina 27514",
-    "food Chapel Hill North Carolina 27514",
-    "restaurant Chapel Hill North Carolina 27516",
-    "cafe Chapel Hill North Carolina 27516",
-    # Carrboro
-    "restaurants Carrboro North Carolina",
-    "cafe Carrboro North Carolina",
-    "coffee shop Carrboro North Carolina",
-    "brunch Carrboro North Carolina",
-    "food Carrboro North Carolina",
-    "brewery Carrboro North Carolina",
-    "vegan Carrboro North Carolina",
-    "restaurant Carrboro North Carolina 27510",
-    "cafe Carrboro North Carolina 27510",
-    # Apex
-    "restaurants Apex North Carolina",
-    "cafe Apex North Carolina",
-    "coffee shop Apex North Carolina",
-    "food Apex North Carolina",
-    "brunch Apex North Carolina",
-    "restaurant downtown Apex North Carolina",
-    "restaurant Apex North Carolina 27502",
-    "cafe Apex North Carolina 27502",
-    "restaurant Apex North Carolina 27539",
-    # Holly Springs
-    "restaurants Holly Springs North Carolina",
-    "cafe Holly Springs North Carolina",
-    "coffee shop Holly Springs North Carolina",
-    "food Holly Springs North Carolina",
-    "restaurant Holly Springs North Carolina 27540",
-    "cafe Holly Springs North Carolina 27540",
-    # Fuquay-Varina
-    "restaurants Fuquay-Varina North Carolina",
-    "cafe Fuquay-Varina North Carolina",
-    "food Fuquay-Varina North Carolina",
-    "restaurant Fuquay-Varina North Carolina 27526",
-    # Pittsboro / Hillsborough
-    "restaurants Pittsboro North Carolina",
-    "cafe Pittsboro North Carolina",
-    "food Pittsboro North Carolina",
-    "restaurants Hillsborough North Carolina",
-    "cafe Hillsborough North Carolina",
-    "food Hillsborough North Carolina",
-    # Morrisville
-    "restaurant Morrisville North Carolina",
-    "cafe Morrisville North Carolina",
-    "food Morrisville North Carolina",
+    # South End
+    "restaurants South End Charlotte North Carolina",
+    "cafe South End Charlotte North Carolina",
+    "coffee shop South End Charlotte North Carolina",
+    "brunch South End Charlotte North Carolina",
+    "breakfast South End Charlotte North Carolina",
+    "food South End Charlotte North Carolina",
+    "bakery South End Charlotte North Carolina",
+    "pizza South End Charlotte North Carolina",
+    "burger South End Charlotte North Carolina",
+    "sushi South End Charlotte North Carolina",
+    "vegan South End Charlotte North Carolina",
+    "bar and grill South End Charlotte North Carolina",
+    "brewery South End Charlotte North Carolina",
+    "italian restaurant South End Charlotte North Carolina",
+    "mexican restaurant South End Charlotte North Carolina",
+    "seafood South End Charlotte North Carolina",
+    "food truck South End Charlotte North Carolina",
+    # Plaza Midwood
+    "restaurants Plaza Midwood Charlotte North Carolina",
+    "cafe Plaza Midwood Charlotte North Carolina",
+    "coffee shop Plaza Midwood Charlotte North Carolina",
+    "brunch Plaza Midwood Charlotte North Carolina",
+    "breakfast Plaza Midwood Charlotte North Carolina",
+    "food Plaza Midwood Charlotte North Carolina",
+    "bakery Plaza Midwood Charlotte North Carolina",
+    "pizza Plaza Midwood Charlotte North Carolina",
+    "burger Plaza Midwood Charlotte North Carolina",
+    "sushi Plaza Midwood Charlotte North Carolina",
+    "vegan Plaza Midwood Charlotte North Carolina",
+    "bar and grill Plaza Midwood Charlotte North Carolina",
+    "brewery Plaza Midwood Charlotte North Carolina",
+    "italian restaurant Plaza Midwood Charlotte North Carolina",
+    "mexican restaurant Plaza Midwood Charlotte North Carolina",
+    "thai restaurant Plaza Midwood Charlotte North Carolina",
+    "indian restaurant Plaza Midwood Charlotte North Carolina",
+    # Adjacent / nearby: Dilworth, Wilmore, Elizabeth (border areas)
+    "restaurants Dilworth Charlotte North Carolina",
+    "cafe Dilworth Charlotte North Carolina",
+    "food Dilworth Charlotte North Carolina",
+    "brunch Dilworth Charlotte North Carolina",
+    "brewery Dilworth Charlotte North Carolina",
+    "restaurants Wilmore Charlotte North Carolina",
+    "cafe Wilmore Charlotte North Carolina",
+    "food Wilmore Charlotte North Carolina",
+    "restaurants Elizabeth Charlotte North Carolina",
+    "cafe Elizabeth Charlotte North Carolina",
+    "food Elizabeth Charlotte North Carolina",
+    # Zip codes covering South End & Plaza Midwood
+    "restaurant Charlotte North Carolina 28203",
+    "cafe Charlotte North Carolina 28203",
+    "food Charlotte North Carolina 28203",
+    "restaurant Charlotte North Carolina 28205",
+    "cafe Charlotte North Carolina 28205",
+    "food Charlotte North Carolina 28205",
+    "restaurant Charlotte North Carolina 28209",
+    "cafe Charlotte North Carolina 28209",
+    "food Charlotte North Carolina 28209",
+    "restaurant Charlotte North Carolina 28204",
+    "cafe Charlotte North Carolina 28204",
+    "food Charlotte North Carolina 28204",
 ]
 
 BAD_EMAIL_DOMAINS = {
