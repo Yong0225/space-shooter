@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-North Carolina Uptown Leads Scraper
-Collects restaurant/cafe leads from Uptown Charlotte, North Carolina
-Output: North Carolina Uptown leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+North Academy Blvd Colorado Leads Scraper
+Collects restaurant/cafe leads from North Academy Blvd, Colorado Springs, Colorado
+Output: North Academy Blvd leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + nc_uptown_progress.json after EVERY lead.
+Resume-safe: writes to Excel + north_academy_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,65 +21,66 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "North Carolina Uptown leads.xlsx"
-PROGRESS    = "nc_uptown_progress.json"
+OUTPUT      = "North Academy Blvd leads.xlsx"
+PROGRESS    = "north_academy_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Uptown Charlotte, North Carolina
+# Queries for North Academy Blvd, Colorado Springs, Colorado
 SEARCH_QUERIES = [
-    # Uptown / Center City core
-    "restaurants Uptown Charlotte North Carolina",
-    "cafe Uptown Charlotte North Carolina",
-    "coffee shop Uptown Charlotte North Carolina",
-    "brunch Uptown Charlotte North Carolina",
-    "breakfast Uptown Charlotte North Carolina",
-    "food Uptown Charlotte North Carolina",
-    "bakery Uptown Charlotte North Carolina",
-    "pizza Uptown Charlotte North Carolina",
-    "burger Uptown Charlotte North Carolina",
-    "sushi Uptown Charlotte North Carolina",
-    "vegan Uptown Charlotte North Carolina",
-    "bar and grill Uptown Charlotte North Carolina",
-    "brewery Uptown Charlotte North Carolina",
-    "italian restaurant Uptown Charlotte North Carolina",
-    "mexican restaurant Uptown Charlotte North Carolina",
-    "seafood Uptown Charlotte North Carolina",
-    "asian restaurant Uptown Charlotte North Carolina",
-    "steakhouse Uptown Charlotte North Carolina",
-    "food truck Uptown Charlotte North Carolina",
-    "sandwich Uptown Charlotte North Carolina",
-    # Center City / downtown synonyms
-    "restaurants downtown Charlotte North Carolina",
-    "cafe downtown Charlotte North Carolina",
-    "coffee shop downtown Charlotte North Carolina",
-    "brunch downtown Charlotte North Carolina",
-    "food downtown Charlotte North Carolina",
-    "bakery downtown Charlotte North Carolina",
-    "lunch downtown Charlotte North Carolina",
-    "dinner downtown Charlotte North Carolina",
-    "restaurant Center City Charlotte North Carolina",
-    "cafe Center City Charlotte North Carolina",
-    "food Center City Charlotte North Carolina",
-    # First Ward, Second Ward, Fourth Ward, Third Ward sub-districts
-    "restaurants First Ward Charlotte North Carolina",
-    "cafe First Ward Charlotte North Carolina",
-    "food First Ward Charlotte North Carolina",
-    "restaurants Fourth Ward Charlotte North Carolina",
-    "cafe Fourth Ward Charlotte North Carolina",
-    "food Fourth Ward Charlotte North Carolina",
-    "restaurants Third Ward Charlotte North Carolina",
-    "cafe Third Ward Charlotte North Carolina",
-    "food Third Ward Charlotte North Carolina",
-    # Zip codes covering Uptown Charlotte
-    "restaurant Charlotte North Carolina 28202",
-    "cafe Charlotte North Carolina 28202",
-    "food Charlotte North Carolina 28202",
-    "restaurant Charlotte North Carolina 28204",
-    "cafe Charlotte North Carolina 28204",
-    "food Charlotte North Carolina 28204",
-    "restaurant Charlotte North Carolina 28208",
-    "cafe Charlotte North Carolina 28208",
-    "food Charlotte North Carolina 28208",
+    # Core corridor
+    "restaurants North Academy Blvd Colorado Springs Colorado",
+    "cafe North Academy Blvd Colorado Springs Colorado",
+    "coffee shop North Academy Blvd Colorado Springs Colorado",
+    "breakfast North Academy Blvd Colorado Springs Colorado",
+    "brunch North Academy Blvd Colorado Springs Colorado",
+    "food North Academy Blvd Colorado Springs Colorado",
+    "bakery North Academy Blvd Colorado Springs Colorado",
+    "pizza North Academy Blvd Colorado Springs Colorado",
+    "burger North Academy Blvd Colorado Springs Colorado",
+    "sushi North Academy Blvd Colorado Springs Colorado",
+    "mexican restaurant North Academy Blvd Colorado Springs Colorado",
+    "chinese restaurant North Academy Blvd Colorado Springs Colorado",
+    "asian restaurant North Academy Blvd Colorado Springs Colorado",
+    "bar and grill North Academy Blvd Colorado Springs Colorado",
+    "fast casual North Academy Blvd Colorado Springs Colorado",
+    "sandwich North Academy Blvd Colorado Springs Colorado",
+    "steakhouse North Academy Blvd Colorado Springs Colorado",
+    "thai restaurant North Academy Blvd Colorado Springs Colorado",
+    "indian restaurant North Academy Blvd Colorado Springs Colorado",
+    "vegan North Academy Blvd Colorado Springs Colorado",
+    # Nearby neighborhoods along the corridor
+    "restaurants Briargate Colorado Springs Colorado",
+    "cafe Briargate Colorado Springs Colorado",
+    "food Briargate Colorado Springs Colorado",
+    "breakfast Briargate Colorado Springs Colorado",
+    "coffee Briargate Colorado Springs Colorado",
+    "pizza Briargate Colorado Springs Colorado",
+    "burger Briargate Colorado Springs Colorado",
+    "restaurants Northgate Colorado Springs Colorado",
+    "cafe Northgate Colorado Springs Colorado",
+    "food Northgate Colorado Springs Colorado",
+    "restaurants Chapel Hills Colorado Springs Colorado",
+    "cafe Chapel Hills Colorado Springs Colorado",
+    "food Chapel Hills Colorado Springs Colorado",
+    "restaurant Powers Blvd Colorado Springs Colorado",
+    "cafe Powers Blvd Colorado Springs Colorado",
+    "food Powers Blvd Colorado Springs Colorado",
+    # Zip codes along North Academy Blvd
+    "restaurant Colorado Springs Colorado 80920",
+    "cafe Colorado Springs Colorado 80920",
+    "food Colorado Springs Colorado 80920",
+    "restaurant Colorado Springs Colorado 80918",
+    "cafe Colorado Springs Colorado 80918",
+    "food Colorado Springs Colorado 80918",
+    "restaurant Colorado Springs Colorado 80917",
+    "cafe Colorado Springs Colorado 80917",
+    "food Colorado Springs Colorado 80917",
+    "restaurant Colorado Springs Colorado 80909",
+    "cafe Colorado Springs Colorado 80909",
+    "food Colorado Springs Colorado 80909",
+    "restaurant Colorado Springs Colorado 80910",
+    "cafe Colorado Springs Colorado 80910",
+    "food Colorado Springs Colorado 80910",
 ]
 
 BAD_EMAIL_DOMAINS = {
