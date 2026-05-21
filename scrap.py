@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-South End & Plaza Midwood Leads Scraper
-Collects restaurant/cafe leads from South End & Plaza Midwood, Charlotte, North Carolina
-Output: South End & Plaza Midwood leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+North Carolina Uptown Leads Scraper
+Collects restaurant/cafe leads from Uptown Charlotte, North Carolina
+Output: North Carolina Uptown leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + southend_plazamidwood_progress.json after EVERY lead.
+Resume-safe: writes to Excel + nc_uptown_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,73 +21,65 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "South End & Plaza Midwood leads.xlsx"
-PROGRESS    = "southend_plazamidwood_progress.json"
+OUTPUT      = "North Carolina Uptown leads.xlsx"
+PROGRESS    = "nc_uptown_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for South End & Plaza Midwood, Charlotte, North Carolina
+# Queries for Uptown Charlotte, North Carolina
 SEARCH_QUERIES = [
-    # South End
-    "restaurants South End Charlotte North Carolina",
-    "cafe South End Charlotte North Carolina",
-    "coffee shop South End Charlotte North Carolina",
-    "brunch South End Charlotte North Carolina",
-    "breakfast South End Charlotte North Carolina",
-    "food South End Charlotte North Carolina",
-    "bakery South End Charlotte North Carolina",
-    "pizza South End Charlotte North Carolina",
-    "burger South End Charlotte North Carolina",
-    "sushi South End Charlotte North Carolina",
-    "vegan South End Charlotte North Carolina",
-    "bar and grill South End Charlotte North Carolina",
-    "brewery South End Charlotte North Carolina",
-    "italian restaurant South End Charlotte North Carolina",
-    "mexican restaurant South End Charlotte North Carolina",
-    "seafood South End Charlotte North Carolina",
-    "food truck South End Charlotte North Carolina",
-    # Plaza Midwood
-    "restaurants Plaza Midwood Charlotte North Carolina",
-    "cafe Plaza Midwood Charlotte North Carolina",
-    "coffee shop Plaza Midwood Charlotte North Carolina",
-    "brunch Plaza Midwood Charlotte North Carolina",
-    "breakfast Plaza Midwood Charlotte North Carolina",
-    "food Plaza Midwood Charlotte North Carolina",
-    "bakery Plaza Midwood Charlotte North Carolina",
-    "pizza Plaza Midwood Charlotte North Carolina",
-    "burger Plaza Midwood Charlotte North Carolina",
-    "sushi Plaza Midwood Charlotte North Carolina",
-    "vegan Plaza Midwood Charlotte North Carolina",
-    "bar and grill Plaza Midwood Charlotte North Carolina",
-    "brewery Plaza Midwood Charlotte North Carolina",
-    "italian restaurant Plaza Midwood Charlotte North Carolina",
-    "mexican restaurant Plaza Midwood Charlotte North Carolina",
-    "thai restaurant Plaza Midwood Charlotte North Carolina",
-    "indian restaurant Plaza Midwood Charlotte North Carolina",
-    # Adjacent / nearby: Dilworth, Wilmore, Elizabeth (border areas)
-    "restaurants Dilworth Charlotte North Carolina",
-    "cafe Dilworth Charlotte North Carolina",
-    "food Dilworth Charlotte North Carolina",
-    "brunch Dilworth Charlotte North Carolina",
-    "brewery Dilworth Charlotte North Carolina",
-    "restaurants Wilmore Charlotte North Carolina",
-    "cafe Wilmore Charlotte North Carolina",
-    "food Wilmore Charlotte North Carolina",
-    "restaurants Elizabeth Charlotte North Carolina",
-    "cafe Elizabeth Charlotte North Carolina",
-    "food Elizabeth Charlotte North Carolina",
-    # Zip codes covering South End & Plaza Midwood
-    "restaurant Charlotte North Carolina 28203",
-    "cafe Charlotte North Carolina 28203",
-    "food Charlotte North Carolina 28203",
-    "restaurant Charlotte North Carolina 28205",
-    "cafe Charlotte North Carolina 28205",
-    "food Charlotte North Carolina 28205",
-    "restaurant Charlotte North Carolina 28209",
-    "cafe Charlotte North Carolina 28209",
-    "food Charlotte North Carolina 28209",
+    # Uptown / Center City core
+    "restaurants Uptown Charlotte North Carolina",
+    "cafe Uptown Charlotte North Carolina",
+    "coffee shop Uptown Charlotte North Carolina",
+    "brunch Uptown Charlotte North Carolina",
+    "breakfast Uptown Charlotte North Carolina",
+    "food Uptown Charlotte North Carolina",
+    "bakery Uptown Charlotte North Carolina",
+    "pizza Uptown Charlotte North Carolina",
+    "burger Uptown Charlotte North Carolina",
+    "sushi Uptown Charlotte North Carolina",
+    "vegan Uptown Charlotte North Carolina",
+    "bar and grill Uptown Charlotte North Carolina",
+    "brewery Uptown Charlotte North Carolina",
+    "italian restaurant Uptown Charlotte North Carolina",
+    "mexican restaurant Uptown Charlotte North Carolina",
+    "seafood Uptown Charlotte North Carolina",
+    "asian restaurant Uptown Charlotte North Carolina",
+    "steakhouse Uptown Charlotte North Carolina",
+    "food truck Uptown Charlotte North Carolina",
+    "sandwich Uptown Charlotte North Carolina",
+    # Center City / downtown synonyms
+    "restaurants downtown Charlotte North Carolina",
+    "cafe downtown Charlotte North Carolina",
+    "coffee shop downtown Charlotte North Carolina",
+    "brunch downtown Charlotte North Carolina",
+    "food downtown Charlotte North Carolina",
+    "bakery downtown Charlotte North Carolina",
+    "lunch downtown Charlotte North Carolina",
+    "dinner downtown Charlotte North Carolina",
+    "restaurant Center City Charlotte North Carolina",
+    "cafe Center City Charlotte North Carolina",
+    "food Center City Charlotte North Carolina",
+    # First Ward, Second Ward, Fourth Ward, Third Ward sub-districts
+    "restaurants First Ward Charlotte North Carolina",
+    "cafe First Ward Charlotte North Carolina",
+    "food First Ward Charlotte North Carolina",
+    "restaurants Fourth Ward Charlotte North Carolina",
+    "cafe Fourth Ward Charlotte North Carolina",
+    "food Fourth Ward Charlotte North Carolina",
+    "restaurants Third Ward Charlotte North Carolina",
+    "cafe Third Ward Charlotte North Carolina",
+    "food Third Ward Charlotte North Carolina",
+    # Zip codes covering Uptown Charlotte
+    "restaurant Charlotte North Carolina 28202",
+    "cafe Charlotte North Carolina 28202",
+    "food Charlotte North Carolina 28202",
     "restaurant Charlotte North Carolina 28204",
     "cafe Charlotte North Carolina 28204",
     "food Charlotte North Carolina 28204",
+    "restaurant Charlotte North Carolina 28208",
+    "cafe Charlotte North Carolina 28208",
+    "food Charlotte North Carolina 28208",
 ]
 
 BAD_EMAIL_DOMAINS = {
