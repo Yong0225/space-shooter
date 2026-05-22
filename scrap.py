@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-North Academy Blvd Colorado Leads Scraper
-Collects restaurant/cafe leads from North Academy Blvd, Colorado Springs, Colorado
-Output: North Academy Blvd leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+Colorado Pearl Street Leads Scraper
+Collects restaurant/cafe leads from Pearl Street, Boulder, Colorado
+Output: Corolado Pearl Street leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + north_academy_progress.json after EVERY lead.
+Resume-safe: writes to Excel + pearl_street_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,66 +21,70 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "North Academy Blvd leads.xlsx"
-PROGRESS    = "north_academy_progress.json"
+OUTPUT      = "Corolado Pearl Street leads.xlsx"
+PROGRESS    = "pearl_street_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for North Academy Blvd, Colorado Springs, Colorado
+# Queries for Pearl Street, Boulder, Colorado
 SEARCH_QUERIES = [
-    # Core corridor
-    "restaurants North Academy Blvd Colorado Springs Colorado",
-    "cafe North Academy Blvd Colorado Springs Colorado",
-    "coffee shop North Academy Blvd Colorado Springs Colorado",
-    "breakfast North Academy Blvd Colorado Springs Colorado",
-    "brunch North Academy Blvd Colorado Springs Colorado",
-    "food North Academy Blvd Colorado Springs Colorado",
-    "bakery North Academy Blvd Colorado Springs Colorado",
-    "pizza North Academy Blvd Colorado Springs Colorado",
-    "burger North Academy Blvd Colorado Springs Colorado",
-    "sushi North Academy Blvd Colorado Springs Colorado",
-    "mexican restaurant North Academy Blvd Colorado Springs Colorado",
-    "chinese restaurant North Academy Blvd Colorado Springs Colorado",
-    "asian restaurant North Academy Blvd Colorado Springs Colorado",
-    "bar and grill North Academy Blvd Colorado Springs Colorado",
-    "fast casual North Academy Blvd Colorado Springs Colorado",
-    "sandwich North Academy Blvd Colorado Springs Colorado",
-    "steakhouse North Academy Blvd Colorado Springs Colorado",
-    "thai restaurant North Academy Blvd Colorado Springs Colorado",
-    "indian restaurant North Academy Blvd Colorado Springs Colorado",
-    "vegan North Academy Blvd Colorado Springs Colorado",
-    # Nearby neighborhoods along the corridor
-    "restaurants Briargate Colorado Springs Colorado",
-    "cafe Briargate Colorado Springs Colorado",
-    "food Briargate Colorado Springs Colorado",
-    "breakfast Briargate Colorado Springs Colorado",
-    "coffee Briargate Colorado Springs Colorado",
-    "pizza Briargate Colorado Springs Colorado",
-    "burger Briargate Colorado Springs Colorado",
-    "restaurants Northgate Colorado Springs Colorado",
-    "cafe Northgate Colorado Springs Colorado",
-    "food Northgate Colorado Springs Colorado",
-    "restaurants Chapel Hills Colorado Springs Colorado",
-    "cafe Chapel Hills Colorado Springs Colorado",
-    "food Chapel Hills Colorado Springs Colorado",
-    "restaurant Powers Blvd Colorado Springs Colorado",
-    "cafe Powers Blvd Colorado Springs Colorado",
-    "food Powers Blvd Colorado Springs Colorado",
-    # Zip codes along North Academy Blvd
-    "restaurant Colorado Springs Colorado 80920",
-    "cafe Colorado Springs Colorado 80920",
-    "food Colorado Springs Colorado 80920",
-    "restaurant Colorado Springs Colorado 80918",
-    "cafe Colorado Springs Colorado 80918",
-    "food Colorado Springs Colorado 80918",
-    "restaurant Colorado Springs Colorado 80917",
-    "cafe Colorado Springs Colorado 80917",
-    "food Colorado Springs Colorado 80917",
-    "restaurant Colorado Springs Colorado 80909",
-    "cafe Colorado Springs Colorado 80909",
-    "food Colorado Springs Colorado 80909",
-    "restaurant Colorado Springs Colorado 80910",
-    "cafe Colorado Springs Colorado 80910",
-    "food Colorado Springs Colorado 80910",
+    # Pearl Street Mall core
+    "restaurants Pearl Street Boulder Colorado",
+    "cafe Pearl Street Boulder Colorado",
+    "coffee shop Pearl Street Boulder Colorado",
+    "breakfast Pearl Street Boulder Colorado",
+    "brunch Pearl Street Boulder Colorado",
+    "food Pearl Street Boulder Colorado",
+    "bakery Pearl Street Boulder Colorado",
+    "pizza Pearl Street Boulder Colorado",
+    "burger Pearl Street Boulder Colorado",
+    "sushi Pearl Street Boulder Colorado",
+    "bar and grill Pearl Street Boulder Colorado",
+    "brewery Pearl Street Boulder Colorado",
+    "vegan Pearl Street Boulder Colorado",
+    "sandwich Pearl Street Boulder Colorado",
+    "mexican restaurant Pearl Street Boulder Colorado",
+    "italian restaurant Pearl Street Boulder Colorado",
+    "asian restaurant Pearl Street Boulder Colorado",
+    "steakhouse Pearl Street Boulder Colorado",
+    "seafood Pearl Street Boulder Colorado",
+    "dessert Pearl Street Boulder Colorado",
+    # Downtown Boulder / Pearl Street Mall area
+    "restaurants downtown Boulder Colorado",
+    "cafe downtown Boulder Colorado",
+    "coffee shop downtown Boulder Colorado",
+    "brunch downtown Boulder Colorado",
+    "breakfast downtown Boulder Colorado",
+    "food downtown Boulder Colorado",
+    "bakery downtown Boulder Colorado",
+    "pizza downtown Boulder Colorado",
+    "burger downtown Boulder Colorado",
+    "brewery downtown Boulder Colorado",
+    "vegan downtown Boulder Colorado",
+    "bar and grill downtown Boulder Colorado",
+    "sushi downtown Boulder Colorado",
+    "thai restaurant downtown Boulder Colorado",
+    "indian restaurant downtown Boulder Colorado",
+    # Adjacent neighborhoods
+    "restaurants University Hill Boulder Colorado",
+    "cafe University Hill Boulder Colorado",
+    "food University Hill Boulder Colorado",
+    "restaurants The Hill Boulder Colorado",
+    "cafe The Hill Boulder Colorado",
+    "restaurants Mapleton Hill Boulder Colorado",
+    "cafe Mapleton Hill Boulder Colorado",
+    "restaurants Whittier Boulder Colorado",
+    "cafe Whittier Boulder Colorado",
+    "food Whittier Boulder Colorado",
+    # Zip codes covering Pearl Street / downtown Boulder
+    "restaurant Boulder Colorado 80302",
+    "cafe Boulder Colorado 80302",
+    "food Boulder Colorado 80302",
+    "restaurant Boulder Colorado 80304",
+    "cafe Boulder Colorado 80304",
+    "food Boulder Colorado 80304",
+    "restaurant Boulder Colorado 80303",
+    "cafe Boulder Colorado 80303",
+    "food Boulder Colorado 80303",
 ]
 
 BAD_EMAIL_DOMAINS = {
