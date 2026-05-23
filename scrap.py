@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Colorado Pearl Street Leads Scraper
-Collects restaurant/cafe leads from Pearl Street, Boulder, Colorado
-Output: Corolado Pearl Street leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+The Hill Boulder Colorado Leads Scraper
+Collects restaurant/cafe leads from The Hill neighborhood, Boulder, Colorado
+Output: The Hill leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + pearl_street_progress.json after EVERY lead.
+Resume-safe: writes to Excel + the_hill_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,70 +21,69 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Corolado Pearl Street leads.xlsx"
-PROGRESS    = "pearl_street_progress.json"
+OUTPUT      = "The Hill leads.xlsx"
+PROGRESS    = "the_hill_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Pearl Street, Boulder, Colorado
+# Queries for The Hill neighborhood, Boulder, Colorado (near CU Boulder campus)
 SEARCH_QUERIES = [
-    # Pearl Street Mall core
-    "restaurants Pearl Street Boulder Colorado",
-    "cafe Pearl Street Boulder Colorado",
-    "coffee shop Pearl Street Boulder Colorado",
-    "breakfast Pearl Street Boulder Colorado",
-    "brunch Pearl Street Boulder Colorado",
-    "food Pearl Street Boulder Colorado",
-    "bakery Pearl Street Boulder Colorado",
-    "pizza Pearl Street Boulder Colorado",
-    "burger Pearl Street Boulder Colorado",
-    "sushi Pearl Street Boulder Colorado",
-    "bar and grill Pearl Street Boulder Colorado",
-    "brewery Pearl Street Boulder Colorado",
-    "vegan Pearl Street Boulder Colorado",
-    "sandwich Pearl Street Boulder Colorado",
-    "mexican restaurant Pearl Street Boulder Colorado",
-    "italian restaurant Pearl Street Boulder Colorado",
-    "asian restaurant Pearl Street Boulder Colorado",
-    "steakhouse Pearl Street Boulder Colorado",
-    "seafood Pearl Street Boulder Colorado",
-    "dessert Pearl Street Boulder Colorado",
-    # Downtown Boulder / Pearl Street Mall area
-    "restaurants downtown Boulder Colorado",
-    "cafe downtown Boulder Colorado",
-    "coffee shop downtown Boulder Colorado",
-    "brunch downtown Boulder Colorado",
-    "breakfast downtown Boulder Colorado",
-    "food downtown Boulder Colorado",
-    "bakery downtown Boulder Colorado",
-    "pizza downtown Boulder Colorado",
-    "burger downtown Boulder Colorado",
-    "brewery downtown Boulder Colorado",
-    "vegan downtown Boulder Colorado",
-    "bar and grill downtown Boulder Colorado",
-    "sushi downtown Boulder Colorado",
-    "thai restaurant downtown Boulder Colorado",
-    "indian restaurant downtown Boulder Colorado",
-    # Adjacent neighborhoods
-    "restaurants University Hill Boulder Colorado",
-    "cafe University Hill Boulder Colorado",
-    "food University Hill Boulder Colorado",
+    # The Hill / University Hill core
     "restaurants The Hill Boulder Colorado",
     "cafe The Hill Boulder Colorado",
-    "restaurants Mapleton Hill Boulder Colorado",
-    "cafe Mapleton Hill Boulder Colorado",
-    "restaurants Whittier Boulder Colorado",
-    "cafe Whittier Boulder Colorado",
-    "food Whittier Boulder Colorado",
-    # Zip codes covering Pearl Street / downtown Boulder
+    "coffee shop The Hill Boulder Colorado",
+    "food The Hill Boulder Colorado",
+    "pizza The Hill Boulder Colorado",
+    "burger The Hill Boulder Colorado",
+    "breakfast The Hill Boulder Colorado",
+    "brunch The Hill Boulder Colorado",
+    "sandwich The Hill Boulder Colorado",
+    "bakery The Hill Boulder Colorado",
+    "bar and grill The Hill Boulder Colorado",
+    "mexican restaurant The Hill Boulder Colorado",
+    "asian restaurant The Hill Boulder Colorado",
+    "sushi The Hill Boulder Colorado",
+    "vegan The Hill Boulder Colorado",
+    "late night food The Hill Boulder Colorado",
+    "restaurants University Hill Boulder Colorado",
+    "cafe University Hill Boulder Colorado",
+    "coffee shop University Hill Boulder Colorado",
+    "food University Hill Boulder Colorado",
+    "pizza University Hill Boulder Colorado",
+    "burger University Hill Boulder Colorado",
+    "breakfast University Hill Boulder Colorado",
+    "sandwich University Hill Boulder Colorado",
+    "bar University Hill Boulder Colorado",
+    "mexican restaurant University Hill Boulder Colorado",
+    # CU Boulder campus area
+    "restaurants CU Boulder campus Colorado",
+    "cafe CU Boulder campus Colorado",
+    "coffee near CU Boulder Colorado",
+    "food near University of Colorado Boulder",
+    "restaurants near University of Colorado Boulder",
+    "cafe near University of Colorado Boulder",
+    # College Ave / Broadway corridor (The Hill's main streets)
+    "restaurant College Avenue Boulder Colorado",
+    "cafe College Avenue Boulder Colorado",
+    "food College Avenue Boulder Colorado",
+    "restaurant Broadway Boulder Colorado",
+    "cafe Broadway Boulder Colorado",
+    "food Broadway Boulder Colorado",
+    "restaurant 13th Street Boulder Colorado",
+    "cafe 13th Street Boulder Colorado",
+    # Surrounding micro-neighborhoods
+    "restaurants Goss-Grove Boulder Colorado",
+    "cafe Goss-Grove Boulder Colorado",
+    "restaurants Newlands Boulder Colorado",
+    "cafe Newlands Boulder Colorado",
+    "restaurants Martin Acres Boulder Colorado",
+    "cafe Martin Acres Boulder Colorado",
+    # Zip codes covering The Hill area
     "restaurant Boulder Colorado 80302",
     "cafe Boulder Colorado 80302",
     "food Boulder Colorado 80302",
-    "restaurant Boulder Colorado 80304",
-    "cafe Boulder Colorado 80304",
-    "food Boulder Colorado 80304",
-    "restaurant Boulder Colorado 80303",
-    "cafe Boulder Colorado 80303",
-    "food Boulder Colorado 80303",
+    "restaurant Boulder Colorado 80305",
+    "cafe Boulder Colorado 80305",
+    "food Boulder Colorado 80305",
 ]
 
 BAD_EMAIL_DOMAINS = {
