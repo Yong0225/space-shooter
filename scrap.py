@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-The Hill Boulder Colorado Leads Scraper
-Collects restaurant/cafe leads from The Hill neighborhood, Boulder, Colorado
-Output: The Hill leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+Cherry Creek North Denver Colorado Leads Scraper
+Collects restaurant/cafe leads from Cherry Creek North neighborhood, Denver, Colorado
+Output: Cherry Creek North leads.xlsx  (Name | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + the_hill_progress.json after EVERY lead.
+Resume-safe: writes to Excel + cherry_creek_north_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,69 +21,65 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "The Hill leads.xlsx"
-PROGRESS    = "the_hill_progress.json"
+OUTPUT      = "Cherry Creek North leads.xlsx"
+PROGRESS    = "cherry_creek_north_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for The Hill neighborhood, Boulder, Colorado (near CU Boulder campus)
+# Queries for Cherry Creek North neighborhood, Denver, Colorado
 SEARCH_QUERIES = [
-    # The Hill / University Hill core
-    "restaurants The Hill Boulder Colorado",
-    "cafe The Hill Boulder Colorado",
-    "coffee shop The Hill Boulder Colorado",
-    "food The Hill Boulder Colorado",
-    "pizza The Hill Boulder Colorado",
-    "burger The Hill Boulder Colorado",
-    "breakfast The Hill Boulder Colorado",
-    "brunch The Hill Boulder Colorado",
-    "sandwich The Hill Boulder Colorado",
-    "bakery The Hill Boulder Colorado",
-    "bar and grill The Hill Boulder Colorado",
-    "mexican restaurant The Hill Boulder Colorado",
-    "asian restaurant The Hill Boulder Colorado",
-    "sushi The Hill Boulder Colorado",
-    "vegan The Hill Boulder Colorado",
-    "late night food The Hill Boulder Colorado",
-    "restaurants University Hill Boulder Colorado",
-    "cafe University Hill Boulder Colorado",
-    "coffee shop University Hill Boulder Colorado",
-    "food University Hill Boulder Colorado",
-    "pizza University Hill Boulder Colorado",
-    "burger University Hill Boulder Colorado",
-    "breakfast University Hill Boulder Colorado",
-    "sandwich University Hill Boulder Colorado",
-    "bar University Hill Boulder Colorado",
-    "mexican restaurant University Hill Boulder Colorado",
-    # CU Boulder campus area
-    "restaurants CU Boulder campus Colorado",
-    "cafe CU Boulder campus Colorado",
-    "coffee near CU Boulder Colorado",
-    "food near University of Colorado Boulder",
-    "restaurants near University of Colorado Boulder",
-    "cafe near University of Colorado Boulder",
-    # College Ave / Broadway corridor (The Hill's main streets)
-    "restaurant College Avenue Boulder Colorado",
-    "cafe College Avenue Boulder Colorado",
-    "food College Avenue Boulder Colorado",
-    "restaurant Broadway Boulder Colorado",
-    "cafe Broadway Boulder Colorado",
-    "food Broadway Boulder Colorado",
-    "restaurant 13th Street Boulder Colorado",
-    "cafe 13th Street Boulder Colorado",
-    # Surrounding micro-neighborhoods
-    "restaurants Goss-Grove Boulder Colorado",
-    "cafe Goss-Grove Boulder Colorado",
-    "restaurants Newlands Boulder Colorado",
-    "cafe Newlands Boulder Colorado",
-    "restaurants Martin Acres Boulder Colorado",
-    "cafe Martin Acres Boulder Colorado",
-    # Zip codes covering The Hill area
-    "restaurant Boulder Colorado 80302",
-    "cafe Boulder Colorado 80302",
-    "food Boulder Colorado 80302",
-    "restaurant Boulder Colorado 80305",
-    "cafe Boulder Colorado 80305",
-    "food Boulder Colorado 80305",
+    # Cherry Creek North core
+    "restaurants Cherry Creek North Denver Colorado",
+    "cafe Cherry Creek North Denver Colorado",
+    "coffee shop Cherry Creek North Denver Colorado",
+    "food Cherry Creek North Denver Colorado",
+    "pizza Cherry Creek North Denver Colorado",
+    "burger Cherry Creek North Denver Colorado",
+    "breakfast Cherry Creek North Denver Colorado",
+    "brunch Cherry Creek North Denver Colorado",
+    "sandwich Cherry Creek North Denver Colorado",
+    "bakery Cherry Creek North Denver Colorado",
+    "bar and grill Cherry Creek North Denver Colorado",
+    "mexican restaurant Cherry Creek North Denver Colorado",
+    "asian restaurant Cherry Creek North Denver Colorado",
+    "sushi Cherry Creek North Denver Colorado",
+    "italian restaurant Cherry Creek North Denver Colorado",
+    "seafood Cherry Creek North Denver Colorado",
+    "steakhouse Cherry Creek North Denver Colorado",
+    "wine bar Cherry Creek North Denver Colorado",
+    "cocktail bar Cherry Creek North Denver Colorado",
+    "fine dining Cherry Creek North Denver Colorado",
+    # Cherry Creek broader area
+    "restaurants Cherry Creek Denver Colorado",
+    "cafe Cherry Creek Denver Colorado",
+    "coffee shop Cherry Creek Denver Colorado",
+    "food Cherry Creek Denver Colorado",
+    "pizza Cherry Creek Denver Colorado",
+    "burger Cherry Creek Denver Colorado",
+    "breakfast Cherry Creek Denver Colorado",
+    "brunch Cherry Creek Denver Colorado",
+    "sandwich Cherry Creek Denver Colorado",
+    "bakery Cherry Creek Denver Colorado",
+    "bar and grill Cherry Creek Denver Colorado",
+    "mexican restaurant Cherry Creek Denver Colorado",
+    "asian restaurant Cherry Creek Denver Colorado",
+    "sushi Cherry Creek Denver Colorado",
+    "vegan Cherry Creek Denver Colorado",
+    # Key streets in Cherry Creek North
+    "restaurant 2nd Avenue Denver Colorado 80206",
+    "cafe 2nd Avenue Denver Colorado 80206",
+    "restaurant 3rd Avenue Denver Colorado 80206",
+    "cafe 3rd Avenue Denver Colorado 80206",
+    "restaurant Milwaukee Street Denver Colorado",
+    "restaurant Fillmore Street Denver Colorado",
+    "restaurant Detroit Street Denver Colorado",
+    "restaurant Clayton Street Denver Colorado",
+    # Zip code
+    "restaurant Denver Colorado 80206",
+    "cafe Denver Colorado 80206",
+    "food Denver Colorado 80206",
+    "restaurant Denver Colorado 80209",
+    "cafe Denver Colorado 80209",
+    "food Denver Colorado 80209",
 ]
 
 BAD_EMAIL_DOMAINS = {
