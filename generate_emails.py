@@ -28,32 +28,30 @@ base, ext = os.path.splitext(INPUT_FILE)
 OUTPUT_FILE = base + "_emails" + ext
 
 
-def call_gemini(business_name, pain_point):
-    prompt = f"""You are a casual, sharp cold email writer for a content studio called Y-Studio that creates high-end visual content for restaurants and cafes.
-Write 2 different cold EMAIL versions for a restaurant/cafe called "{business_name}".
+def call_gemini(biz_name, pain_point, owner_name=None):
+    subject_name = owner_name.split()[0] if owner_name else biz_name
+    subject = f"{subject_name} x Y-Studio"
 
-The observed pain point is: {pain_point}
+    prompt = f"""You are an expert Cold Email Copywriter specializing in B2B outreach and high-converting marketing for the food & beverage, lifestyle, and retail industries.
 
-Each email must follow this exact 3-part structure:
+Your goal is to write a highly compelling, personalized, and short Cold Email to the owner of "{biz_name}".
 
-1. HOOK (1 sentence) — Always start with "Are you open to..." followed by a desirable positive outcome for the business (e.g. getting more walk-ins, getting more bookings, filling more tables, pulling more local attention). Do NOT ask about their pain or problems here — focus purely on the upside they want. Vary the positive outcome between v1 and v2. Examples: "Are you open to getting more walk-ins this month?" / "Are you open to pulling more local attention to Burger & Bear?"
+The observed pain point about this business is: {pain_point}
 
-2. VALUE (2 sentences max — keep tight) — One sentence: genuine compliment + specific pain point with empathy, woven together. One sentence: Competitor-Based FOMO — similar spots nearby are leveling up their poster content and you'd hate for {business_name} to get overlooked. Be observational, not aggressive. Target ~30 words for this section.
+The core psychology of the email is to leverage "competitor anxiety" and offer a "visual upgrade solution" to outshine their local competitor, backed by proven success.
 
-3. PORTFOLIO CTA (2 sentences) — First sentence: naturally introduce your recent work with the exact anchor text phrase "click here to view our recent work" embedded in a real sentence (e.g. "You can click here to view our recent work" or "Here is a look at what we do, click here to view our recent work"). Second sentence: softly ask if they would be curious to hear how you could help them with their foot traffic, bookings, walk-ins, or engagement — pick whichever fits their pain point. Tone must feel zero-pressure, like you are genuinely curious whether it is relevant to them, not pushing for a reply.
+Follow this strict structure:
 
-Global rules:
-- Format: cold EMAIL body only (no subject line, no sign-off)
-- Salutation: start with "Hi {business_name},"
-- Tone: casual, real, grounded — like a person texting a business owner, not a corporate pitch
-- Total word count: 60–75 words. Count every word before finalising. If over 75, cut sentences. This is a hard limit — do not exceed it.
-- No hashtags, no emojis, no buzzwords
-- Punctuation: use ONLY commas, periods, and question marks. No dashes, colons, semicolons, exclamation marks, parentheses, or any other punctuation symbols whatsoever.
-- Never say: "free", "guaranteed", "limited offer", "marketing agency", "social media services", "just", "I wanted to", "reach out", "visual", "visuals"
-- The 2 versions must feel clearly different — vary the hook angle, the compliment, the FOMO framing, and the CTA phrasing
-- Sound like a real human, not a template
+1. Do NOT include a subject line — the subject is already set. Start directly with the salutation "Hi {biz_name}," (or use the owner first name if it feels natural).
+2. Hook: Mention that their local competitor (invent a plausible-sounding nearby competitor of the same business type) is doing heavily aggressive visual marketing on social media and getting strong results (e.g. growing following fast, pulling walk-ins, filling seats).
+3. Flattery & Pivot: Immediately compliment the prospect — their product quality and brand foundation is actually BETTER than the competitor's, but it's a shame the competitor is winning audience attention purely through better visual content.
+4. Value Proposition + Social Proof: State you have identified 2 specific visual breakthrough points to help them outshine this competitor. Support it with a brief success story — e.g. "We recently helped a local cafe grow their Instagram engagement 3x in 6 weeks" (keep it short and believable).
+5. Low-friction CTA: One sentence only — ask if they want to see the 2 custom ideas and the case study. Example: "I've put together these 2 custom ideas along with the quick case study of how we did it. Open to checking them out? Just reply 'yes' and I'll send them over."
 
-Return ONLY the 2 email bodies separated by "---", no labels, no numbering, no extra text."""
+Tone: Professional, confident, helpful, peer-to-peer — sounds like a real human, not a template. No corporate jargon.
+Length: Under 120 words. Hard limit — count every word before finalizing.
+
+Return ONLY the email body. No subject line, no labels, no extra text."""
 
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}]
@@ -67,10 +65,7 @@ Return ONLY the 2 email bodies separated by "---", no labels, no numbering, no e
                 with urllib.request.urlopen(req, timeout=60) as resp:
                     result = json.loads(resp.read())
                 text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
-                parts = text.split("---")
-                v1 = parts[0].strip() if len(parts) >= 1 else ""
-                v2 = parts[1].strip() if len(parts) >= 2 else ""
-                return v1, v2
+                return subject, text
             except urllib.error.HTTPError as e:
                 wait = 5 * (attempt + 1)
                 print(f"  [{model}] attempt {attempt+1} failed ({e.code}) — retry in {wait}s")
@@ -85,8 +80,8 @@ Return ONLY the 2 email bodies separated by "---", no labels, no numbering, no e
 
 
 def clean_body(text):
-    # Strip everything except letters, digits, whitespace, commas, periods, apostrophes
-    cleaned = re.sub(r"[^a-zA-Z0-9\s,.?\']", "", text)
+    # Remove markdown bold/italic markers and excessive whitespace
+    cleaned = re.sub(r"[*_`#]", "", text)
     cleaned = re.sub(r" {2,}", " ", cleaned)
     return cleaned.strip()
 
@@ -103,14 +98,13 @@ wb = openpyxl.load_workbook(OUTPUT_FILE)
 ws = wb.active
 headers = [cell.value for cell in ws[1]]
 
-for col_name in ["Subject", "Email v1", "Email v2"]:
+for col_name in ["Subject", "Email"]:
     if col_name not in headers:
         headers.append(col_name)
         ws.cell(row=1, column=len(headers), value=col_name)
 
 subject_col = headers.index("Subject") + 1
-v1_col = headers.index("Email v1") + 1
-v2_col = headers.index("Email v2") + 1
+email_col = headers.index("Email") + 1
 name_col_key = next((k for k in ["Restaurant Name", "Name", "name"] if k in headers), headers[0])
 name_col = headers.index(name_col_key) + 1
 pain_col = headers.index("Pain Point") + 1
@@ -127,35 +121,32 @@ for row_idx in range(2, ws.max_row + 1):
     if not biz_name or not pain_point:
         continue
 
-    # Skip if Email v1 already filled with a real email (resume checkpoint)
-    existing_v1 = ws.cell(row=row_idx, column=v1_col).value or ""
-    if existing_v1 and existing_v1.startswith("Hi "):
+    # Skip if Email already filled (resume checkpoint)
+    existing_email = ws.cell(row=row_idx, column=email_col).value or ""
+    if existing_email and existing_email.startswith("Hi "):
         skipped += 1
         print(f"[{row_idx-1}/{total}] SKIP (already done): {biz_name}")
         continue
 
-    subject = f"Hi {biz_name}"
+    owner_name = ws.cell(row=row_idx, column=owner_col).value if owner_col else None
 
     print(f"[{row_idx-1}/{total}] Generating: {biz_name} ...")
     try:
-        v1, v2 = call_gemini(biz_name, pain_point)
+        subject, email_body = call_gemini(biz_name, pain_point, owner_name)
     except Exception as e:
         print(f"  ERROR: {e} — skipping, will retry on next run")
         continue
 
-    v1 = clean_body(v1)
-    v2 = clean_body(v2)
+    email_body = clean_body(email_body)
 
     ws.cell(row=row_idx, column=subject_col, value=subject)
-    ws.cell(row=row_idx, column=v1_col, value=v1)
-    ws.cell(row=row_idx, column=v2_col, value=v2)
+    ws.cell(row=row_idx, column=email_col, value=email_body)
 
     wb.save(OUTPUT_FILE)  # save immediately after each row
     done += 1
 
     print(f"  Subject: {subject}")
-    print(f"  v1: {v1[:80]}...")
-    print(f"  v2: {v2[:80]}...")
+    print(f"  Email: {email_body[:100]}...")
     time.sleep(3)  # avoid rate-limiting
 
 print(f"\nDone. {done} generated, {skipped} skipped. Output: {OUTPUT_FILE}")
