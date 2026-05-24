@@ -113,13 +113,13 @@ wb = openpyxl.load_workbook(OUTPUT_FILE)
 ws = wb.active
 headers = [cell.value for cell in ws[1]]
 
-for col_name in ["Subject", "Email"]:
+for col_name in ["Subject", "Cold Email"]:
     if col_name not in headers:
         headers.append(col_name)
         ws.cell(row=1, column=len(headers), value=col_name)
 
 subject_col = headers.index("Subject") + 1
-email_col = headers.index("Email") + 1
+email_col = headers.index("Cold Email") + 1
 name_col_key = next((k for k in ["Restaurant Name", "Name", "name"] if k in headers), headers[0])
 name_col = headers.index(name_col_key) + 1
 # All columns optional except Name
