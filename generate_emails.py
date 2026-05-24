@@ -34,16 +34,22 @@ AREA = re.sub(r'\s*leads\s*$', '', AREA, flags=re.IGNORECASE).strip()
 print(f"Detected area: {AREA}")
 
 
-def call_gemini(biz_name, pain_point, owner_name=None):
+def call_gemini(biz_name, pain_point, owner_name=None, menu_items=None):
     subject_name = owner_name.split()[0] if owner_name else biz_name
     subject = f"{subject_name} x Y-Studio"
+
+    context_lines = []
+    if pain_point:
+        context_lines.append(f"Observed pain point: {pain_point}")
+    if menu_items:
+        context_lines.append(f"Known menu items: {menu_items}")
+    context_block = ("\n" + "\n".join(context_lines)) if context_lines else ""
 
     prompt = f"""You are an expert Cold Email Copywriter specializing in B2B outreach and high-converting marketing for the food & beverage, lifestyle, and retail industries.
 
 Your goal is to write a highly compelling, personalized, and short Cold Email to the owner of "{biz_name}".
 
-The business is located in: {AREA}
-The observed pain point about this business is: {pain_point}
+The business is located in: {AREA}{context_block}
 
 The core psychology of the email is to leverage "competitor anxiety" and offer a "visual upgrade solution" to outshine their local competitor, backed by proven success.
 
@@ -53,12 +59,12 @@ Write exactly 3 tight paragraphs. No subject line. No bullet points. No labels.
 
 Para 1 — Salutation + Hook: Start with "Hi {biz_name}," (always use the exact business name, never a placeholder). Then name a specific, plausible competitor from {AREA} (invent a realistic-sounding name that fits the neighbourhood). Describe vividly how their consistent food poster content on Instagram racks up engagement and pulls walk-ins — make the reader feel the gap as if they are scrolling past those posts right now.
 
-Para 2 — Flattery and Pivot: Open with "But what I noticed is..." or "But here's the thing —". Give a specific, believable compliment tied to their actual concept, neighbourhood identity, or loyal customer base — NOT generic phrases like "your food is incredible" or "your menu is amazing". Then say it is a shame that a competitor with weaker food is winning purely through stronger poster content.
+Para 2 — Flattery and Pivot: Open with "But what I noticed is..." or "But here's the thing —". Give a specific, believable compliment tied to their actual concept, neighbourhood identity, or loyal customer base. If menu items are provided, naturally reference 1–2 specific dishes or drinks by name to show you actually know their food — NOT generic phrases like "your food is incredible". Then say it is a shame a competitor with weaker food is winning purely through stronger poster content.
 
-Para 3 — Value Prop + CTA: Say you have already spotted 2 food poster design ideas for {biz_name} that could flip this. Drop one concrete number from a past client (e.g. "3x reach in 6 weeks" or "40% more walk-ins in a month"). End with one zero-pressure sentence asking if they want to see the 2 ideas and the case study.
+Para 3 — Value Prop + CTA: Say you have already spotted 2 food poster design ideas for {biz_name} that could flip this. If menu items are known, hint that these ideas are built around their specific dishes. Drop one concrete number from a past client (e.g. "3x reach in 6 weeks"). End with one zero-pressure sentence asking if they want to see the 2 ideas and the case study.
 
-Tone: Professional, confident, helpful, peer-to-peer — sounds like a real human wrote it, not a template. No corporate jargon. The whole email should read as one natural, connected thought, not a list of blocks.
-Length: Under 120 words. This is a strict hard limit. Count every word before finalizing. If over 120, cut ruthlessly — shorten sentences, remove filler words. Do not go over.
+Tone: Professional, confident, helpful, peer-to-peer — sounds like a real human wrote it, not a template. No corporate jargon.
+Length: Under 120 words. Hard limit. Cut ruthlessly if needed.
 
 Return ONLY the email body. No subject line, no labels, no extra text."""
 
@@ -116,18 +122,19 @@ subject_col = headers.index("Subject") + 1
 email_col = headers.index("Email") + 1
 name_col_key = next((k for k in ["Restaurant Name", "Name", "name"] if k in headers), headers[0])
 name_col = headers.index(name_col_key) + 1
-pain_col = headers.index("Pain Point") + 1
-# Owner column is optional — used for subject line if present
+# All columns optional except Name
+pain_col  = headers.index("Pain Point") + 1 if "Pain Point" in headers else None
 owner_col = headers.index("Owner") + 1 if "Owner" in headers else None
+menu_col  = headers.index("Menu Items") + 1 if "Menu Items" in headers else None
 
 total = ws.max_row - 1
 done = 0
 skipped = 0
 
 for row_idx in range(2, ws.max_row + 1):
-    biz_name = ws.cell(row=row_idx, column=name_col).value
-    pain_point = ws.cell(row=row_idx, column=pain_col).value
-    if not biz_name or not pain_point:
+    biz_name   = ws.cell(row=row_idx, column=name_col).value
+    pain_point = ws.cell(row=row_idx, column=pain_col).value if pain_col else ""
+    if not biz_name:
         continue
 
     # Skip if Email already filled (resume checkpoint)
@@ -137,11 +144,12 @@ for row_idx in range(2, ws.max_row + 1):
         print(f"[{row_idx-1}/{total}] SKIP (already done): {biz_name}")
         continue
 
-    owner_name = ws.cell(row=row_idx, column=owner_col).value if owner_col else None
+    owner_name  = ws.cell(row=row_idx, column=owner_col).value if owner_col else None
+    menu_items  = ws.cell(row=row_idx, column=menu_col).value if menu_col else None
 
     print(f"[{row_idx-1}/{total}] Generating: {biz_name} ...")
     try:
-        subject, email_body = call_gemini(biz_name, pain_point, owner_name)
+        subject, email_body = call_gemini(biz_name, pain_point, owner_name, menu_items)
     except Exception as e:
         print(f"  ERROR: {e} — skipping, will retry on next run")
         continue
