@@ -49,13 +49,13 @@ The core psychology of the email is to leverage "competitor anxiety" and offer a
 
 Y-Studio specializes in creating high-end food poster design — visually striking posters that make food look irresistible on Instagram and in-store displays. IMPORTANT: Never use the words "photography" or "photo shoot" — Y-Studio is a poster design studio, not a photography studio. Always say "food poster", "poster design", or "poster content".
 
-Follow this strict structure and write it as ONE flowing paragraph or 2–3 short paragraphs — not as separate bullet-point blocks:
+Write exactly 3 tight paragraphs. No subject line. No bullet points. No labels.
 
-1. Do NOT include a subject line — the subject is already set. Start directly with the salutation "Hi {biz_name}," (or use the owner first name if it feels natural).
-2. Hook: Paint a vivid picture of a specific, plausible competitor from the {AREA} area (invent a realistic-sounding name that fits that neighbourhood) — describe how they have been consistently posting eye-catching food poster content on social media, how their posts are getting strong engagement, and how it is visibly translating into more walk-ins and buzz. Make it feel real and specific enough that the reader can picture it and feel the gap.
-3. Flattery & Pivot: Flow naturally from the competitor result into a soft compliment — use a transition like "But what I noticed is..." or "But honestly..." to say that {biz_name}'s food is actually better, and with the right poster content it can absolutely outshine them.
-4. Value Proposition + Social Proof: Naturally lead into the fact that you've spotted 2 specific food poster design ideas for {biz_name} that could flip the game. Then weave in a brief success story (e.g. "We recently helped a local cafe in a similar spot grow their Instagram engagement 3x in 6 weeks with a new food poster series") — make it feel like a natural aside, not a sudden announcement.
-5. Low-friction CTA: One easy closing sentence asking if they'd like to see the 2 custom poster ideas and the quick case study (e.g. "I've put these 2 ideas together along with the case study — want me to send them over? Just reply 'yes'.")
+Para 1 — Salutation + Hook: Start with "Hi {biz_name}," (always use the exact business name, never a placeholder). Then name a specific, plausible competitor from {AREA} (invent a realistic-sounding name that fits the neighbourhood). Describe vividly how their consistent food poster content on Instagram racks up engagement and pulls walk-ins — make the reader feel the gap as if they are scrolling past those posts right now.
+
+Para 2 — Flattery and Pivot: Open with "But what I noticed is..." or "But here's the thing —". Give a specific, believable compliment tied to their actual concept, neighbourhood identity, or loyal customer base — NOT generic phrases like "your food is incredible" or "your menu is amazing". Then say it is a shame that a competitor with weaker food is winning purely through stronger poster content.
+
+Para 3 — Value Prop + CTA: Say you have already spotted 2 food poster design ideas for {biz_name} that could flip this. Drop one concrete number from a past client (e.g. "3x reach in 6 weeks" or "40% more walk-ins in a month"). End with one zero-pressure sentence asking if they want to see the 2 ideas and the case study.
 
 Tone: Professional, confident, helpful, peer-to-peer — sounds like a real human wrote it, not a template. No corporate jargon. The whole email should read as one natural, connected thought, not a list of blocks.
 Length: Under 120 words. This is a strict hard limit. Count every word before finalizing. If over 120, cut ruthlessly — shorten sentences, remove filler words. Do not go over.
