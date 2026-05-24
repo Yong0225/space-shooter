@@ -27,6 +27,12 @@ INPUT_FILE = sys.argv[1]
 base, ext = os.path.splitext(INPUT_FILE)
 OUTPUT_FILE = base + "_emails" + ext
 
+# Extract area name from filename: "Cherry Creek North Denver leads.xlsx" → "Cherry Creek North, Denver"
+_filename_base = os.path.basename(base)
+AREA = re.sub(r'[_\-]emails$', '', _filename_base, flags=re.IGNORECASE)
+AREA = re.sub(r'\s*leads\s*$', '', AREA, flags=re.IGNORECASE).strip()
+print(f"Detected area: {AREA}")
+
 
 def call_gemini(biz_name, pain_point, owner_name=None):
     subject_name = owner_name.split()[0] if owner_name else biz_name
@@ -36,21 +42,22 @@ def call_gemini(biz_name, pain_point, owner_name=None):
 
 Your goal is to write a highly compelling, personalized, and short Cold Email to the owner of "{biz_name}".
 
+The business is located in: {AREA}
 The observed pain point about this business is: {pain_point}
 
 The core psychology of the email is to leverage "competitor anxiety" and offer a "visual upgrade solution" to outshine their local competitor, backed by proven success.
 
 Y-Studio specializes in creating high-end food poster design — visually striking posters that make food look irresistible on Instagram and in-store displays. IMPORTANT: Never use the words "photography" or "photo shoot" — Y-Studio is a poster design studio, not a photography studio. Always say "food poster", "poster design", or "poster content".
 
-Follow this strict structure:
+Follow this strict structure and write it as ONE flowing paragraph or 2–3 short paragraphs — not as separate bullet-point blocks:
 
 1. Do NOT include a subject line — the subject is already set. Start directly with the salutation "Hi {biz_name}," (or use the owner first name if it feels natural).
-2. Hook: Mention that their local competitor (invent a plausible-sounding nearby competitor of the same business type) is posting stunning food posters on social media and getting strong results (e.g. growing following fast, pulling walk-ins, filling seats).
-3. Flattery & Pivot: Immediately after the competitor result, pivot to compliment the prospect — say that their food is actually better than the competitor's and absolutely has what it takes to outshine them, but right now the competitor is winning the audience purely because of stronger poster content.
-4. Value Proposition + Social Proof: State that you have identified 2 specific food poster design ideas that would make their dishes look irresistible online and pull more attention than the competitor. Support it with a brief success story — e.g. "We recently helped a local cafe grow their Instagram engagement 3x in 6 weeks with a new food poster series" (keep it short and believable).
-5. Low-friction CTA: One sentence only — ask if they want to see the 2 custom poster ideas and the case study. Example: "I've put together these 2 custom poster ideas along with the quick case study of how we did it. Open to checking them out? Just reply 'yes' and I'll send them over."
+2. Hook: Mention that a specific, plausible competitor from the {AREA} area (invent a realistic-sounding name that fits that neighbourhood) has been posting strong food poster content on social media and pulling in walk-ins because of it.
+3. Flattery & Pivot: Flow naturally from the competitor result into a soft compliment — use a transition like "But what I noticed is..." or "But honestly..." to say that {biz_name}'s food is actually better, and with the right poster content it can absolutely outshine them.
+4. Value Proposition + Social Proof: Naturally lead into the fact that you've spotted 2 specific food poster design ideas for {biz_name} that could flip the game. Then weave in a brief success story (e.g. "We recently helped a local cafe in a similar spot grow their Instagram engagement 3x in 6 weeks with a new food poster series") — make it feel like a natural aside, not a sudden announcement.
+5. Low-friction CTA: One easy closing sentence asking if they'd like to see the 2 custom poster ideas and the quick case study (e.g. "I've put these 2 ideas together along with the case study — want me to send them over? Just reply 'yes'.")
 
-Tone: Professional, confident, helpful, peer-to-peer — sounds like a real human, not a template. No corporate jargon.
+Tone: Professional, confident, helpful, peer-to-peer — sounds like a real human wrote it, not a template. No corporate jargon. The whole email should read as one natural, connected thought, not a list of blocks.
 Length: Under 120 words. Hard limit — count every word before finalizing.
 
 Return ONLY the email body. No subject line, no labels, no extra text."""
