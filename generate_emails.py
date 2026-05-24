@@ -58,7 +58,7 @@ Follow this strict structure and write it as ONE flowing paragraph or 2–3 shor
 5. Low-friction CTA: One easy closing sentence asking if they'd like to see the 2 custom poster ideas and the quick case study (e.g. "I've put these 2 ideas together along with the case study — want me to send them over? Just reply 'yes'.")
 
 Tone: Professional, confident, helpful, peer-to-peer — sounds like a real human wrote it, not a template. No corporate jargon. The whole email should read as one natural, connected thought, not a list of blocks.
-Length: Under 120 words. Hard limit — count every word before finalizing.
+Length: Under 100 words. This is a strict hard limit. Count every word before finalizing. If over 100, cut ruthlessly — shorten sentences, remove filler words. Do not go over.
 
 Return ONLY the email body. No subject line, no labels, no extra text."""
 
