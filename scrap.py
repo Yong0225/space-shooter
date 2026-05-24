@@ -128,7 +128,7 @@ def save_progress(prog):
     Path(tmp).replace(PROGRESS)
 
 # ── Excel ─────────────────────────────────────────────────────────────────────
-HEADERS      = ["Name", "Website", "Email", "Instagram", "Facebook"]
+HEADERS      = ["Name", "Area", "Website", "Email", "Instagram", "Facebook"]
 HDR_BG       = "2E4057"
 ROW_BG       = ["FFFFFF", "EDF2F7"]
 EMAIL_BG     = "C6F6D5"   # green tint if email found
@@ -250,7 +250,7 @@ def init_excel():
         c.fill      = PatternFill("solid", fgColor=HDR_BG)
         c.alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[1].height = 22
-    for col, w in zip("ABCDE", [38, 42, 38, 42, 42]):
+    for col, w in zip("ABCDEF", [38, 28, 42, 38, 42, 42]):
         ws.column_dimensions[col].width = w
     ws.freeze_panes = "A2"
     wb.save(OUTPUT)
@@ -261,6 +261,7 @@ def append_lead_to_excel(lead):
     ws = wb.active
     ws.append([
         lead.get("name", ""),
+        lead.get("area", ""),
         lead.get("website", ""),
         lead.get("email", ""),
         lead.get("instagram", ""),
@@ -268,7 +269,7 @@ def append_lead_to_excel(lead):
     ])
     r = ws.max_row
     bg = EMAIL_BG if lead.get("email") else ROW_BG[(r - 2) % 2]
-    for c in range(1, 6):
+    for c in range(1, 7):
         cell = ws.cell(r, c)
         cell.fill      = PatternFill("solid", fgColor=bg)
         cell.alignment = Alignment(vertical="center", wrap_text=False)
@@ -376,7 +377,9 @@ def scrape_maps_query(page, query):
 
 # ── Place detail → website ────────────────────────────────────────────────────
 def get_website(page, maps_url):
-    """Visit a Google Maps place page; return the business website URL or None."""
+    """Visit a Google Maps place page; return (website_url, area) — either may be None."""
+    website = None
+    area    = None
     try:
         page.goto(maps_url, timeout=25000, wait_until="domcontentloaded")
         sleep(1.5, 2.5)
@@ -386,17 +389,41 @@ def get_website(page, maps_url):
         if link.count():
             href = link.get_attribute('href') or ''
             if href.startswith('http'):
-                return href.split('?')[0]
+                website = href.split('?')[0]
 
         # Fallback: any external link shown in the info panel
-        for a in page.locator('a[href^="http"]').all():
-            href = a.get_attribute('href') or ''
-            if href.startswith('http') and 'google' not in href and 'maps' not in href:
-                return href.split('?')[0]
+        if not website:
+            for a in page.locator('a[href^="http"]').all():
+                href = a.get_attribute('href') or ''
+                if href.startswith('http') and 'google' not in href and 'maps' not in href:
+                    website = href.split('?')[0]
+                    break
+
+        # Extract area from the address shown on the Maps place page
+        try:
+            addr_btn = page.locator('button[data-item-id="address"]').first
+            if addr_btn.count():
+                addr_text = addr_btn.get_attribute('aria-label') or addr_btn.inner_text() or ''
+                addr_text = re.sub(r'^Address:\s*', '', addr_text, flags=re.IGNORECASE).strip()
+                parts = [p.strip() for p in addr_text.split(',')]
+                # Walk backwards: skip state+zip, zip-only, 2-letter state, and country
+                for p in reversed(parts[1:]):
+                    if re.match(r'^[A-Z]{2}\s+\d', p):   # "MI 48216"
+                        continue
+                    if re.match(r'^\d{4,5}', p):           # zip only
+                        continue
+                    if re.match(r'^[A-Z]{2}$', p):         # "MI"
+                        continue
+                    if p.lower() in ('united states', 'usa', 'us', 'canada'):
+                        continue
+                    area = p
+                    break
+        except Exception:
+            pass
 
     except Exception:
         pass
-    return None
+    return website, area
 
 # ── Website scraping ──────────────────────────────────────────────────────────
 def collect_html(page, base_url):
@@ -568,11 +595,13 @@ def main():
 
             print(f"\n[{ts()}] [{len(leads)+1}/{TARGET}] {name}")
 
-            website = get_website(page, maps_url)
+            website, area = get_website(page, maps_url)
             print(f"  Website : {website or '-'}")
+            print(f"  Area    : {area or '-'}")
 
             lead = {
                 'name':      name,
+                'area':      area or '',
                 'website':   website or '',
                 'email':     '',
                 'instagram': '',
