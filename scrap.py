@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Cherry Creek North Denver Colorado Leads Scraper
-Collects restaurant/cafe leads from Cherry Creek North neighborhood, Denver, Colorado
-Output: Cherry Creek North leads.xlsx  (Name | Website | Email | Instagram | Facebook)
+RiNo (River North Art District) Denver Colorado Leads Scraper
+Collects restaurant/cafe leads from RiNo neighborhood, Denver, Colorado
+Output: RiNo leads.xlsx  (Name | Area | Menu Items | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + cherry_creek_north_progress.json after EVERY lead.
+Resume-safe: writes to Excel + rino_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,65 +21,61 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Cherry Creek North leads.xlsx"
-PROGRESS    = "cherry_creek_north_progress.json"
+OUTPUT      = "RiNo leads.xlsx"
+PROGRESS    = "rino_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Cherry Creek North neighborhood, Denver, Colorado
+# Queries for RiNo (River North Art District) neighborhood, Denver, Colorado
 SEARCH_QUERIES = [
-    # Cherry Creek North core
-    "restaurants Cherry Creek North Denver Colorado",
-    "cafe Cherry Creek North Denver Colorado",
-    "coffee shop Cherry Creek North Denver Colorado",
-    "food Cherry Creek North Denver Colorado",
-    "pizza Cherry Creek North Denver Colorado",
-    "burger Cherry Creek North Denver Colorado",
-    "breakfast Cherry Creek North Denver Colorado",
-    "brunch Cherry Creek North Denver Colorado",
-    "sandwich Cherry Creek North Denver Colorado",
-    "bakery Cherry Creek North Denver Colorado",
-    "bar and grill Cherry Creek North Denver Colorado",
-    "mexican restaurant Cherry Creek North Denver Colorado",
-    "asian restaurant Cherry Creek North Denver Colorado",
-    "sushi Cherry Creek North Denver Colorado",
-    "italian restaurant Cherry Creek North Denver Colorado",
-    "seafood Cherry Creek North Denver Colorado",
-    "steakhouse Cherry Creek North Denver Colorado",
-    "wine bar Cherry Creek North Denver Colorado",
-    "cocktail bar Cherry Creek North Denver Colorado",
-    "fine dining Cherry Creek North Denver Colorado",
-    # Cherry Creek broader area
-    "restaurants Cherry Creek Denver Colorado",
-    "cafe Cherry Creek Denver Colorado",
-    "coffee shop Cherry Creek Denver Colorado",
-    "food Cherry Creek Denver Colorado",
-    "pizza Cherry Creek Denver Colorado",
-    "burger Cherry Creek Denver Colorado",
-    "breakfast Cherry Creek Denver Colorado",
-    "brunch Cherry Creek Denver Colorado",
-    "sandwich Cherry Creek Denver Colorado",
-    "bakery Cherry Creek Denver Colorado",
-    "bar and grill Cherry Creek Denver Colorado",
-    "mexican restaurant Cherry Creek Denver Colorado",
-    "asian restaurant Cherry Creek Denver Colorado",
-    "sushi Cherry Creek Denver Colorado",
-    "vegan Cherry Creek Denver Colorado",
-    # Key streets in Cherry Creek North
-    "restaurant 2nd Avenue Denver Colorado 80206",
-    "cafe 2nd Avenue Denver Colorado 80206",
-    "restaurant 3rd Avenue Denver Colorado 80206",
-    "cafe 3rd Avenue Denver Colorado 80206",
-    "restaurant Milwaukee Street Denver Colorado",
-    "restaurant Fillmore Street Denver Colorado",
-    "restaurant Detroit Street Denver Colorado",
-    "restaurant Clayton Street Denver Colorado",
-    # Zip code
-    "restaurant Denver Colorado 80206",
-    "cafe Denver Colorado 80206",
-    "food Denver Colorado 80206",
-    "restaurant Denver Colorado 80209",
-    "cafe Denver Colorado 80209",
-    "food Denver Colorado 80209",
+    # RiNo core
+    "restaurants RiNo Denver Colorado",
+    "cafe RiNo Denver Colorado",
+    "coffee shop RiNo Denver Colorado",
+    "food RiNo Denver Colorado",
+    "pizza RiNo Denver Colorado",
+    "burger RiNo Denver Colorado",
+    "breakfast RiNo Denver Colorado",
+    "brunch RiNo Denver Colorado",
+    "sandwich RiNo Denver Colorado",
+    "bakery RiNo Denver Colorado",
+    "bar and grill RiNo Denver Colorado",
+    "mexican restaurant RiNo Denver Colorado",
+    "asian restaurant RiNo Denver Colorado",
+    "sushi RiNo Denver Colorado",
+    "italian restaurant RiNo Denver Colorado",
+    "vegan RiNo Denver Colorado",
+    "fine dining RiNo Denver Colorado",
+    "brewery restaurant RiNo Denver Colorado",
+    # River North Art District full name
+    "restaurants River North Art District Denver Colorado",
+    "cafe River North Art District Denver Colorado",
+    "coffee River North Art District Denver Colorado",
+    "brunch River North Art District Denver Colorado",
+    "food River North Art District Denver Colorado",
+    # Key streets in RiNo
+    "restaurant Brighton Blvd Denver Colorado",
+    "cafe Brighton Blvd Denver Colorado",
+    "restaurant Larimer Street Denver Colorado 80205",
+    "cafe Larimer Street Denver Colorado 80205",
+    "restaurant Walnut Street Denver Colorado 80205",
+    "cafe Walnut Street Denver Colorado 80205",
+    "restaurant Blake Street Denver Colorado 80205",
+    "restaurant Wynkoop Street Denver Colorado",
+    "restaurant 35th Street Denver Colorado RiNo",
+    "restaurant 38th Street Denver Colorado RiNo",
+    "restaurant 40th Street Denver Colorado RiNo",
+    # Zip codes covering RiNo
+    "restaurant Denver Colorado 80205",
+    "cafe Denver Colorado 80205",
+    "food Denver Colorado 80205",
+    "restaurant Denver Colorado 80216",
+    "cafe Denver Colorado 80216",
+    "food Denver Colorado 80216",
+    # Nearby / overlapping neighborhoods
+    "restaurants Five Points Denver Colorado",
+    "cafe Five Points Denver Colorado",
+    "restaurants Cole neighborhood Denver Colorado",
+    "cafe Cole neighborhood Denver Colorado",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -242,7 +238,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "OTR Leads"
+    ws.title = "RiNo Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
