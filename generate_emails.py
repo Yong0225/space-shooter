@@ -1,4 +1,4 @@
-import sys, io, json, urllib.request, urllib.error, os, time, re
+import sys, io, json, urllib.request, urllib.error, os, time, re, random
 from dotenv import load_dotenv
 
 # Fix: force UTF-8 stdout so Chinese characters don't crash on Windows cp1252
@@ -28,31 +28,127 @@ base, ext = os.path.splitext(INPUT_FILE)
 OUTPUT_FILE = base + "_emails" + ext
 
 
-def call_gemini(biz_name, food_post=None, menu_items=None):
+# ── Phrase banks: one slot drawn per email to force wording variation ──────────
+_OPENERS = [
+    "Just saw your recent {food} post while scrolling",
+    "Was scrolling earlier and came across your {food} post",
+    "Came across your {food} post just now while scrolling",
+    "Spotted your {food} post while I was scrolling",
+    "Just stumbled across your {food} post",
+    "Your {food} post just popped up while I was scrolling",
+    "Was just scrolling and noticed your {food} post",
+    "Just came across your {food} post on my feed",
+    "Saw your {food} post show up while I was scrolling",
+    "Was scrolling and your {food} post caught my eye",
+]
+
+_COMPLIMENTS = [
+    "the food honestly already looks really good",
+    "the food presentation honestly has a lot of potential",
+    "it honestly looks super solid",
+    "honestly the food already looks amazing",
+    "the {food} honestly looks really appetizing",
+    "the food already looks really well-done",
+    "it honestly already looks really appetizing",
+    "the food honestly looks really promising",
+    "ngl the food already looks pretty fire",
+    "the food genuinely looks great as is",
+]
+
+_FREETIME = [
+    "Had a bit of free time so I",
+    "Had some free time so I",
+    "Was messing around and",
+    "Had a spare moment so I",
+    "Just had some downtime so I",
+]
+
+_ACTIONS = [
+    "made a quick promo-style concept using your photo",
+    "turned it into a poster-style visual just for fun",
+    "put together a scroll-stopping promo visual using your original photo",
+    "put together a quick poster concept around your shot",
+    "made a promo-style design using your photo",
+    "turned your photo into a clean poster-style visual",
+    "put together a quick food poster concept from your shot",
+    "turned it into a promo design using your photo",
+    "made a scroll-stopping version of it using your original shot",
+    "put together a visual concept using your photo",
+]
+
+_CTAS = [
+    "Mind if I send it over?",
+    "Want me to send it over?",
+    "Would you want to take a look?",
+    "Mind if I share it with you?",
+    "Want to see it?",
+]
+
+
+def _pick(lst, food=""):
+    item = random.choice(lst)
+    return item.replace("{food}", food)
+
+
+def call_gemini(biz_name, food_post=None, menu_items=None, row_seed=None):
     subject = f"{biz_name} x Y-Studio"
+
+    # Seed per-row so retries reproduce the same combo but each row differs
+    rng = random.Random(row_seed)
 
     if food_post:
         food_hint = f"The food item from their recent post: {food_post}"
+        food_label = food_post
     elif menu_items:
-        food_hint = f"Their menu includes: {menu_items}. Pick the single most visually appealing / photogenic item from this list."
+        food_hint = f"Their menu includes: {menu_items}. Pick the single most visually appealing / photogenic item."
+        food_label = "{food}"  # Gemini will resolve this
     else:
-        food_hint = "Pick any one common, visually appealing food item (e.g. burger, ramen, fried chicken, tacos, pasta, boba, waffle, etc.)."
+        food_hint = "Choose one visually appealing food item (e.g. burger, ramen, fried chicken, tacos, boba, waffle, pizza, etc.)."
+        food_label = "{food}"
 
-    prompt = f"""Write a short, casual Instagram DM / cold outreach message for Y-Studio, a food poster design studio.
+    opener    = rng.choice(_OPENERS).replace("{food}", food_label)
+    compliment = rng.choice(_COMPLIMENTS).replace("{food}", food_label)
+    freetime  = rng.choice(_FREETIME)
+    action    = rng.choice(_ACTIONS)
+    cta       = rng.choice(_CTAS)
+
+    prompt = f"""Write a short, casual Instagram DM for a food poster design studio.
 
 Target business: {biz_name}
 {food_hint}
 
-Follow this structure exactly (2–3 sentences, under 45 words total):
-Sentence 1: "Hey! [Casual opener — say you were scrolling and came across / just saw / spotted their recent [food item] post.]"
-Sentence 2: "[One-line compliment on how the food looks — e.g. 'the food honestly already looks really good', 'the food presentation has a lot of potential', 'it honestly looks super solid'.]"
-Sentence 3: "Had [a bit of / some] free time so I [made / turned it into / put together] a [promo-style concept / poster-style visual / scroll-stopping promo visual] using your [photo / original photo / shot]. Mind if I send it over?"
+Build the message around these exact phrase seeds — rephrase them naturally, do NOT copy word-for-word, but keep the core idea of each:
+• Opener seed: "{opener}"
+• Compliment seed: "{compliment}"
+• Action seed: "{freetime} {action}"
+• CTA: "{cta}"
 
-Rules:
-- Vary the exact wording each time — never copy sentence-for-sentence from the examples.
-- Keep it conversational and human. No hashtags, no emojis, no salesy language.
-- Do NOT mention Y-Studio by name in the message body.
-- Return ONLY the message. No subject line, no labels, no extra text."""
+Output format: 2–3 sentences, under 45 words. Start with "Hey!". No hashtags, no emojis, no salesy language. Do NOT name the studio. Return ONLY the message."""
+
+    payload = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}]
+    }).encode("utf-8")
+
+    for model in MODELS:
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={API_KEY}"
+        for attempt in range(3):
+            try:
+                req = urllib.request.Request(endpoint, data=payload, headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    result = json.loads(resp.read())
+                text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+                return subject, text
+            except urllib.error.HTTPError as e:
+                wait = 5 * (attempt + 1)
+                print(f"  [{model}] attempt {attempt+1} failed ({e.code}) — retry in {wait}s")
+                time.sleep(wait)
+            except Exception as e:
+                wait = 5 * (attempt + 1)
+                print(f"  [{model}] attempt {attempt+1} failed ({type(e).__name__}) — retry in {wait}s")
+                time.sleep(wait)
+        print(f"  [{model}] all attempts failed, trying next model...")
+
+    raise RuntimeError("All models exhausted")
 
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}]
@@ -131,7 +227,7 @@ for row_idx in range(2, ws.max_row + 1):
 
     print(f"[{row_idx-1}/{total}] Generating: {biz_name} ...")
     try:
-        subject, email_body = call_gemini(biz_name, food_post, menu_items)
+        subject, email_body = call_gemini(biz_name, food_post, menu_items, row_seed=row_idx)
     except Exception as e:
         print(f"  ERROR: {e} — skipping, will retry on next run")
         continue
