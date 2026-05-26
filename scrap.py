@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Old Town Scottsdale Arizona Leads Scraper
-Collects restaurant/cafe leads in Old Town Scottsdale, Arizona
-Output: Old Town Scottsdale leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+Mill Avenue Tempe Arizona Leads Scraper
+Collects restaurant/cafe leads along Mill Avenue corridor, Tempe, Arizona
+Output: Mill Avenue leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + old_town_scottsdale_progress.json after EVERY lead.
+Resume-safe: writes to Excel + mill_avenue_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,61 +21,59 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Old Town Scottsdale leads.xlsx"
-PROGRESS    = "old_town_scottsdale_progress.json"
+OUTPUT      = "Mill Avenue leads.xlsx"
+PROGRESS    = "mill_avenue_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Old Town Scottsdale, Arizona
+# Queries for Mill Avenue corridor, Tempe, Arizona
 SEARCH_QUERIES = [
-    # Core Old Town searches
-    "restaurants Old Town Scottsdale Arizona",
-    "cafe Old Town Scottsdale Arizona",
-    "coffee Old Town Scottsdale Arizona",
-    "food Old Town Scottsdale Arizona",
-    "breakfast Old Town Scottsdale Arizona",
-    "brunch Old Town Scottsdale Arizona",
-    "lunch Old Town Scottsdale Arizona",
-    "bakery Old Town Scottsdale Arizona",
-    "pizza Old Town Scottsdale Arizona",
-    "burger Old Town Scottsdale Arizona",
-    "sushi Old Town Scottsdale Arizona",
-    "mexican restaurant Old Town Scottsdale Arizona",
-    "italian restaurant Old Town Scottsdale Arizona",
-    "steakhouse Old Town Scottsdale Arizona",
-    "seafood Old Town Scottsdale Arizona",
-    "asian restaurant Old Town Scottsdale Arizona",
-    "thai restaurant Old Town Scottsdale Arizona",
-    "mediterranean restaurant Old Town Scottsdale Arizona",
-    "rooftop bar Old Town Scottsdale Arizona",
-    "bar and grill Old Town Scottsdale Arizona",
-    "fine dining Old Town Scottsdale Arizona",
-    "happy hour Old Town Scottsdale Arizona",
-    "vegan Old Town Scottsdale Arizona",
-    # Key streets inside Old Town
-    "restaurant Scottsdale Road Scottsdale Arizona 85251",
-    "cafe Scottsdale Road Scottsdale Arizona 85251",
-    "restaurant Marshall Way Scottsdale Arizona",
-    "cafe Marshall Way Scottsdale Arizona",
-    "restaurant Main Street Scottsdale Arizona",
-    "cafe Main Street Scottsdale Arizona 85251",
-    "restaurant 5th Avenue Scottsdale Arizona",
-    "restaurant Brown Ave Scottsdale Arizona",
-    "restaurant Craftsman Court Scottsdale Arizona",
-    "restaurant Goldwater Blvd Scottsdale Arizona",
-    "restaurant Drinkwater Blvd Scottsdale Arizona",
-    "restaurant Miller Road Scottsdale Arizona 85251",
-    # ZIP codes for Old Town area
-    "restaurant Scottsdale Arizona 85251",
-    "cafe Scottsdale Arizona 85251",
-    "food Scottsdale Arizona 85251",
-    "restaurant Scottsdale Arizona 85257",
-    "cafe Scottsdale Arizona 85257",
-    "food Scottsdale Arizona 85257",
-    # Nearby districts that overlap
-    "restaurants Scottsdale Waterfront Arizona",
-    "restaurants Old Town Arts District Scottsdale",
-    "restaurant Fashion Square Scottsdale Arizona",
-    "cafe Old Town Scottsdale Entertainment District",
+    # Core Mill Ave searches
+    "restaurants Mill Avenue Tempe Arizona",
+    "cafe Mill Avenue Tempe Arizona",
+    "coffee Mill Avenue Tempe Arizona",
+    "food Mill Avenue Tempe Arizona",
+    "breakfast Mill Avenue Tempe Arizona",
+    "brunch Mill Avenue Tempe Arizona",
+    "lunch Mill Avenue Tempe Arizona",
+    "bakery Mill Avenue Tempe Arizona",
+    "pizza Mill Avenue Tempe Arizona",
+    "burger Mill Avenue Tempe Arizona",
+    "sushi Mill Avenue Tempe Arizona",
+    "mexican restaurant Mill Avenue Tempe Arizona",
+    "bar and grill Mill Avenue Tempe Arizona",
+    "asian restaurant Mill Avenue Tempe Arizona",
+    "sandwich Mill Avenue Tempe Arizona",
+    "vegan Mill Avenue Tempe Arizona",
+    "happy hour Mill Avenue Tempe Arizona",
+    "live music bar Mill Avenue Tempe Arizona",
+    # Downtown Tempe / ASU area
+    "restaurants downtown Tempe Arizona",
+    "cafe downtown Tempe Arizona",
+    "coffee downtown Tempe Arizona",
+    "food downtown Tempe Arizona",
+    "breakfast downtown Tempe Arizona",
+    "brunch downtown Tempe Arizona",
+    "pizza downtown Tempe Arizona",
+    "burger downtown Tempe Arizona",
+    "sushi downtown Tempe Arizona",
+    "bar downtown Tempe Arizona",
+    "restaurant ASU Tempe Arizona",
+    "cafe near Arizona State University Tempe",
+    # Key cross streets on Mill Ave
+    "restaurant University Drive Tempe Arizona",
+    "cafe University Drive Tempe Arizona",
+    "restaurant 5th Street Tempe Arizona",
+    "restaurant 6th Street Tempe Arizona",
+    "restaurant Rio Salado Tempe Arizona",
+    "restaurant Tempe Town Lake Arizona",
+    "restaurant College Avenue Tempe Arizona",
+    # ZIP codes for Tempe/Mill Ave area
+    "restaurant Tempe Arizona 85281",
+    "cafe Tempe Arizona 85281",
+    "food Tempe Arizona 85281",
+    "restaurant Tempe Arizona 85282",
+    "cafe Tempe Arizona 85282",
+    "food Tempe Arizona 85282",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -238,7 +236,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Old Town Scottsdale Leads"
+    ws.title = "Mill Avenue Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
