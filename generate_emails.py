@@ -78,10 +78,10 @@ _ACTIONS = [
 
 _CTAS = [
     "Mind if I send it over?",
-    "Want me to send it over?",
-    "Would you want to take a look?",
     "Mind if I share it with you?",
-    "Want to see it?",
+    "Mind if I pass it along?",
+    "Would it be okay if I sent it over?",
+    "Happy to send it over if you'd like to take a look!",
 ]
 
 
