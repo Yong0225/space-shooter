@@ -2,7 +2,7 @@
 """
 RiNo (River North Art District) Denver Colorado Leads Scraper
 Collects restaurant/cafe leads from RiNo neighborhood, Denver, Colorado
-Output: RiNo leads.xlsx  (Name | Area | Menu Items | Website | Email | Instagram | Facebook)
+Output: RiNo leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
 Resume-safe: writes to Excel + rino_progress.json after EVERY lead.
 Run: py scrap.py
@@ -124,7 +124,7 @@ def save_progress(prog):
     Path(tmp).replace(PROGRESS)
 
 # ── Excel ─────────────────────────────────────────────────────────────────────
-HEADERS      = ["Name", "Area", "Menu Items", "Website", "Email", "Instagram", "Facebook"]
+HEADERS      = ["Name", "Area", "Website", "Email", "Instagram", "Facebook"]
 HDR_BG       = "2E4057"
 ROW_BG       = ["FFFFFF", "EDF2F7"]
 EMAIL_BG     = "C6F6D5"   # green tint if email found
@@ -246,7 +246,7 @@ def init_excel():
         c.fill      = PatternFill("solid", fgColor=HDR_BG)
         c.alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[1].height = 22
-    for col, w in zip("ABCDEFG", [38, 28, 45, 42, 38, 42, 42]):
+    for col, w in zip("ABCDEF", [38, 28, 42, 38, 42, 42]):
         ws.column_dimensions[col].width = w
     ws.freeze_panes = "A2"
     wb.save(OUTPUT)
@@ -258,7 +258,6 @@ def append_lead_to_excel(lead):
     ws.append([
         lead.get("name", ""),
         lead.get("area", ""),
-        lead.get("menu_items", ""),
         lead.get("website", ""),
         lead.get("email", ""),
         lead.get("instagram", ""),
@@ -266,7 +265,7 @@ def append_lead_to_excel(lead):
     ])
     r = ws.max_row
     bg = EMAIL_BG if lead.get("email") else ROW_BG[(r - 2) % 2]
-    for c in range(1, 8):
+    for c in range(1, 7):
         cell = ws.cell(r, c)
         cell.fill      = PatternFill("solid", fgColor=bg)
         cell.alignment = Alignment(vertical="center", wrap_text=False)
@@ -423,68 +422,9 @@ def get_website(page, maps_url):
     return website, area
 
 # ── Website scraping ──────────────────────────────────────────────────────────
-FOOD_WORDS = {
-    'chicken', 'beef', 'pork', 'lamb', 'duck', 'fish', 'salmon', 'tuna', 'shrimp',
-    'lobster', 'crab', 'pasta', 'pizza', 'burger', 'sandwich', 'salad', 'soup',
-    'steak', 'taco', 'burrito', 'bowl', 'wrap', 'noodle', 'rice', 'egg', 'waffle',
-    'pancake', 'toast', 'bacon', 'sausage', 'cake', 'pie', 'donut', 'cookie', 'bread',
-    'coffee', 'latte', 'espresso', 'cappuccino', 'mocha', 'matcha', 'tea', 'brew',
-    'cocktail', 'beer', 'wine', 'juice', 'smoothie', 'milkshake', 'cider', 'soda',
-    'ramen', 'pho', 'curry', 'hummus', 'falafel', 'gyro', 'kebab', 'dumpling', 'bao',
-    'wings', 'ribs', 'brisket', 'pulled pork', 'mac', 'grilled', 'fried', 'roasted',
-}
-
-def extract_menu_items(html):
-    """Extract up to 5 dish/drink names from page HTML."""
-    items = []
-    seen  = set()
-
-    def add(name):
-        name = re.sub(r'\s+', ' ', name).strip()
-        key  = name.lower()
-        if key not in seen and 3 < len(name) < 55:
-            seen.add(key)
-            items.append(name)
-
-    # 1. Schema.org MenuItem in JSON-LD (most reliable)
-    for m in re.finditer(
-        r'"@type"\s*:\s*"MenuItem"[^}]{0,400}?"name"\s*:\s*"([^"]{3,55})"',
-        html, re.DOTALL
-    ):
-        add(m.group(1))
-        if len(items) >= 5:
-            break
-
-    if len(items) >= 3:
-        return ', '.join(items[:5])
-
-    # 2. Text immediately before a price ($12, $12.50)
-    for m in re.finditer(r'([A-Z][a-zA-Z][a-zA-Z\s&\'\-]{2,40}?)\s*\$\s*\d+', html):
-        add(m.group(1))
-        if len(items) >= 5:
-            break
-
-    if len(items) >= 3:
-        return ', '.join(items[:5])
-
-    # 3. List/heading tags whose text contains a food word
-    for m in re.finditer(
-        r'<(?:li|h[23]|td)[^>]*>\s*([A-Z][a-zA-Z][a-zA-Z\s&\'\-]{2,45}?)\s*</(?:li|h[23]|td)>',
-        html
-    ):
-        name = m.group(1).strip()
-        if any(w in name.lower() for w in FOOD_WORDS):
-            add(name)
-        if len(items) >= 5:
-            break
-
-    return ', '.join(items[:5]) if items else ''
-
-
 def collect_html(page, base_url):
-    """Load homepage + up to 1 menu page + 1 contact page; return combined HTML."""
-    html_parts = []
-    menu_urls    = []
+    """Load homepage + up to 1 contact page; return combined HTML."""
+    html_parts   = []
     contact_urls = []
 
     try:
@@ -498,13 +438,10 @@ def collect_html(page, base_url):
                 text = (a.inner_text() or '').lower().strip()
                 if not href.startswith('http'):
                     href = base_url.rstrip('/') + '/' + href.lstrip('/')
-                if href in menu_urls or href in contact_urls or href == base_url:
+                if href in contact_urls or href == base_url:
                     continue
-                if any(k in href.lower() or k == text
-                       for k in ['menu', 'food', 'drink', 'cuisine', 'eats']):
-                    menu_urls.append(href)
-                elif any(k in href.lower() or k in text
-                         for k in ['contact', 'about', 'reach', 'connect', 'location']):
+                if any(k in href.lower() or k in text
+                       for k in ['contact', 'about', 'reach', 'connect', 'location']):
                     contact_urls.append(href)
             except Exception:
                 continue
@@ -512,7 +449,7 @@ def collect_html(page, base_url):
     except Exception:
         pass
 
-    for url in (menu_urls[:1] + contact_urls[:1]):
+    for url in contact_urls[:1]:
         try:
             page.goto(url, timeout=12000, wait_until="domcontentloaded")
             sleep(0.8, 1.5)
@@ -528,15 +465,13 @@ def scrape_website(page, website_url):
         html = collect_html(page, website_url)
         emails = extract_emails_from_html(html)
         fb, ig = extract_socials(html)
-        menu   = extract_menu_items(html)
         return {
-            'email':      emails[0] if emails else None,
-            'facebook':   fb,
-            'instagram':  ig,
-            'menu_items': menu,
+            'email':     emails[0] if emails else None,
+            'facebook':  fb,
+            'instagram': ig,
         }
     except Exception:
-        return {'email': None, 'facebook': None, 'instagram': None, 'menu_items': ''}
+        return {'email': None, 'facebook': None, 'instagram': None}
 
 # ── Facebook About scraping ───────────────────────────────────────────────────
 def scrape_fb_email(page, fb_url):
@@ -663,25 +598,22 @@ def main():
             print(f"  Area    : {area or '-'}")
 
             lead = {
-                'name':       name,
-                'area':       area or '',
-                'menu_items': '',
-                'website':    website or '',
-                'email':      '',
-                'instagram':  '',
-                'facebook':   '',
+                'name':      name,
+                'area':      area or '',
+                'website':   website or '',
+                'email':     '',
+                'instagram': '',
+                'facebook':  '',
             }
 
             if website:
                 data = scrape_website(page, website)
-                lead['email']      = data.get('email') or ''
-                lead['facebook']   = data.get('facebook') or ''
-                lead['instagram']  = data.get('instagram') or ''
-                lead['menu_items'] = data.get('menu_items') or ''
+                lead['email']     = data.get('email') or ''
+                lead['facebook']  = data.get('facebook') or ''
+                lead['instagram'] = data.get('instagram') or ''
                 print(f"  Email   : {lead['email'] or '-'}")
                 print(f"  FB      : {lead['facebook'] or '-'}")
                 print(f"  IG      : {lead['instagram'] or '-'}")
-                print(f"  Menu    : {lead['menu_items'] or '-'}")
 
                 # No email on website -> try Facebook About section
                 if not lead['email'] and lead['facebook']:
