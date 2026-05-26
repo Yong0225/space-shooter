@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-South Federal Blvd Denver Colorado Leads Scraper
-Collects restaurant/cafe leads along South Federal Blvd corridor, Denver, Colorado
-Output: South Federal Blvd leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+Havana Street Aurora Colorado Leads Scraper
+Collects restaurant/cafe leads along Havana Street corridor, Aurora, Colorado
+Output: Havana Street leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + south_federal_blvd_progress.json after EVERY lead.
+Resume-safe: writes to Excel + havana_street_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,67 +21,64 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "South Federal Blvd leads.xlsx"
-PROGRESS    = "south_federal_blvd_progress.json"
+OUTPUT      = "Havana Street leads.xlsx"
+PROGRESS    = "havana_street_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for South Federal Blvd corridor, Denver, Colorado
+# Queries for Havana Street corridor, Aurora, Colorado
 SEARCH_QUERIES = [
     # Direct street queries
-    "restaurants South Federal Blvd Denver Colorado",
-    "cafe South Federal Blvd Denver Colorado",
-    "coffee South Federal Blvd Denver Colorado",
-    "food South Federal Blvd Denver Colorado",
-    "breakfast South Federal Blvd Denver Colorado",
-    "brunch South Federal Blvd Denver Colorado",
-    "lunch South Federal Blvd Denver Colorado",
-    "bakery South Federal Blvd Denver Colorado",
-    "pizza South Federal Blvd Denver Colorado",
-    "burger South Federal Blvd Denver Colorado",
-    "sandwich South Federal Blvd Denver Colorado",
-    "mexican restaurant South Federal Blvd Denver Colorado",
-    "vietnamese restaurant South Federal Blvd Denver Colorado",
-    "asian restaurant South Federal Blvd Denver Colorado",
-    "chinese restaurant South Federal Blvd Denver Colorado",
-    "thai restaurant South Federal Blvd Denver Colorado",
-    "pho South Federal Blvd Denver Colorado",
-    "taco South Federal Blvd Denver Colorado",
-    "bar and grill South Federal Blvd Denver Colorado",
-    "fast food South Federal Blvd Denver Colorado",
-    # Neighborhood: Westwood (the primary neighborhood along S Federal)
-    "restaurants Westwood Denver Colorado",
-    "cafe Westwood Denver Colorado",
-    "food Westwood Denver Colorado",
-    "mexican restaurant Westwood Denver Colorado",
-    "vietnamese restaurant Westwood Denver Colorado",
-    "asian restaurant Westwood Denver Colorado",
-    "breakfast Westwood Denver Colorado",
-    # Neighborhood: Harvey Park
-    "restaurants Harvey Park Denver Colorado",
-    "cafe Harvey Park Denver Colorado",
-    "food Harvey Park Denver Colorado",
-    # Neighborhood: Bear Valley
-    "restaurants Bear Valley Denver Colorado",
-    "food Bear Valley Denver Colorado",
-    # Zip codes along the corridor (80219 = Westwood/Harvey Park, 80236 = Bear Valley)
-    "restaurant Denver Colorado 80219",
-    "cafe Denver Colorado 80219",
-    "food Denver Colorado 80219",
-    "restaurant Denver Colorado 80236",
-    "cafe Denver Colorado 80236",
-    "food Denver Colorado 80236",
-    # Englewood section of Federal Blvd (just south of Denver city limit)
-    "restaurants Federal Blvd Englewood Colorado",
-    "cafe Federal Blvd Englewood Colorado",
-    "food Federal Blvd Englewood Colorado",
-    "restaurant Englewood Colorado 80110",
-    "cafe Englewood Colorado 80110",
-    # Specific cuisine clusters known on this corridor
-    "pho Vietnamese Federal Denver",
-    "tacos Federal Blvd Denver",
-    "carnitas Federal Blvd Denver",
-    "tamales South Federal Denver",
-    "dim sum Federal Blvd Denver",
+    "restaurants Havana Street Aurora Colorado",
+    "cafe Havana Street Aurora Colorado",
+    "coffee Havana Street Aurora Colorado",
+    "food Havana Street Aurora Colorado",
+    "breakfast Havana Street Aurora Colorado",
+    "brunch Havana Street Aurora Colorado",
+    "lunch Havana Street Aurora Colorado",
+    "bakery Havana Street Aurora Colorado",
+    "pizza Havana Street Aurora Colorado",
+    "burger Havana Street Aurora Colorado",
+    "sandwich Havana Street Aurora Colorado",
+    "mexican restaurant Havana Street Aurora Colorado",
+    "vietnamese restaurant Havana Street Aurora Colorado",
+    "asian restaurant Havana Street Aurora Colorado",
+    "chinese restaurant Havana Street Aurora Colorado",
+    "thai restaurant Havana Street Aurora Colorado",
+    "ethiopian restaurant Havana Street Aurora Colorado",
+    "african restaurant Havana Street Aurora Colorado",
+    "pho Havana Street Aurora Colorado",
+    "taco Havana Street Aurora Colorado",
+    "bar and grill Havana Street Aurora Colorado",
+    "fast food Havana Street Aurora Colorado",
+    # Key ZIP codes along Havana St (80010, 80012, 80014)
+    "restaurant Aurora Colorado 80010",
+    "cafe Aurora Colorado 80010",
+    "food Aurora Colorado 80010",
+    "restaurant Aurora Colorado 80012",
+    "cafe Aurora Colorado 80012",
+    "food Aurora Colorado 80012",
+    "restaurant Aurora Colorado 80014",
+    "cafe Aurora Colorado 80014",
+    "food Aurora Colorado 80014",
+    # Neighborhoods along Havana corridor
+    "restaurants Aurora Colorado near Havana",
+    "restaurants Jewell Square Aurora Colorado",
+    "restaurants Aurora Town Center Colorado",
+    "restaurants Hampden Aurora Colorado",
+    "food Mississippi Ave Aurora Colorado",
+    "restaurant Alameda Ave Aurora Colorado",
+    "restaurant Colfax Ave Aurora Colorado",
+    # Cuisine clusters known on this corridor
+    "pho Vietnamese Aurora Colorado",
+    "Ethiopian food Aurora Colorado",
+    "Somali restaurant Aurora Colorado",
+    "African restaurant Aurora Colorado",
+    "taco Aurora Colorado Havana",
+    "carnitas Aurora Colorado",
+    "dim sum Aurora Colorado",
+    "halal restaurant Aurora Colorado",
+    "Indian restaurant Aurora Colorado Havana",
+    "Korean BBQ Aurora Colorado",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -244,7 +241,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "South Federal Blvd Leads"
+    ws.title = "Havana Street Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
