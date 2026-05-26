@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-RiNo (River North Art District) Denver Colorado Leads Scraper
-Collects restaurant/cafe leads from RiNo neighborhood, Denver, Colorado
-Output: RiNo leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+South Federal Blvd Denver Colorado Leads Scraper
+Collects restaurant/cafe leads along South Federal Blvd corridor, Denver, Colorado
+Output: South Federal Blvd leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + rino_progress.json after EVERY lead.
+Resume-safe: writes to Excel + south_federal_blvd_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,61 +21,67 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "RiNo leads.xlsx"
-PROGRESS    = "rino_progress.json"
+OUTPUT      = "South Federal Blvd leads.xlsx"
+PROGRESS    = "south_federal_blvd_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for RiNo (River North Art District) neighborhood, Denver, Colorado
+# Queries for South Federal Blvd corridor, Denver, Colorado
 SEARCH_QUERIES = [
-    # RiNo core
-    "restaurants RiNo Denver Colorado",
-    "cafe RiNo Denver Colorado",
-    "coffee shop RiNo Denver Colorado",
-    "food RiNo Denver Colorado",
-    "pizza RiNo Denver Colorado",
-    "burger RiNo Denver Colorado",
-    "breakfast RiNo Denver Colorado",
-    "brunch RiNo Denver Colorado",
-    "sandwich RiNo Denver Colorado",
-    "bakery RiNo Denver Colorado",
-    "bar and grill RiNo Denver Colorado",
-    "mexican restaurant RiNo Denver Colorado",
-    "asian restaurant RiNo Denver Colorado",
-    "sushi RiNo Denver Colorado",
-    "italian restaurant RiNo Denver Colorado",
-    "vegan RiNo Denver Colorado",
-    "fine dining RiNo Denver Colorado",
-    "brewery restaurant RiNo Denver Colorado",
-    # River North Art District full name
-    "restaurants River North Art District Denver Colorado",
-    "cafe River North Art District Denver Colorado",
-    "coffee River North Art District Denver Colorado",
-    "brunch River North Art District Denver Colorado",
-    "food River North Art District Denver Colorado",
-    # Key streets in RiNo
-    "restaurant Brighton Blvd Denver Colorado",
-    "cafe Brighton Blvd Denver Colorado",
-    "restaurant Larimer Street Denver Colorado 80205",
-    "cafe Larimer Street Denver Colorado 80205",
-    "restaurant Walnut Street Denver Colorado 80205",
-    "cafe Walnut Street Denver Colorado 80205",
-    "restaurant Blake Street Denver Colorado 80205",
-    "restaurant Wynkoop Street Denver Colorado",
-    "restaurant 35th Street Denver Colorado RiNo",
-    "restaurant 38th Street Denver Colorado RiNo",
-    "restaurant 40th Street Denver Colorado RiNo",
-    # Zip codes covering RiNo
-    "restaurant Denver Colorado 80205",
-    "cafe Denver Colorado 80205",
-    "food Denver Colorado 80205",
-    "restaurant Denver Colorado 80216",
-    "cafe Denver Colorado 80216",
-    "food Denver Colorado 80216",
-    # Nearby / overlapping neighborhoods
-    "restaurants Five Points Denver Colorado",
-    "cafe Five Points Denver Colorado",
-    "restaurants Cole neighborhood Denver Colorado",
-    "cafe Cole neighborhood Denver Colorado",
+    # Direct street queries
+    "restaurants South Federal Blvd Denver Colorado",
+    "cafe South Federal Blvd Denver Colorado",
+    "coffee South Federal Blvd Denver Colorado",
+    "food South Federal Blvd Denver Colorado",
+    "breakfast South Federal Blvd Denver Colorado",
+    "brunch South Federal Blvd Denver Colorado",
+    "lunch South Federal Blvd Denver Colorado",
+    "bakery South Federal Blvd Denver Colorado",
+    "pizza South Federal Blvd Denver Colorado",
+    "burger South Federal Blvd Denver Colorado",
+    "sandwich South Federal Blvd Denver Colorado",
+    "mexican restaurant South Federal Blvd Denver Colorado",
+    "vietnamese restaurant South Federal Blvd Denver Colorado",
+    "asian restaurant South Federal Blvd Denver Colorado",
+    "chinese restaurant South Federal Blvd Denver Colorado",
+    "thai restaurant South Federal Blvd Denver Colorado",
+    "pho South Federal Blvd Denver Colorado",
+    "taco South Federal Blvd Denver Colorado",
+    "bar and grill South Federal Blvd Denver Colorado",
+    "fast food South Federal Blvd Denver Colorado",
+    # Neighborhood: Westwood (the primary neighborhood along S Federal)
+    "restaurants Westwood Denver Colorado",
+    "cafe Westwood Denver Colorado",
+    "food Westwood Denver Colorado",
+    "mexican restaurant Westwood Denver Colorado",
+    "vietnamese restaurant Westwood Denver Colorado",
+    "asian restaurant Westwood Denver Colorado",
+    "breakfast Westwood Denver Colorado",
+    # Neighborhood: Harvey Park
+    "restaurants Harvey Park Denver Colorado",
+    "cafe Harvey Park Denver Colorado",
+    "food Harvey Park Denver Colorado",
+    # Neighborhood: Bear Valley
+    "restaurants Bear Valley Denver Colorado",
+    "food Bear Valley Denver Colorado",
+    # Zip codes along the corridor (80219 = Westwood/Harvey Park, 80236 = Bear Valley)
+    "restaurant Denver Colorado 80219",
+    "cafe Denver Colorado 80219",
+    "food Denver Colorado 80219",
+    "restaurant Denver Colorado 80236",
+    "cafe Denver Colorado 80236",
+    "food Denver Colorado 80236",
+    # Englewood section of Federal Blvd (just south of Denver city limit)
+    "restaurants Federal Blvd Englewood Colorado",
+    "cafe Federal Blvd Englewood Colorado",
+    "food Federal Blvd Englewood Colorado",
+    "restaurant Englewood Colorado 80110",
+    "cafe Englewood Colorado 80110",
+    # Specific cuisine clusters known on this corridor
+    "pho Vietnamese Federal Denver",
+    "tacos Federal Blvd Denver",
+    "carnitas Federal Blvd Denver",
+    "tamales South Federal Denver",
+    "dim sum Federal Blvd Denver",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -238,7 +244,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "RiNo Leads"
+    ws.title = "South Federal Blvd Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
