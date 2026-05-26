@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Havana Street Aurora Colorado Leads Scraper
-Collects restaurant/cafe leads along Havana Street corridor, Aurora, Colorado
-Output: Havana Street leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+Old Town Scottsdale Arizona Leads Scraper
+Collects restaurant/cafe leads in Old Town Scottsdale, Arizona
+Output: Old Town Scottsdale leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + havana_street_progress.json after EVERY lead.
+Resume-safe: writes to Excel + old_town_scottsdale_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,64 +21,61 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Havana Street leads.xlsx"
-PROGRESS    = "havana_street_progress.json"
+OUTPUT      = "Old Town Scottsdale leads.xlsx"
+PROGRESS    = "old_town_scottsdale_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Havana Street corridor, Aurora, Colorado
+# Queries for Old Town Scottsdale, Arizona
 SEARCH_QUERIES = [
-    # Direct street queries
-    "restaurants Havana Street Aurora Colorado",
-    "cafe Havana Street Aurora Colorado",
-    "coffee Havana Street Aurora Colorado",
-    "food Havana Street Aurora Colorado",
-    "breakfast Havana Street Aurora Colorado",
-    "brunch Havana Street Aurora Colorado",
-    "lunch Havana Street Aurora Colorado",
-    "bakery Havana Street Aurora Colorado",
-    "pizza Havana Street Aurora Colorado",
-    "burger Havana Street Aurora Colorado",
-    "sandwich Havana Street Aurora Colorado",
-    "mexican restaurant Havana Street Aurora Colorado",
-    "vietnamese restaurant Havana Street Aurora Colorado",
-    "asian restaurant Havana Street Aurora Colorado",
-    "chinese restaurant Havana Street Aurora Colorado",
-    "thai restaurant Havana Street Aurora Colorado",
-    "ethiopian restaurant Havana Street Aurora Colorado",
-    "african restaurant Havana Street Aurora Colorado",
-    "pho Havana Street Aurora Colorado",
-    "taco Havana Street Aurora Colorado",
-    "bar and grill Havana Street Aurora Colorado",
-    "fast food Havana Street Aurora Colorado",
-    # Key ZIP codes along Havana St (80010, 80012, 80014)
-    "restaurant Aurora Colorado 80010",
-    "cafe Aurora Colorado 80010",
-    "food Aurora Colorado 80010",
-    "restaurant Aurora Colorado 80012",
-    "cafe Aurora Colorado 80012",
-    "food Aurora Colorado 80012",
-    "restaurant Aurora Colorado 80014",
-    "cafe Aurora Colorado 80014",
-    "food Aurora Colorado 80014",
-    # Neighborhoods along Havana corridor
-    "restaurants Aurora Colorado near Havana",
-    "restaurants Jewell Square Aurora Colorado",
-    "restaurants Aurora Town Center Colorado",
-    "restaurants Hampden Aurora Colorado",
-    "food Mississippi Ave Aurora Colorado",
-    "restaurant Alameda Ave Aurora Colorado",
-    "restaurant Colfax Ave Aurora Colorado",
-    # Cuisine clusters known on this corridor
-    "pho Vietnamese Aurora Colorado",
-    "Ethiopian food Aurora Colorado",
-    "Somali restaurant Aurora Colorado",
-    "African restaurant Aurora Colorado",
-    "taco Aurora Colorado Havana",
-    "carnitas Aurora Colorado",
-    "dim sum Aurora Colorado",
-    "halal restaurant Aurora Colorado",
-    "Indian restaurant Aurora Colorado Havana",
-    "Korean BBQ Aurora Colorado",
+    # Core Old Town searches
+    "restaurants Old Town Scottsdale Arizona",
+    "cafe Old Town Scottsdale Arizona",
+    "coffee Old Town Scottsdale Arizona",
+    "food Old Town Scottsdale Arizona",
+    "breakfast Old Town Scottsdale Arizona",
+    "brunch Old Town Scottsdale Arizona",
+    "lunch Old Town Scottsdale Arizona",
+    "bakery Old Town Scottsdale Arizona",
+    "pizza Old Town Scottsdale Arizona",
+    "burger Old Town Scottsdale Arizona",
+    "sushi Old Town Scottsdale Arizona",
+    "mexican restaurant Old Town Scottsdale Arizona",
+    "italian restaurant Old Town Scottsdale Arizona",
+    "steakhouse Old Town Scottsdale Arizona",
+    "seafood Old Town Scottsdale Arizona",
+    "asian restaurant Old Town Scottsdale Arizona",
+    "thai restaurant Old Town Scottsdale Arizona",
+    "mediterranean restaurant Old Town Scottsdale Arizona",
+    "rooftop bar Old Town Scottsdale Arizona",
+    "bar and grill Old Town Scottsdale Arizona",
+    "fine dining Old Town Scottsdale Arizona",
+    "happy hour Old Town Scottsdale Arizona",
+    "vegan Old Town Scottsdale Arizona",
+    # Key streets inside Old Town
+    "restaurant Scottsdale Road Scottsdale Arizona 85251",
+    "cafe Scottsdale Road Scottsdale Arizona 85251",
+    "restaurant Marshall Way Scottsdale Arizona",
+    "cafe Marshall Way Scottsdale Arizona",
+    "restaurant Main Street Scottsdale Arizona",
+    "cafe Main Street Scottsdale Arizona 85251",
+    "restaurant 5th Avenue Scottsdale Arizona",
+    "restaurant Brown Ave Scottsdale Arizona",
+    "restaurant Craftsman Court Scottsdale Arizona",
+    "restaurant Goldwater Blvd Scottsdale Arizona",
+    "restaurant Drinkwater Blvd Scottsdale Arizona",
+    "restaurant Miller Road Scottsdale Arizona 85251",
+    # ZIP codes for Old Town area
+    "restaurant Scottsdale Arizona 85251",
+    "cafe Scottsdale Arizona 85251",
+    "food Scottsdale Arizona 85251",
+    "restaurant Scottsdale Arizona 85257",
+    "cafe Scottsdale Arizona 85257",
+    "food Scottsdale Arizona 85257",
+    # Nearby districts that overlap
+    "restaurants Scottsdale Waterfront Arizona",
+    "restaurants Old Town Arts District Scottsdale",
+    "restaurant Fashion Square Scottsdale Arizona",
+    "cafe Old Town Scottsdale Entertainment District",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -241,7 +238,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Havana Street Leads"
+    ws.title = "Old Town Scottsdale Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
