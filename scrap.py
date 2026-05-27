@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-ASU Main Campus Tempe Arizona Leads Scraper
-Collects restaurant/cafe leads around ASU Main Campus, Tempe, Arizona
-Output: ASU Main Campus leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+Desert Ridge North Phoenix Arizona Leads Scraper
+Collects restaurant/cafe leads in Desert Ridge / North Phoenix, Arizona
+Output: Desert Ridge leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + asu_main_campus_progress.json after EVERY lead.
+Resume-safe: writes to Excel + desert_ridge_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,60 +21,63 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "ASU Main Campus leads.xlsx"
-PROGRESS    = "asu_main_campus_progress.json"
+OUTPUT      = "Desert Ridge leads.xlsx"
+PROGRESS    = "desert_ridge_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for ASU Main Campus area, Tempe, Arizona
+# Queries for Desert Ridge / North Phoenix, Arizona
 SEARCH_QUERIES = [
-    # Direct ASU campus searches
-    "restaurants near ASU Main Campus Tempe Arizona",
-    "cafe near ASU Main Campus Tempe Arizona",
-    "coffee near Arizona State University Tempe Arizona",
-    "food near ASU Tempe Arizona",
-    "breakfast near ASU Tempe Arizona",
-    "brunch near ASU Tempe Arizona",
-    "lunch near ASU Tempe Arizona",
-    "pizza near ASU Tempe Arizona",
-    "burger near ASU Tempe Arizona",
-    "sushi near ASU Tempe Arizona",
-    "sandwich near ASU Tempe Arizona",
-    "bakery near ASU Tempe Arizona",
-    "mexican restaurant near ASU Tempe Arizona",
-    "asian restaurant near ASU Tempe Arizona",
-    "thai restaurant near ASU Tempe Arizona",
-    "vegan near ASU Tempe Arizona",
-    "bar near ASU Tempe Arizona",
-    # Key streets bordering/surrounding ASU campus
-    "restaurant Apache Boulevard Tempe Arizona",
-    "cafe Apache Boulevard Tempe Arizona",
-    "food Apache Boulevard Tempe Arizona",
-    "restaurant Rural Road Tempe Arizona",
-    "cafe Rural Road Tempe Arizona",
-    "restaurant College Avenue Tempe Arizona",
-    "cafe College Avenue Tempe Arizona",
-    "restaurant University Drive Tempe Arizona",
-    "cafe University Drive Tempe Arizona",
-    "restaurant Forest Avenue Tempe Arizona",
-    "restaurant Lemon Street Tempe Arizona",
-    "restaurant Myrtle Avenue Tempe Arizona",
-    "restaurant Farmer Avenue Tempe Arizona",
-    "restaurant Ash Avenue Tempe Arizona",
-    # Neighborhoods adjacent to campus
-    "restaurants Student Union ASU Tempe Arizona",
-    "restaurant Tempe Marketplace Arizona",
-    "cafe Tempe Marketplace Arizona",
-    "restaurant Sun Devil Stadium area Tempe Arizona",
-    "restaurants Broadmor neighborhood Tempe Arizona",
-    # ZIP codes tightly around ASU campus
-    "restaurant Tempe Arizona 85281",
-    "cafe Tempe Arizona 85281",
-    "food Tempe Arizona 85281",
-    "restaurant Tempe Arizona 85283",
-    "cafe Tempe Arizona 85283",
-    "food Tempe Arizona 85283",
-    "restaurant Tempe Arizona 85284",
-    "cafe Tempe Arizona 85284",
+    # Desert Ridge core
+    "restaurants Desert Ridge Phoenix Arizona",
+    "cafe Desert Ridge Phoenix Arizona",
+    "coffee Desert Ridge Phoenix Arizona",
+    "food Desert Ridge Phoenix Arizona",
+    "breakfast Desert Ridge Phoenix Arizona",
+    "brunch Desert Ridge Phoenix Arizona",
+    "lunch Desert Ridge Phoenix Arizona",
+    "bakery Desert Ridge Phoenix Arizona",
+    "pizza Desert Ridge Phoenix Arizona",
+    "burger Desert Ridge Phoenix Arizona",
+    "sushi Desert Ridge Phoenix Arizona",
+    "mexican restaurant Desert Ridge Phoenix Arizona",
+    "italian restaurant Desert Ridge Phoenix Arizona",
+    "steakhouse Desert Ridge Phoenix Arizona",
+    "asian restaurant Desert Ridge Phoenix Arizona",
+    "thai restaurant Desert Ridge Phoenix Arizona",
+    "bar and grill Desert Ridge Phoenix Arizona",
+    "fine dining Desert Ridge Phoenix Arizona",
+    "vegan Desert Ridge Phoenix Arizona",
+    # Desert Ridge Marketplace (the main shopping/dining hub)
+    "restaurants Desert Ridge Marketplace Phoenix Arizona",
+    "cafe Desert Ridge Marketplace Phoenix Arizona",
+    "food Desert Ridge Marketplace Phoenix Arizona",
+    # North Phoenix general
+    "restaurants North Phoenix Arizona",
+    "cafe North Phoenix Arizona",
+    "coffee North Phoenix Arizona",
+    "breakfast North Phoenix Arizona",
+    "brunch North Phoenix Arizona",
+    "pizza North Phoenix Arizona",
+    "sushi North Phoenix Arizona",
+    "burger North Phoenix Arizona",
+    # Key streets in the Desert Ridge area
+    "restaurant Tatum Blvd Phoenix Arizona 85050",
+    "cafe Tatum Blvd Phoenix Arizona",
+    "restaurant Scottsdale Road Phoenix Arizona 85054",
+    "cafe Scottsdale Road Phoenix Arizona 85054",
+    "restaurant Happy Valley Road Phoenix Arizona",
+    "cafe Happy Valley Road Phoenix Arizona",
+    "restaurant Mayo Blvd Phoenix Arizona",
+    "restaurant Pinnacle Peak Road Phoenix Arizona",
+    "restaurant 56th Street Phoenix Arizona 85054",
+    "restaurant Deer Valley Road Phoenix Arizona",
+    # ZIP codes for Desert Ridge area
+    "restaurant Phoenix Arizona 85050",
+    "cafe Phoenix Arizona 85050",
+    "food Phoenix Arizona 85050",
+    "restaurant Phoenix Arizona 85054",
+    "cafe Phoenix Arizona 85054",
+    "food Phoenix Arizona 85054",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -237,7 +240,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "ASU Main Campus Leads"
+    ws.title = "Desert Ridge Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
