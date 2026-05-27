@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Mill Avenue Tempe Arizona Leads Scraper
-Collects restaurant/cafe leads along Mill Avenue corridor, Tempe, Arizona
-Output: Mill Avenue leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+ASU Main Campus Tempe Arizona Leads Scraper
+Collects restaurant/cafe leads around ASU Main Campus, Tempe, Arizona
+Output: ASU Main Campus leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + mill_avenue_progress.json after EVERY lead.
+Resume-safe: writes to Excel + asu_main_campus_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,59 +21,60 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Mill Avenue leads.xlsx"
-PROGRESS    = "mill_avenue_progress.json"
+OUTPUT      = "ASU Main Campus leads.xlsx"
+PROGRESS    = "asu_main_campus_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Mill Avenue corridor, Tempe, Arizona
+# Queries for ASU Main Campus area, Tempe, Arizona
 SEARCH_QUERIES = [
-    # Core Mill Ave searches
-    "restaurants Mill Avenue Tempe Arizona",
-    "cafe Mill Avenue Tempe Arizona",
-    "coffee Mill Avenue Tempe Arizona",
-    "food Mill Avenue Tempe Arizona",
-    "breakfast Mill Avenue Tempe Arizona",
-    "brunch Mill Avenue Tempe Arizona",
-    "lunch Mill Avenue Tempe Arizona",
-    "bakery Mill Avenue Tempe Arizona",
-    "pizza Mill Avenue Tempe Arizona",
-    "burger Mill Avenue Tempe Arizona",
-    "sushi Mill Avenue Tempe Arizona",
-    "mexican restaurant Mill Avenue Tempe Arizona",
-    "bar and grill Mill Avenue Tempe Arizona",
-    "asian restaurant Mill Avenue Tempe Arizona",
-    "sandwich Mill Avenue Tempe Arizona",
-    "vegan Mill Avenue Tempe Arizona",
-    "happy hour Mill Avenue Tempe Arizona",
-    "live music bar Mill Avenue Tempe Arizona",
-    # Downtown Tempe / ASU area
-    "restaurants downtown Tempe Arizona",
-    "cafe downtown Tempe Arizona",
-    "coffee downtown Tempe Arizona",
-    "food downtown Tempe Arizona",
-    "breakfast downtown Tempe Arizona",
-    "brunch downtown Tempe Arizona",
-    "pizza downtown Tempe Arizona",
-    "burger downtown Tempe Arizona",
-    "sushi downtown Tempe Arizona",
-    "bar downtown Tempe Arizona",
-    "restaurant ASU Tempe Arizona",
-    "cafe near Arizona State University Tempe",
-    # Key cross streets on Mill Ave
+    # Direct ASU campus searches
+    "restaurants near ASU Main Campus Tempe Arizona",
+    "cafe near ASU Main Campus Tempe Arizona",
+    "coffee near Arizona State University Tempe Arizona",
+    "food near ASU Tempe Arizona",
+    "breakfast near ASU Tempe Arizona",
+    "brunch near ASU Tempe Arizona",
+    "lunch near ASU Tempe Arizona",
+    "pizza near ASU Tempe Arizona",
+    "burger near ASU Tempe Arizona",
+    "sushi near ASU Tempe Arizona",
+    "sandwich near ASU Tempe Arizona",
+    "bakery near ASU Tempe Arizona",
+    "mexican restaurant near ASU Tempe Arizona",
+    "asian restaurant near ASU Tempe Arizona",
+    "thai restaurant near ASU Tempe Arizona",
+    "vegan near ASU Tempe Arizona",
+    "bar near ASU Tempe Arizona",
+    # Key streets bordering/surrounding ASU campus
+    "restaurant Apache Boulevard Tempe Arizona",
+    "cafe Apache Boulevard Tempe Arizona",
+    "food Apache Boulevard Tempe Arizona",
+    "restaurant Rural Road Tempe Arizona",
+    "cafe Rural Road Tempe Arizona",
+    "restaurant College Avenue Tempe Arizona",
+    "cafe College Avenue Tempe Arizona",
     "restaurant University Drive Tempe Arizona",
     "cafe University Drive Tempe Arizona",
-    "restaurant 5th Street Tempe Arizona",
-    "restaurant 6th Street Tempe Arizona",
-    "restaurant Rio Salado Tempe Arizona",
-    "restaurant Tempe Town Lake Arizona",
-    "restaurant College Avenue Tempe Arizona",
-    # ZIP codes for Tempe/Mill Ave area
+    "restaurant Forest Avenue Tempe Arizona",
+    "restaurant Lemon Street Tempe Arizona",
+    "restaurant Myrtle Avenue Tempe Arizona",
+    "restaurant Farmer Avenue Tempe Arizona",
+    "restaurant Ash Avenue Tempe Arizona",
+    # Neighborhoods adjacent to campus
+    "restaurants Student Union ASU Tempe Arizona",
+    "restaurant Tempe Marketplace Arizona",
+    "cafe Tempe Marketplace Arizona",
+    "restaurant Sun Devil Stadium area Tempe Arizona",
+    "restaurants Broadmor neighborhood Tempe Arizona",
+    # ZIP codes tightly around ASU campus
     "restaurant Tempe Arizona 85281",
     "cafe Tempe Arizona 85281",
     "food Tempe Arizona 85281",
-    "restaurant Tempe Arizona 85282",
-    "cafe Tempe Arizona 85282",
-    "food Tempe Arizona 85282",
+    "restaurant Tempe Arizona 85283",
+    "cafe Tempe Arizona 85283",
+    "food Tempe Arizona 85283",
+    "restaurant Tempe Arizona 85284",
+    "cafe Tempe Arizona 85284",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -236,7 +237,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Mill Avenue Leads"
+    ws.title = "ASU Main Campus Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
