@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Desert Ridge North Phoenix Arizona Leads Scraper
-Collects restaurant/cafe leads in Desert Ridge / North Phoenix, Arizona
-Output: Desert Ridge leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+Central Phoenix Midtown Arizona Leads Scraper
+Collects restaurant/cafe leads in Midtown / Central Phoenix, Arizona
+Output: Midtown leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + desert_ridge_progress.json after EVERY lead.
+Resume-safe: writes to Excel + midtown_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,63 +21,63 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Desert Ridge leads.xlsx"
-PROGRESS    = "desert_ridge_progress.json"
+OUTPUT      = "Midtown leads.xlsx"
+PROGRESS    = "midtown_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Desert Ridge / North Phoenix, Arizona
+# Queries for Midtown / Central Phoenix, Arizona
 SEARCH_QUERIES = [
-    # Desert Ridge core
-    "restaurants Desert Ridge Phoenix Arizona",
-    "cafe Desert Ridge Phoenix Arizona",
-    "coffee Desert Ridge Phoenix Arizona",
-    "food Desert Ridge Phoenix Arizona",
-    "breakfast Desert Ridge Phoenix Arizona",
-    "brunch Desert Ridge Phoenix Arizona",
-    "lunch Desert Ridge Phoenix Arizona",
-    "bakery Desert Ridge Phoenix Arizona",
-    "pizza Desert Ridge Phoenix Arizona",
-    "burger Desert Ridge Phoenix Arizona",
-    "sushi Desert Ridge Phoenix Arizona",
-    "mexican restaurant Desert Ridge Phoenix Arizona",
-    "italian restaurant Desert Ridge Phoenix Arizona",
-    "steakhouse Desert Ridge Phoenix Arizona",
-    "asian restaurant Desert Ridge Phoenix Arizona",
-    "thai restaurant Desert Ridge Phoenix Arizona",
-    "bar and grill Desert Ridge Phoenix Arizona",
-    "fine dining Desert Ridge Phoenix Arizona",
-    "vegan Desert Ridge Phoenix Arizona",
-    # Desert Ridge Marketplace (the main shopping/dining hub)
-    "restaurants Desert Ridge Marketplace Phoenix Arizona",
-    "cafe Desert Ridge Marketplace Phoenix Arizona",
-    "food Desert Ridge Marketplace Phoenix Arizona",
-    # North Phoenix general
-    "restaurants North Phoenix Arizona",
-    "cafe North Phoenix Arizona",
-    "coffee North Phoenix Arizona",
-    "breakfast North Phoenix Arizona",
-    "brunch North Phoenix Arizona",
-    "pizza North Phoenix Arizona",
-    "sushi North Phoenix Arizona",
-    "burger North Phoenix Arizona",
-    # Key streets in the Desert Ridge area
-    "restaurant Tatum Blvd Phoenix Arizona 85050",
-    "cafe Tatum Blvd Phoenix Arizona",
-    "restaurant Scottsdale Road Phoenix Arizona 85054",
-    "cafe Scottsdale Road Phoenix Arizona 85054",
-    "restaurant Happy Valley Road Phoenix Arizona",
-    "cafe Happy Valley Road Phoenix Arizona",
-    "restaurant Mayo Blvd Phoenix Arizona",
-    "restaurant Pinnacle Peak Road Phoenix Arizona",
-    "restaurant 56th Street Phoenix Arizona 85054",
-    "restaurant Deer Valley Road Phoenix Arizona",
-    # ZIP codes for Desert Ridge area
-    "restaurant Phoenix Arizona 85050",
-    "cafe Phoenix Arizona 85050",
-    "food Phoenix Arizona 85050",
-    "restaurant Phoenix Arizona 85054",
-    "cafe Phoenix Arizona 85054",
-    "food Phoenix Arizona 85054",
+    # Midtown Phoenix core
+    "restaurants Midtown Phoenix Arizona",
+    "cafe Midtown Phoenix Arizona",
+    "coffee Midtown Phoenix Arizona",
+    "food Midtown Phoenix Arizona",
+    "breakfast Midtown Phoenix Arizona",
+    "brunch Midtown Phoenix Arizona",
+    "lunch Midtown Phoenix Arizona",
+    "bakery Midtown Phoenix Arizona",
+    "pizza Midtown Phoenix Arizona",
+    "burger Midtown Phoenix Arizona",
+    "sushi Midtown Phoenix Arizona",
+    "mexican restaurant Midtown Phoenix Arizona",
+    "italian restaurant Midtown Phoenix Arizona",
+    "bar Midtown Phoenix Arizona",
+    "asian restaurant Midtown Phoenix Arizona",
+    "vegan Midtown Phoenix Arizona",
+    "happy hour Midtown Phoenix Arizona",
+    "fine dining Midtown Phoenix Arizona",
+    # Central Avenue corridor (the spine of Midtown)
+    "restaurant Central Avenue Phoenix Arizona",
+    "cafe Central Avenue Phoenix Arizona",
+    "coffee Central Avenue Phoenix Arizona",
+    "food Central Avenue Phoenix Arizona",
+    "breakfast Central Avenue Phoenix Arizona",
+    # Key cross streets
+    "restaurant Camelback Road Phoenix Arizona 85012",
+    "cafe Camelback Road Phoenix Arizona 85012",
+    "restaurant Thomas Road Phoenix Arizona",
+    "cafe Thomas Road Phoenix Arizona",
+    "restaurant Indian School Road Phoenix Arizona",
+    "cafe Indian School Road Phoenix Arizona",
+    "restaurant McDowell Road Phoenix Arizona 85012",
+    "restaurant 7th Street Phoenix Arizona 85014",
+    "cafe 7th Street Phoenix Arizona 85014",
+    "restaurant 7th Avenue Phoenix Arizona 85013",
+    "cafe 7th Avenue Phoenix Arizona 85013",
+    "restaurant 3rd Street Phoenix Arizona Midtown",
+    "restaurant Osborn Road Phoenix Arizona",
+    # ZIP codes for Midtown
+    "restaurant Phoenix Arizona 85012",
+    "cafe Phoenix Arizona 85012",
+    "food Phoenix Arizona 85012",
+    "restaurant Phoenix Arizona 85013",
+    "cafe Phoenix Arizona 85013",
+    "food Phoenix Arizona 85013",
+    "restaurant Phoenix Arizona 85014",
+    "cafe Phoenix Arizona 85014",
+    "food Phoenix Arizona 85014",
+    "restaurant Phoenix Arizona 85016",
+    "cafe Phoenix Arizona 85016",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -240,7 +240,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Desert Ridge Leads"
+    ws.title = "Midtown Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
