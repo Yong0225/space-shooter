@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Eugene Oregon Leads Scraper
-Collects restaurant/cafe leads in Eugene, Oregon
-Output: Eugene leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+Portland Food Cart Pods Oregon Leads Scraper
+Collects food cart / food truck leads at Portland Food Cart Pods, Oregon
+Output: Portland Food Cart Pods leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + eugene_progress.json after EVERY lead.
+Resume-safe: writes to Excel + portland_food_carts_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,73 +21,79 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Eugene leads.xlsx"
-PROGRESS    = "eugene_progress.json"
+OUTPUT      = "Portland Food Cart Pods leads.xlsx"
+PROGRESS    = "portland_food_carts_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Eugene, Oregon
+# Queries for Portland Food Cart Pods, Oregon
 SEARCH_QUERIES = [
-    # Downtown Eugene core
-    "restaurants downtown Eugene Oregon",
-    "cafe downtown Eugene Oregon",
-    "coffee downtown Eugene Oregon",
-    "food downtown Eugene Oregon",
-    "breakfast downtown Eugene Oregon",
-    "brunch downtown Eugene Oregon",
-    "lunch downtown Eugene Oregon",
-    "bakery downtown Eugene Oregon",
-    "pizza downtown Eugene Oregon",
-    "burger downtown Eugene Oregon",
-    "sushi downtown Eugene Oregon",
-    "mexican restaurant downtown Eugene Oregon",
-    "italian restaurant downtown Eugene Oregon",
-    "bar downtown Eugene Oregon",
-    "asian restaurant downtown Eugene Oregon",
-    "vegan downtown Eugene Oregon",
-    "happy hour downtown Eugene Oregon",
-    "fine dining downtown Eugene Oregon",
-    # Whiteaker neighborhood
-    "restaurant Whiteaker Eugene Oregon",
-    "cafe Whiteaker Eugene Oregon",
-    "bar Whiteaker Eugene Oregon",
-    "food Whiteaker Eugene Oregon",
-    "coffee Whiteaker Eugene Oregon",
-    # University District / UO area
-    "restaurant University of Oregon Eugene",
-    "cafe University District Eugene Oregon",
-    "coffee near University Oregon Eugene",
-    "food near UO Eugene Oregon",
-    "restaurant 13th Ave Eugene Oregon",
-    "cafe 13th Ave Eugene Oregon",
-    # 5th Street Public Market area
-    "restaurant 5th Street Market Eugene Oregon",
-    "cafe 5th Street Market Eugene Oregon",
-    "restaurant Broadway Eugene Oregon",
-    "cafe Broadway Eugene Oregon",
-    # South Eugene / Willamette St
-    "restaurant Willamette Street Eugene Oregon",
-    "cafe Willamette Street Eugene Oregon",
-    "restaurant South Eugene Oregon",
-    "cafe South Eugene Oregon",
-    # Other key streets
-    "restaurant W 11th Ave Eugene Oregon",
-    "cafe W 11th Ave Eugene Oregon",
-    "restaurant Coburg Road Eugene Oregon",
-    "restaurant River Road Eugene Oregon",
-    "restaurant W 6th Ave Eugene Oregon",
-    # ZIP codes for Eugene
-    "restaurant Eugene Oregon 97401",
-    "cafe Eugene Oregon 97401",
-    "food Eugene Oregon 97401",
-    "restaurant Eugene Oregon 97402",
-    "cafe Eugene Oregon 97402",
-    "restaurant Eugene Oregon 97403",
-    "cafe Eugene Oregon 97403",
-    "food Eugene Oregon 97403",
-    "restaurant Eugene Oregon 97404",
-    "cafe Eugene Oregon 97404",
-    "restaurant Eugene Oregon 97405",
-    "cafe Eugene Oregon 97405",
+    # Generic food cart / pod searches
+    "food cart pod Portland Oregon",
+    "food cart Portland Oregon",
+    "food truck pod Portland Oregon",
+    "food trucks Portland Oregon",
+    "food cart park Portland Oregon",
+    # Major pod locations - Downtown / SW
+    "food cart SW 9th Alder Portland Oregon",
+    "food cart SW 10th Alder Portland Oregon",
+    "food cart SW 5th Stark Portland Oregon",
+    "food cart downtown Portland Oregon",
+    "restaurant SW Alder Portland Oregon",
+    "food SW 9th Ave Portland Oregon",
+    # SE Portland pods
+    "food cart SE Division Portland Oregon",
+    "food cart Cartopia Portland Oregon",
+    "food cart SE 12th Hawthorne Portland Oregon",
+    "food cart SE 28th Ankeny Portland Oregon",
+    "food cart Hawthorne Asylum Portland Oregon",
+    "food cart SE Portland Oregon",
+    "restaurant SE Division Street Portland Oregon",
+    "food cart SE Belmont Portland Oregon",
+    "food cart SE Foster Portland Oregon",
+    # NE Portland pods
+    "food cart NE Alberta Portland Oregon",
+    "food cart NE Mississippi Portland Oregon",
+    "food cart NE Portland Oregon",
+    "food cart NE MLK Portland Oregon",
+    "food cart NE Sandy Portland Oregon",
+    # North / NW Portland
+    "food cart North Portland Oregon",
+    "food cart NW Portland Oregon",
+    "food cart Williams Ave Portland Oregon",
+    # Cuisine-specific at pods
+    "food cart thai Portland Oregon",
+    "food cart mexican Portland Oregon",
+    "food cart Vietnamese Portland Oregon",
+    "food cart Korean Portland Oregon",
+    "food cart Ethiopian Portland Oregon",
+    "food cart Indian Portland Oregon",
+    "food cart Japanese Portland Oregon",
+    "food cart Mediterranean Portland Oregon",
+    "food cart vegan Portland Oregon",
+    "food cart breakfast Portland Oregon",
+    "food cart pizza Portland Oregon",
+    "food cart burger Portland Oregon",
+    "food cart Chinese Portland Oregon",
+    "food cart Hawaiian Portland Oregon",
+    "food cart Latin Portland Oregon",
+    # Named pods
+    "Tidbit Food Farm Garden Portland Oregon",
+    "Pod 28 Portland Oregon",
+    "Cartopia food carts Portland Oregon",
+    "Hawthorne Asylum food carts Portland Oregon",
+    "Good Food Here Portland Oregon",
+    # ZIP codes covering pod-dense areas
+    "food cart Portland Oregon 97201",
+    "food cart Portland Oregon 97202",
+    "food cart Portland Oregon 97204",
+    "food cart Portland Oregon 97205",
+    "food cart Portland Oregon 97206",
+    "food cart Portland Oregon 97209",
+    "food cart Portland Oregon 97211",
+    "food cart Portland Oregon 97212",
+    "food cart Portland Oregon 97214",
+    "food cart Portland Oregon 97217",
+    "food cart Portland Oregon 97227",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -250,7 +256,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Eugene Leads"
+    ws.title = "Portland Food Cart Pods Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
