@@ -179,6 +179,9 @@ Output format: 2–3 sentences, under 45 words. Start with "Hey!". No hashtags, 
 def clean_body(text):
     cleaned = re.sub(r"[*_`#]", "", text)
     cleaned = re.sub(r" {2,}", " ", cleaned)
+    # Replace dash used as punctuation separator with comma (space-dash-space, or em/en dash)
+    cleaned = re.sub(r" - ", ", ", cleaned)
+    cleaned = re.sub(r"\s*[–—]\s*", ", ", cleaned)
     return cleaned.strip()
 
 
