@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Chandler Village Arizona Leads Scraper
-Collects restaurant/cafe leads in Chandler Village (Downtown Chandler), Arizona
-Output: Chandler Village leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+Eugene Oregon Leads Scraper
+Collects restaurant/cafe leads in Eugene, Oregon
+Output: Eugene leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + chandler_village_progress.json after EVERY lead.
+Resume-safe: writes to Excel + eugene_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,63 +21,73 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Chandler Village leads.xlsx"
-PROGRESS    = "chandler_village_progress.json"
+OUTPUT      = "Eugene leads.xlsx"
+PROGRESS    = "eugene_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Chandler Village (Downtown Chandler), Arizona
+# Queries for Eugene, Oregon
 SEARCH_QUERIES = [
-    # Chandler Village / Downtown Chandler core
-    "restaurants Chandler Village Arizona",
-    "cafe Chandler Village Arizona",
-    "coffee Chandler Village Arizona",
-    "food Chandler Village Arizona",
-    "breakfast Chandler Village Arizona",
-    "brunch Chandler Village Arizona",
-    "lunch Chandler Village Arizona",
-    "bakery Chandler Village Arizona",
-    "pizza Chandler Village Arizona",
-    "burger Chandler Village Arizona",
-    "sushi Chandler Village Arizona",
-    "mexican restaurant Chandler Village Arizona",
-    "italian restaurant Chandler Village Arizona",
-    "bar Chandler Village Arizona",
-    "asian restaurant Chandler Village Arizona",
-    "vegan Chandler Village Arizona",
-    "happy hour Chandler Village Arizona",
-    "fine dining Chandler Village Arizona",
-    # Downtown Chandler
-    "restaurants downtown Chandler Arizona",
-    "cafe downtown Chandler Arizona",
-    "coffee downtown Chandler Arizona",
-    "food downtown Chandler Arizona",
-    "breakfast downtown Chandler Arizona",
-    "brunch downtown Chandler Arizona",
-    "pizza downtown Chandler Arizona",
-    "burger downtown Chandler Arizona",
-    "sushi downtown Chandler Arizona",
-    "bar downtown Chandler Arizona",
-    "restaurant downtown Chandler Arizona",
-    # Key streets in Chandler Village
-    "restaurant Arizona Avenue Chandler Arizona",
-    "cafe Arizona Avenue Chandler Arizona",
-    "restaurant Chandler Blvd Chandler Arizona",
-    "cafe Chandler Blvd Chandler Arizona",
-    "restaurant Commonwealth Ave Chandler Arizona",
-    "cafe Commonwealth Ave Chandler Arizona",
-    "restaurant Buffalo Street Chandler Arizona",
-    "restaurant Boston Street Chandler Arizona",
-    "restaurant Erie Street Chandler Arizona",
-    "restaurant Frye Road Chandler Arizona",
-    # ZIP codes for Chandler Village area
-    "restaurant Chandler Arizona 85224",
-    "cafe Chandler Arizona 85224",
-    "food Chandler Arizona 85224",
-    "restaurant Chandler Arizona 85225",
-    "cafe Chandler Arizona 85225",
-    "food Chandler Arizona 85225",
-    "restaurant Chandler Arizona 85226",
-    "cafe Chandler Arizona 85226",
+    # Downtown Eugene core
+    "restaurants downtown Eugene Oregon",
+    "cafe downtown Eugene Oregon",
+    "coffee downtown Eugene Oregon",
+    "food downtown Eugene Oregon",
+    "breakfast downtown Eugene Oregon",
+    "brunch downtown Eugene Oregon",
+    "lunch downtown Eugene Oregon",
+    "bakery downtown Eugene Oregon",
+    "pizza downtown Eugene Oregon",
+    "burger downtown Eugene Oregon",
+    "sushi downtown Eugene Oregon",
+    "mexican restaurant downtown Eugene Oregon",
+    "italian restaurant downtown Eugene Oregon",
+    "bar downtown Eugene Oregon",
+    "asian restaurant downtown Eugene Oregon",
+    "vegan downtown Eugene Oregon",
+    "happy hour downtown Eugene Oregon",
+    "fine dining downtown Eugene Oregon",
+    # Whiteaker neighborhood
+    "restaurant Whiteaker Eugene Oregon",
+    "cafe Whiteaker Eugene Oregon",
+    "bar Whiteaker Eugene Oregon",
+    "food Whiteaker Eugene Oregon",
+    "coffee Whiteaker Eugene Oregon",
+    # University District / UO area
+    "restaurant University of Oregon Eugene",
+    "cafe University District Eugene Oregon",
+    "coffee near University Oregon Eugene",
+    "food near UO Eugene Oregon",
+    "restaurant 13th Ave Eugene Oregon",
+    "cafe 13th Ave Eugene Oregon",
+    # 5th Street Public Market area
+    "restaurant 5th Street Market Eugene Oregon",
+    "cafe 5th Street Market Eugene Oregon",
+    "restaurant Broadway Eugene Oregon",
+    "cafe Broadway Eugene Oregon",
+    # South Eugene / Willamette St
+    "restaurant Willamette Street Eugene Oregon",
+    "cafe Willamette Street Eugene Oregon",
+    "restaurant South Eugene Oregon",
+    "cafe South Eugene Oregon",
+    # Other key streets
+    "restaurant W 11th Ave Eugene Oregon",
+    "cafe W 11th Ave Eugene Oregon",
+    "restaurant Coburg Road Eugene Oregon",
+    "restaurant River Road Eugene Oregon",
+    "restaurant W 6th Ave Eugene Oregon",
+    # ZIP codes for Eugene
+    "restaurant Eugene Oregon 97401",
+    "cafe Eugene Oregon 97401",
+    "food Eugene Oregon 97401",
+    "restaurant Eugene Oregon 97402",
+    "cafe Eugene Oregon 97402",
+    "restaurant Eugene Oregon 97403",
+    "cafe Eugene Oregon 97403",
+    "food Eugene Oregon 97403",
+    "restaurant Eugene Oregon 97404",
+    "cafe Eugene Oregon 97404",
+    "restaurant Eugene Oregon 97405",
+    "cafe Eugene Oregon 97405",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -240,7 +250,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Chandler Village Leads"
+    ws.title = "Eugene Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
