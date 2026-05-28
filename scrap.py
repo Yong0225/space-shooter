@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Gilbert Heritage District Arizona Leads Scraper
-Collects restaurant/cafe leads in Gilbert Heritage District, Gilbert, Arizona
-Output: Gilbert Heritage District leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
+Chandler Village Arizona Leads Scraper
+Collects restaurant/cafe leads in Chandler Village (Downtown Chandler), Arizona
+Output: Chandler Village leads.xlsx  (Name | Area | Website | Email | Instagram | Facebook)
 
-Resume-safe: writes to Excel + gilbert_heritage_progress.json after EVERY lead.
+Resume-safe: writes to Excel + chandler_village_progress.json after EVERY lead.
 Run: py scrap.py
       py scrap.py --reset   # clear progress and restart
 """
@@ -21,60 +21,63 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Gilbert Heritage District leads.xlsx"
-PROGRESS    = "gilbert_heritage_progress.json"
+OUTPUT      = "Chandler Village leads.xlsx"
+PROGRESS    = "chandler_village_progress.json"
 HEADLESS    = False   # keep visible so you can solve CAPTCHAs / intervene
 
-# Queries for Gilbert Heritage District, Gilbert, Arizona
+# Queries for Chandler Village (Downtown Chandler), Arizona
 SEARCH_QUERIES = [
-    # Heritage District core
-    "restaurants Heritage District Gilbert Arizona",
-    "cafe Heritage District Gilbert Arizona",
-    "coffee Heritage District Gilbert Arizona",
-    "food Heritage District Gilbert Arizona",
-    "breakfast Heritage District Gilbert Arizona",
-    "brunch Heritage District Gilbert Arizona",
-    "lunch Heritage District Gilbert Arizona",
-    "bakery Heritage District Gilbert Arizona",
-    "pizza Heritage District Gilbert Arizona",
-    "burger Heritage District Gilbert Arizona",
-    "sushi Heritage District Gilbert Arizona",
-    "mexican restaurant Heritage District Gilbert Arizona",
-    "italian restaurant Heritage District Gilbert Arizona",
-    "bar Heritage District Gilbert Arizona",
-    "asian restaurant Heritage District Gilbert Arizona",
-    "vegan Heritage District Gilbert Arizona",
-    "happy hour Heritage District Gilbert Arizona",
-    "fine dining Heritage District Gilbert Arizona",
-    # Downtown Gilbert
-    "restaurants downtown Gilbert Arizona",
-    "cafe downtown Gilbert Arizona",
-    "coffee downtown Gilbert Arizona",
-    "food downtown Gilbert Arizona",
-    "breakfast downtown Gilbert Arizona",
-    "brunch downtown Gilbert Arizona",
-    "pizza downtown Gilbert Arizona",
-    "burger downtown Gilbert Arizona",
-    "sushi downtown Gilbert Arizona",
-    "bar downtown Gilbert Arizona",
-    # Key streets in Heritage District
-    "restaurant Gilbert Road Gilbert Arizona",
-    "cafe Gilbert Road Gilbert Arizona",
-    "restaurant Elliot Road Gilbert Arizona",
-    "cafe Elliot Road Gilbert Arizona",
-    "restaurant Page Avenue Gilbert Arizona",
-    "restaurant Vaughn Avenue Gilbert Arizona",
-    "restaurant Warner Road Gilbert Arizona Gilbert",
-    "restaurant Guadalupe Road Gilbert Arizona",
-    # ZIP codes for Gilbert Heritage area
-    "restaurant Gilbert Arizona 85233",
-    "cafe Gilbert Arizona 85233",
-    "food Gilbert Arizona 85233",
-    "restaurant Gilbert Arizona 85234",
-    "cafe Gilbert Arizona 85234",
-    "food Gilbert Arizona 85234",
-    "restaurant Gilbert Arizona 85296",
-    "cafe Gilbert Arizona 85296",
+    # Chandler Village / Downtown Chandler core
+    "restaurants Chandler Village Arizona",
+    "cafe Chandler Village Arizona",
+    "coffee Chandler Village Arizona",
+    "food Chandler Village Arizona",
+    "breakfast Chandler Village Arizona",
+    "brunch Chandler Village Arizona",
+    "lunch Chandler Village Arizona",
+    "bakery Chandler Village Arizona",
+    "pizza Chandler Village Arizona",
+    "burger Chandler Village Arizona",
+    "sushi Chandler Village Arizona",
+    "mexican restaurant Chandler Village Arizona",
+    "italian restaurant Chandler Village Arizona",
+    "bar Chandler Village Arizona",
+    "asian restaurant Chandler Village Arizona",
+    "vegan Chandler Village Arizona",
+    "happy hour Chandler Village Arizona",
+    "fine dining Chandler Village Arizona",
+    # Downtown Chandler
+    "restaurants downtown Chandler Arizona",
+    "cafe downtown Chandler Arizona",
+    "coffee downtown Chandler Arizona",
+    "food downtown Chandler Arizona",
+    "breakfast downtown Chandler Arizona",
+    "brunch downtown Chandler Arizona",
+    "pizza downtown Chandler Arizona",
+    "burger downtown Chandler Arizona",
+    "sushi downtown Chandler Arizona",
+    "bar downtown Chandler Arizona",
+    "restaurant downtown Chandler Arizona",
+    # Key streets in Chandler Village
+    "restaurant Arizona Avenue Chandler Arizona",
+    "cafe Arizona Avenue Chandler Arizona",
+    "restaurant Chandler Blvd Chandler Arizona",
+    "cafe Chandler Blvd Chandler Arizona",
+    "restaurant Commonwealth Ave Chandler Arizona",
+    "cafe Commonwealth Ave Chandler Arizona",
+    "restaurant Buffalo Street Chandler Arizona",
+    "restaurant Boston Street Chandler Arizona",
+    "restaurant Erie Street Chandler Arizona",
+    "restaurant Frye Road Chandler Arizona",
+    # ZIP codes for Chandler Village area
+    "restaurant Chandler Arizona 85224",
+    "cafe Chandler Arizona 85224",
+    "food Chandler Arizona 85224",
+    "restaurant Chandler Arizona 85225",
+    "cafe Chandler Arizona 85225",
+    "food Chandler Arizona 85225",
+    "restaurant Chandler Arizona 85226",
+    "cafe Chandler Arizona 85226",
 ]
 
 BAD_EMAIL_DOMAINS = {
@@ -237,7 +240,7 @@ def count_existing_rows():
 def init_excel():
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Gilbert Heritage District Leads"
+    ws.title = "Chandler Village Leads"
     ws.append(HEADERS)
     for col, _ in enumerate(HEADERS, 1):
         c = ws.cell(1, col)
