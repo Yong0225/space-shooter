@@ -103,8 +103,8 @@ def call_gemini(biz_name, food_post=None, menu_items=None, row_seed=None):
         food_hint = f"Their menu includes: {menu_items}. Pick the single most visually appealing / photogenic item."
         food_label = "{food}"  # Gemini will resolve this
     else:
-        food_hint = "Choose one visually appealing food item (e.g. burger, ramen, fried chicken, tacos, boba, waffle, pizza, etc.)."
-        food_label = "{food}"
+        food_hint = "Use a generic word like 'food', 'dish', or 'drinks' — do NOT name a specific food item."
+        food_label = "food"
 
     opener    = rng.choice(_OPENERS).replace("{food}", food_label)
     compliment = rng.choice(_COMPLIMENTS).replace("{food}", food_label)
@@ -123,7 +123,7 @@ Build the message around these exact phrase seeds — rephrase them naturally, d
 • Action seed: "{freetime} {action}"
 • CTA: "{cta}"
 
-Output format: 2–3 sentences, under 45 words. Start with "Hey!". No hashtags, no emojis, no salesy language. Do NOT name the studio. Return ONLY the message."""
+Output format: 2–3 sentences, under 45 words. Start with "Hey!". No hashtags, no emojis, no salesy language. Do NOT name the studio. Do NOT mention specific food items unless provided above. Return ONLY the message."""
 
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}]
