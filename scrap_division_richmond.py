@@ -20,7 +20,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TARGET      = 9999
-OUTPUT      = "Division Street / Richmond leads.xlsx"
+OUTPUT      = "Division Street + Richmond leads.xlsx"
 PROGRESS    = "division_richmond_progress.json"
 HEADLESS    = False
 
