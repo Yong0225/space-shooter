@@ -30,16 +30,16 @@ OUTPUT_FILE = base + "_emails" + ext
 
 # ── Phrase banks: one slot drawn per email to force wording variation ──────────
 _OPENERS = [
-    "Just saw your recent {food} post while scrolling",
-    "Was scrolling earlier and came across your {food} post",
-    "Came across your {food} post just now while scrolling",
-    "Spotted your {food} post while I was scrolling",
-    "Just stumbled across your {food} post",
-    "Your {food} post just popped up while I was scrolling",
-    "Was just scrolling and noticed your {food} post",
-    "Just came across your {food} post on my feed",
-    "Saw your {food} post show up while I was scrolling",
-    "Was scrolling and your {food} post caught my eye",
+    "Just saw one of your {food} posts while scrolling",
+    "Was scrolling earlier and came across one of your {food} posts",
+    "Came across one of your {food} posts while scrolling",
+    "Spotted one of your {food} posts while I was scrolling",
+    "Just stumbled across one of your {food} posts",
+    "One of your {food} posts just popped up while I was scrolling",
+    "Was just scrolling and noticed one of your {food} posts",
+    "Just came across one of your {food} posts on my feed",
+    "Saw one of your {food} posts while scrolling",
+    "Was scrolling and one of your {food} posts caught my eye",
 ]
 
 _COMPLIMENTS = [
@@ -125,7 +125,7 @@ Build the message around these exact phrase seeds — rephrase them naturally, d
 
 Tone and reading level: Write at a grade school level. Use short, simple words and short sentences. Avoid any fancy, formal, or complex vocabulary. Sound like a real person texting a friend, not a professional writer.
 
-Output format: 2–3 sentences, under 45 words. Start with "Hey!". No hashtags, no emojis, no salesy language. Do NOT name the studio. Do NOT mention specific food items unless provided above. Return ONLY the message."""
+Output format: 2–3 sentences, under 45 words. Start with "Hey!". No hashtags, no emojis, no salesy language. Do NOT name the studio. Do NOT mention specific food items unless provided above. Do NOT use words like "recent", "latest", or "newest" — say "one of your posts" instead. Return ONLY the message."""
 
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}]
