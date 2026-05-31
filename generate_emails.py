@@ -123,6 +123,8 @@ Build the message around these exact phrase seeds — rephrase them naturally, d
 • Action seed: "{freetime} {action}"
 • CTA: "{cta}"
 
+Tone and reading level: Write at a grade school level. Use short, simple words and short sentences. Avoid any fancy, formal, or complex vocabulary. Sound like a real person texting a friend, not a professional writer.
+
 Output format: 2–3 sentences, under 45 words. Start with "Hey!". No hashtags, no emojis, no salesy language. Do NOT name the studio. Do NOT mention specific food items unless provided above. Return ONLY the message."""
 
     payload = json.dumps({
