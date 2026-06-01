@@ -35,33 +35,24 @@ def call_gemini(biz_name, food_post=None, menu_items=None, row_seed=None):
 
 Generate a cold email for a restaurant owner.
 
+STRICT 3-LINE STRUCTURE — follow exactly:
+Line 1: "Hey,"
+Line 2: One sentence — saw/came across/was checking out + one of: "your page" / "your Instagram page" / "your Facebook page" / "your social page" / "one of your posts" + optional casual time reference (earlier, today, just now).
+Line 3: Curiosity opener + one soft question. Curiosity openers: "Quick question —" / "Just curious —" / "Out of curiosity," / "Random question —". The question must be gentle, non-judgmental, and genuinely curious. It should NOT imply anything is wrong or broken.
+
 Rules:
-* Maximum 30 words.
+* Maximum 30 words total.
 * Sound completely human.
 * Never sell.
 * Never pitch.
-* Never mention services.
-* Never mention design.
-* Never mention agency.
-* Never mention pricing.
-* Never mention marketing.
+* Never mention services, design, agency, pricing, or marketing.
+* Do NOT use the business name.
+* Do NOT use placeholders.
+* Generate a unique variation each time.
 
 The goal is ONLY to start a conversation.
 
-Use one short curiosity-based question.
-
-Allowed personalization:
-* "your page"
-* "your Instagram page"
-* "your Facebook page"
-* "your social page"
-* "one of your posts"
-
-Do NOT use the business name.
-Do NOT use placeholders.
-Generate a unique variation each time.
-
-Examples of style:
+Good examples (copy this tone and structure exactly):
 
 "Hey,
 
@@ -81,17 +72,17 @@ Just curious — do most new customers find you online or through word of mouth?
 
 "Hey,
 
-Random question.
+Was checking out your Instagram page.
 
-If there was one thing you'd improve about your online presence right now, what would it be?"
+Out of curiosity, do you feel enough people are noticing what makes your place different?"
 
 ---
 
 "Hey,
 
-Was checking out your Instagram page.
+Just saw one of your posts.
 
-Out of curiosity, do you feel enough people are noticing what makes your place different?"
+Just curious — do you feel your page gives people a real sense of what your place is like?"
 
 Return ONLY the email message, nothing else."""
 
