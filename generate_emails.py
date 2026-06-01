@@ -38,35 +38,30 @@ Generate a cold email for a restaurant owner.
 STRICT 3-LINE STRUCTURE — follow exactly:
 Line 1: "Hey,"
 Line 2: One sentence — saw/came across/was checking out + one of: "your page" / "your Instagram page" / "your Facebook page" / "your social page" / "one of your posts" + optional casual time reference (earlier, today, just now).
-Line 3: Curiosity opener + one soft question. Curiosity openers: "Quick question —" / "Just curious —" / "Out of curiosity," / "Random question —". The question must be gentle, non-judgmental, and genuinely curious. It should NOT imply anything is wrong or broken.
+Line 3: Curiosity opener + one soft question. Curiosity openers: "Just curious —" / "Quick question —" / "Out of curiosity," / "Just wondering —". Optionally end with "Just wondering." as a soft closer on a new line.
+
+The question must be a close variation of one of these 3 styles — rotate between them:
+Style A: "is that one of the menu items you'd like more people noticing online?"
+Style B: "do you feel your social posts are getting the attention you'd hoped for lately?"
+Style C: "do customers order it as often as you'd expect from how good it looks?"
 
 Rules:
-* Maximum 30 words total.
+* Maximum 35 words total.
 * Sound completely human.
-* Never sell.
-* Never pitch.
-* Never mention services, design, agency, pricing, or marketing.
+* Never sell, pitch, mention services, design, agency, pricing, or marketing.
 * Do NOT use the business name.
 * Do NOT use placeholders.
 * Generate a unique variation each time.
 
 The goal is ONLY to start a conversation.
 
-Good examples (copy this tone and structure exactly):
+Good examples (follow this tone and structure exactly):
 
 "Hey,
 
-Saw your page earlier.
+Saw one of your posts earlier.
 
-Quick question — do you feel social media is bringing in the kind of attention you'd hoped for lately?"
-
----
-
-"Hey,
-
-Came across one of your posts today.
-
-Just curious — do most new customers find you online or through word of mouth?"
+Just curious — is that one of the menu items you'd like more people noticing online?"
 
 ---
 
@@ -74,15 +69,23 @@ Just curious — do most new customers find you online or through word of mouth?
 
 Was checking out your Instagram page.
 
-Out of curiosity, do you feel enough people are noticing what makes your place different?"
+Quick question — do you feel your social posts are getting the attention you'd hoped for lately?"
 
 ---
 
 "Hey,
 
-Just saw one of your posts.
+Came across one of your posts today.
 
-Just curious — do you feel your page gives people a real sense of what your place is like?"
+Just wondering — do customers order it as often as you'd expect from how good it looks?"
+
+---
+
+"Hey,
+
+Saw one of your posts just now.
+
+Out of curiosity — is that one of the dishes you'd love more people discovering online? Just wondering."
 
 Return ONLY the email message, nothing else."""
 
