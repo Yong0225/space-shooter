@@ -28,16 +28,17 @@ base, ext = os.path.splitext(INPUT_FILE)
 OUTPUT_FILE = base + "_emails" + ext
 
 
-def call_gemini(biz_name, food_post=None, menu_items=None, row_seed=None):
+def call_gemini(biz_name, food_post=None, menu_items=None, row_seed=None, platform="Instagram"):
     subject = biz_name
+    page_ref = f"your {platform} page"
 
-    prompt = """You are an elite cold email copywriter trained in Jeremy Miner's NEPQ methodology.
+    prompt = f"""You are an elite cold email copywriter trained in Jeremy Miner's NEPQ methodology.
 
 Generate a cold email for a restaurant owner.
 
 STRICT 3-LINE STRUCTURE — follow exactly:
 Line 1: "Hey,"
-Line 2: One sentence — saw/came across/was checking out + one of: "your page" / "your social page" / "one of your posts" + optional casual time reference (earlier, today, just now).
+Line 2: One sentence — saw/came across/was checking out + one of: "{page_ref}" / "one of your posts" + optional casual time reference (earlier, today, just now).
 Line 3: Curiosity opener + one soft question. Curiosity openers: "Just curious —" / "Quick question —" / "Out of curiosity," / "Just wondering —". Optionally end with "Just wondering." as a soft closer on a new line.
 
 The question must be a close variation of one of these 3 styles — rotate between them:
@@ -67,7 +68,7 @@ Just curious — is that one of the menu items you'd like more people noticing o
 
 "Hey,
 
-Was checking out your social page.
+Was checking out {page_ref}.
 
 Quick question — do you feel your social posts are getting the attention you'd hoped for lately?"
 
@@ -83,7 +84,7 @@ Just wondering — do customers order it as often as you'd expect from how good 
 
 "Hey,
 
-Saw one of your posts just now.
+Saw {page_ref} just now.
 
 Out of curiosity — is that one of the dishes you'd love more people discovering online? Just wondering."
 
@@ -147,6 +148,7 @@ name_col_key = next((k for k in ["Restaurant Name", "Name", "name"] if k in head
 name_col    = headers.index(name_col_key) + 1
 food_col    = headers.index("Food Post") + 1 if "Food Post" in headers else None
 menu_col    = headers.index("Menu Items") + 1 if "Menu Items" in headers else None
+fb_col      = headers.index("Facebook") + 1 if "Facebook" in headers else None
 
 total   = ws.max_row - 1
 done    = 0
@@ -166,10 +168,12 @@ for row_idx in range(2, ws.max_row + 1):
 
     food_post  = ws.cell(row=row_idx, column=food_col).value if food_col else None
     menu_items = ws.cell(row=row_idx, column=menu_col).value if menu_col else None
+    fb_val     = ws.cell(row=row_idx, column=fb_col).value if fb_col else None
+    platform   = "Facebook" if fb_val else "Instagram"
 
-    print(f"[{row_idx-1}/{total}] Generating: {biz_name} ...")
+    print(f"[{row_idx-1}/{total}] Generating: {biz_name} ({platform}) ...")
     try:
-        subject, email_body = call_gemini(biz_name, food_post, menu_items, row_seed=row_idx)
+        subject, email_body = call_gemini(biz_name, food_post, menu_items, row_seed=row_idx, platform=platform)
     except Exception as e:
         print(f"  ERROR: {e} — skipping, will retry on next run")
         continue
