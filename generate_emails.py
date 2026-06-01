@@ -37,7 +37,7 @@ Generate a cold email for a restaurant owner.
 
 STRICT 3-LINE STRUCTURE — follow exactly:
 Line 1: "Hey,"
-Line 2: One sentence — saw/came across/was checking out + one of: "your page" / "your Instagram page" / "your Facebook page" / "your social page" / "one of your posts" + optional casual time reference (earlier, today, just now).
+Line 2: One sentence — saw/came across/was checking out + one of: "your page" / "your social page" / "one of your posts" + optional casual time reference (earlier, today, just now).
 Line 3: Curiosity opener + one soft question. Curiosity openers: "Just curious —" / "Quick question —" / "Out of curiosity," / "Just wondering —". Optionally end with "Just wondering." as a soft closer on a new line.
 
 The question must be a close variation of one of these 3 styles — rotate between them:
@@ -67,7 +67,7 @@ Just curious — is that one of the menu items you'd like more people noticing o
 
 "Hey,
 
-Was checking out your Instagram page.
+Was checking out your social page.
 
 Quick question — do you feel your social posts are getting the attention you'd hoped for lately?"
 
