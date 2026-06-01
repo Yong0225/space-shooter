@@ -29,7 +29,7 @@ OUTPUT_FILE = base + "_emails" + ext
 
 
 def call_gemini(biz_name, food_post=None, menu_items=None, row_seed=None, platform="Instagram"):
-    subject = biz_name
+    subject = f"{biz_name} x Y-Studio"
     page_ref = f"your {platform} page"
 
     prompt = f"""You are an elite cold email copywriter trained in Jeremy Miner's NEPQ methodology.
@@ -148,7 +148,7 @@ name_col_key = next((k for k in ["Restaurant Name", "Name", "name"] if k in head
 name_col    = headers.index(name_col_key) + 1
 food_col    = headers.index("Food Post") + 1 if "Food Post" in headers else None
 menu_col    = headers.index("Menu Items") + 1 if "Menu Items" in headers else None
-fb_col      = headers.index("Facebook") + 1 if "Facebook" in headers else None
+igfb_col    = next((headers.index(k) + 1 for k in headers if k and "ig or fb" in str(k).lower()), None)
 
 total   = ws.max_row - 1
 done    = 0
@@ -168,8 +168,8 @@ for row_idx in range(2, ws.max_row + 1):
 
     food_post  = ws.cell(row=row_idx, column=food_col).value if food_col else None
     menu_items = ws.cell(row=row_idx, column=menu_col).value if menu_col else None
-    fb_val     = ws.cell(row=row_idx, column=fb_col).value if fb_col else None
-    platform   = "Facebook" if fb_val else "Instagram"
+    igfb_val   = str(ws.cell(row=row_idx, column=igfb_col).value or "").strip().lower() if igfb_col else ""
+    platform   = "Facebook" if "facebook" in igfb_val else "Instagram"
 
     print(f"[{row_idx-1}/{total}] Generating: {biz_name} ({platform}) ...")
     try:
