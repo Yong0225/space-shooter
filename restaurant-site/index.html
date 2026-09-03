@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拾山 SHISHAN · 现代川菜</title>
+<meta name="description" content="拾山 SHISHAN。以川西与黔北的时令山货为底，做一桌只留香、不燥人的现代川菜。上海愚园路，每日午晚市，可在线订座。">
+
+<!--
+  图片替换清单（目前是 picsum 占位图，请换成真实拍摄）
+  ------------------------------------------------------
+  hero        首页主图 1400x1750 竖构图 · 出品或灶台特写
+  dish1..5    招牌菜 900x1200 竖构图 · 单菜俯拍或 45 度
+  chef        主厨肖像 1200x1500 竖构图
+  room1..4    空间：私宴厅 900x900 / 大堂 1400x1000 / 露台 900x1200
+  storefront  门头 1200x900
+  直接替换 <img src> 即可，比例已由 CSS 锁定，不会跳版。
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   拾山 SHISHAN
+   Palette lock : 冷调纸白 / 冷调墨黑 / 单一朱砂 accent
+   Radius lock  : 0（全站直角，含按钮与输入框）
+   Theme lock   : 单一主题，light / dark 通过变量映射，section 不反色
+   ============================================================ */
+
+:root{
+  --paper:#f4f5f2;
+  --paper-2:#eceee8;
+  --ink:#15181c;
+  --ink-2:#464c53;
+  --line:#d5d8d1;
+  --accent:#c2402a;
+  --on-accent:#ffffff;
+
+  --max:1320px;
+  --gut:clamp(20px,5vw,64px);
+  --sect:clamp(80px,11vw,152px);
+
+  --sans:"Outfit","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",system-ui,sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#121417;
+    --paper-2:#181b1f;
+    --ink:#eceee9;
+    --ink-2:#9aa2a9;
+    --line:#2b3036;
+    --accent:#e05a3f;
+    --on-accent:#14161a;
+  }
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+img{display:block;max-width:100%;height:auto;background:var(--paper-2)}
+a{color:inherit;text-decoration:none}
+button,input,textarea,select{font:inherit;color:inherit;border-radius:0}
+
+.wrap{max-width:var(--max);margin:0 auto;padding-inline:var(--gut)}
+.sect{padding-block:var(--sect)}
+
+h1,h2,h3{margin:0;font-weight:500;letter-spacing:-.015em;line-height:1.16}
+h2{font-size:clamp(1.9rem,4vw,3.1rem)}
+h3{font-size:clamp(1.1rem,1.6vw,1.35rem);line-height:1.35}
+p{margin:0}
+.lead{color:var(--ink-2);max-width:44ch;font-size:clamp(.98rem,1.1vw,1.08rem)}
+
+.eyebrow{
+  font-size:.72rem;text-transform:uppercase;letter-spacing:.2em;
+  color:var(--accent);font-weight:500;margin-bottom:14px;
+}
+
+/* ---------- buttons（直角，AA 对比度已核算） ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  white-space:nowrap;padding:.86em 1.5em;font-size:.94rem;font-weight:500;
+  letter-spacing:.02em;border:1px solid transparent;cursor:pointer;
+  transition:background .25s var(--ease),color .25s var(--ease),
+             border-color .25s var(--ease),transform .12s var(--ease);
+}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-primary:hover{background:color-mix(in srgb,var(--accent) 84%,var(--ink))}
+.btn-ghost{border-color:var(--line);color:var(--ink);background:transparent}
+.btn-ghost:hover{border-color:var(--ink);background:var(--paper-2)}
+.btn[disabled]{opacity:.62;cursor:not-allowed}
+
+/* ---------- nav：单行，68px ---------- */
+.nav{
+  position:sticky;top:0;z-index:40;height:68px;
+  display:flex;align-items:center;
+  background:color-mix(in srgb,var(--paper) 86%,transparent);
+  backdrop-filter:saturate(150%) blur(14px);
+  -webkit-backdrop-filter:saturate(150%) blur(14px);
+  border-bottom:1px solid var(--line);
+}
+@media (prefers-reduced-transparency:reduce){
+  .nav{background:var(--paper);backdrop-filter:none;-webkit-backdrop-filter:none}
+}
+.nav .wrap{display:flex;align-items:center;gap:32px;width:100%}
+.brand{display:flex;align-items:baseline;gap:9px;font-weight:600;font-size:1.12rem;letter-spacing:.02em}
+.brand small{font-size:.6rem;letter-spacing:.28em;color:var(--ink-2);font-weight:400}
+.nav-links{display:flex;gap:26px;margin-left:auto;font-size:.92rem;color:var(--ink-2)}
+.nav-links a{position:relative;padding-block:4px;transition:color .2s var(--ease)}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--accent);
+  transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease);
+}
+.nav-links a:hover::after{transform:scaleX(1)}
+.nav .btn{padding:.62em 1.15em;font-size:.88rem}
+@media (max-width:900px){
+  .nav-links{display:none}
+  .nav .btn{margin-left:auto}
+}
+
+/* ---------- hero：非对称分屏 ---------- */
+.hero{
+  min-height:calc(100dvh - 68px);
+  display:grid;grid-template-columns:1.02fr .98fr;align-items:stretch;
+}
+.hero-copy{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:clamp(40px,6vw,72px) clamp(20px,5vw,72px);
+  padding-left:max(var(--gut),calc((100vw - var(--max))/2 + var(--gut)));
+}
+.hero h1{
+  font-size:clamp(2.35rem,5.1vw,4.3rem);
+  line-height:1.14;letter-spacing:-.03em;font-weight:500;max-width:15ch;
+}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero .lead{margin-top:22px;max-width:32ch}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.hero-media{position:relative;overflow:hidden;background:var(--paper-2)}
+.hero-media img{width:100%;height:100%;object-fit:cover;min-height:52vh}
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;min-height:0}
+  .hero-copy{order:2;padding:44px var(--gut) 56px}
+  .hero-media{order:1;height:54vh}
+  .hero-media img{min-height:0}
+}
+
+/* ---------- signature：横向滚动 rail ---------- */
+.rail-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:38px;flex-wrap:wrap}
+.rail{
+  display:flex;gap:clamp(14px,1.6vw,24px);
+  overflow-x:auto;scroll-snap-type:x mandatory;
+  padding-inline:max(var(--gut),calc((100vw - var(--max))/2 + var(--gut)));
+  padding-bottom:14px;scrollbar-width:thin;
+}
+.rail::-webkit-scrollbar{height:3px}
+.rail::-webkit-scrollbar-thumb{background:var(--line)}
+.dish{flex:0 0 clamp(248px,30vw,352px);scroll-snap-align:start}
+.dish-img{overflow:hidden;aspect-ratio:3/4;background:var(--paper-2)}
+.dish-img img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.dish:hover .dish-img img{transform:scale(1.045)}
+.dish-meta{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-top:16px}
+.dish-meta .price{font-size:.9rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.dish p{margin-top:8px;font-size:.92rem;color:var(--ink-2);line-height:1.65}
+
+/* ---------- chef：文字 + 肖像分屏 ---------- */
+.chef{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,80px);align-items:center}
+.chef-img{aspect-ratio:4/5;overflow:hidden;background:var(--paper-2)}
+.chef-img img{width:100%;height:100%;object-fit:cover}
+.chef-body h2{max-width:14ch}
+.chef-body p{margin-top:22px;color:var(--ink-2);max-width:46ch}
+.chef-sign{margin-top:30px;padding-top:22px;border-top:1px solid var(--line);font-size:.92rem}
+.chef-sign strong{font-weight:500;display:block}
+.chef-sign span{color:var(--ink-2)}
+@media (max-width:860px){.chef{grid-template-columns:1fr}}
+
+/* ---------- rooms：bento，正好 4 格 ---------- */
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(10px,1.2vw,18px);margin-top:44px}
+.cell{position:relative;overflow:hidden;background:var(--paper-2);margin:0}
+.cell img{width:100%;height:100%;object-fit:cover;transition:transform .9s var(--ease)}
+.cell:hover img{transform:scale(1.04)}
+.c1{grid-column:1/6;aspect-ratio:1/1}
+.c2{grid-column:6/13;aspect-ratio:16/10}
+.c3{grid-column:1/9;background:var(--accent);color:var(--on-accent);
+    display:flex;flex-direction:column;justify-content:center;
+    padding:clamp(26px,3.4vw,48px);min-height:220px}
+.c3 h3{font-size:clamp(1.25rem,2.1vw,1.7rem);max-width:20ch}
+.c3 p{margin-top:12px;max-width:42ch;opacity:.9;font-size:.95rem}
+.c4{grid-column:9/13;aspect-ratio:3/4}
+@media (max-width:860px){
+  .c1,.c2,.c3,.c4{grid-column:1/13}
+  .c1,.c4{aspect-ratio:4/3}
+}
+
+/* ---------- menu：分组，稀疏分隔线 ---------- */
+.menu-grid{display:grid;grid-template-columns:repeat(12,1fr);
+  gap:clamp(30px,4vw,64px) clamp(24px,4vw,72px);margin-top:48px}
+.mg1{grid-column:1/6}
+.mg2{grid-column:7/13;grid-row:1/3}
+.mg3{grid-column:1/6}
+.group>h3{padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.group ul{list-style:none;margin:0;padding:0;display:grid;gap:15px}
+.group li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline}
+.group li b{font-weight:400}
+.group li i{font-style:normal;color:var(--ink-2);font-size:.88rem;font-variant-numeric:tabular-nums}
+.group li small{grid-column:1/-1;color:var(--ink-2);font-size:.83rem;line-height:1.6}
+@media (max-width:860px){.mg1,.mg2,.mg3{grid-column:1/13;grid-row:auto}}
+
+/* ---------- quote band ---------- */
+.quote{background:var(--paper-2);border-block:1px solid var(--line)}
+.quote blockquote{margin:0;max-width:24ch;font-size:clamp(1.5rem,3.4vw,2.5rem);
+  line-height:1.35;letter-spacing:-.02em;font-weight:400}
+.quote .by{margin-top:26px;font-size:.9rem;line-height:1.6}
+.quote .by strong{display:block;font-weight:500}
+.quote .by span{color:var(--ink-2)}
+
+/* ---------- booking ---------- */
+.book{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(32px,5vw,80px)}
+.field{display:grid;gap:8px;margin-bottom:20px}
+.field label{font-size:.86rem;font-weight:500}
+.field .hint{font-size:.79rem;color:var(--ink-2)}
+.field input,.field select,.field textarea{
+  width:100%;padding:.78em .9em;background:var(--paper);
+  border:1px solid var(--line);color:var(--ink);
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease);
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--ink-2);opacity:.9}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 24%,transparent);
+}
+.field .err{font-size:.79rem;color:var(--accent);font-weight:500;display:none}
+.field[data-invalid] input,.field[data-invalid] select{border-color:var(--accent)}
+.field[data-invalid] .err{display:block}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.form-note{margin-top:10px;font-size:.82rem;color:var(--ink-2);max-width:40ch}
+.form-ok{display:none;padding:22px;border:1px solid var(--accent);
+  background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.form-ok p{color:var(--ink-2);font-size:.92rem;margin-top:8px;max-width:38ch}
+form[data-sent] .form-ok{display:block}
+form[data-sent] .form-body{display:none}
+.info{align-self:start}
+.info-img{aspect-ratio:4/3;overflow:hidden;background:var(--paper-2);margin-bottom:26px}
+.info-img img{width:100%;height:100%;object-fit:cover}
+.info dl{margin:0;display:grid;gap:18px}
+.info dt{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin-bottom:4px}
+.info dd{margin:0;font-size:.98rem;line-height:1.65}
+.info dd a:hover{color:var(--accent)}
+@media (max-width:860px){.book{grid-template-columns:1fr}.row2{grid-template-columns:1fr}}
+
+/* ---------- footer ---------- */
+.foot{border-top:1px solid var(--line);padding-block:44px;font-size:.88rem;color:var(--ink-2)}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:20px 40px;align-items:center;justify-content:space-between}
+.foot a:hover{color:var(--ink)}
+.foot nav{display:flex;gap:22px;flex-wrap:wrap}
+
+/* ---------- reveal ---------- */
+.js [data-reveal]{opacity:0;transform:translateY(22px);
+  transition:opacity .75s var(--ease) var(--d,0ms),transform .75s var(--ease) var(--d,0ms)}
+.js [data-reveal].in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  .js [data-reveal]{opacity:1;transform:none;transition:none}
+  .dish-img img,.cell img{transition:none}
+}
+</style>
+<script>document.documentElement.className+=" js";</script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top">拾山 <small>SHISHAN</small></a>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#signature">招牌</a>
+      <a href="#chef">主厨</a>
+      <a href="#rooms">空间</a>
+      <a href="#menu">菜单</a>
+      <a href="#book">到店</a>
+    </nav>
+    <a class="btn btn-primary" href="#book">在线订座</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-copy">
+      <h1 data-reveal>山野的<em>川味</em><br>落在城市的餐桌</h1>
+      <p class="lead" data-reveal>以川西与黔北的时令山货为底，一桌只留香、不燥人的现代川菜。</p>
+      <div class="hero-cta" data-reveal>
+        <a class="btn btn-primary" href="#book">在线订座</a>
+        <a class="btn btn-ghost" href="#menu">看菜单</a>
+      </div>
+    </div>
+    <div class="hero-media">
+      <img src="https://picsum.photos/seed/shishan-hero-kitchen-fire/1400/1750" alt="拾山后厨灶台出品瞬间" fetchpriority="high" width="1400" height="1750">
+    </div>
+  </section>
+
+  <!-- SIGNATURE -->
+  <section class="sect" id="signature">
+    <div class="wrap">
+      <div class="rail-head">
+        <div>
+          <p class="eyebrow">当季主推</p>
+          <h2 data-reveal>五道菜，<br>说得清我们的做法</h2>
+        </div>
+        <p class="lead" data-reveal style="max-width:30ch">山货每周从雅安与遵义直发，菜单随之小改，招牌常在。</p>
+      </div>
+    </div>
+    <div class="rail" role="list">
+      <article class="dish" role="listitem" data-reveal>
+        <div class="dish-img"><img src="https://picsum.photos/seed/shishan-dish-zheergen/900/1200" alt="折耳根拌野山椒" loading="lazy" width="900" height="1200"></div>
+        <div class="dish-meta"><h3>折耳根拌野山椒</h3><span class="price">¥58</span></div>
+        <p>只取春末的嫩根，冰镇后拌黔北野山椒，收口留一点糖。</p>
+      </article>
+      <article class="dish" role="listitem" data-reveal>
+        <div class="dish-img"><img src="https://picsum.photos/seed/shishan-dish-jizong-noodle/900/1200" alt="荞面刀削鸡枞菌" loading="lazy" width="900" height="1200"></div>
+        <div class="dish-meta"><h3>荞面刀削鸡枞菌</h3><span class="price">¥88</span></div>
+        <p>菌子先用菜籽油慢炸出香，再回锅拌刚削好的荞面。</p>
+      </article>
+      <article class="dish" role="listitem" data-reveal>
+        <div class="dish-img"><img src="https://picsum.photos/seed/shishan-dish-douhua-beef/900/1200" alt="柴火豆花牛肉" loading="lazy" width="900" height="1200"></div>
+        <div class="dish-meta"><h3>柴火豆花牛肉</h3><span class="price">¥138</span></div>
+        <p>店里现点的胆水豆花，配黄牛腱心，辣度可点到三档。</p>
+      </article>
+      <article class="dish" role="listitem" data-reveal>
+        <div class="dish-img"><img src="https://picsum.photos/seed/shishan-dish-grilled-fish/900/1200" alt="青花椒烤江团" loading="lazy" width="900" height="1200"></div>
+        <div class="dish-meta"><h3>青花椒烤江团</h3><span class="price">¥228</span></div>
+        <p>整条现杀，先烤后浇汁，青花椒当天从汉源冷链到店。</p>
+      </article>
+      <article class="dish" role="listitem" data-reveal>
+        <div class="dish-img"><img src="https://picsum.photos/seed/shishan-dish-laozao-dessert/900/1200" alt="醪糟冻酪" loading="lazy" width="900" height="1200"></div>
+        <div class="dish-meta"><h3>醪糟冻酪</h3><span class="price">¥42</span></div>
+        <p>自酿醪糟做成冻酪，微酸收尾，一顿麻辣之后的休止符。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- CHEF -->
+  <section class="sect" id="chef" style="padding-top:0">
+    <div class="wrap chef">
+      <div class="chef-img" data-reveal>
+        <img src="https://picsum.photos/seed/shishan-chef-portrait/1200/1500" alt="主厨周砚清" loading="lazy" width="1200" height="1500">
+      </div>
+      <div class="chef-body">
+        <h2 data-reveal>做川菜十四年，<br>越做越不敢加料</h2>
+        <p data-reveal>在成都学徒，在广州做了六年粤菜，回过头才明白川菜的底子是山货和时令，不是辣椒的量。拾山的菜谱一年改四次，跟着雅安的笋、遵义的菌、汉源的花椒走。</p>
+        <p data-reveal>厨房只有九个人，所以我们把菜单压到二十六道。做不好的，就不上。</p>
+        <div class="chef-sign" data-reveal>
+          <strong>周砚清</strong>
+          <span>主厨 · 拾山创始人</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROOMS -->
+  <section class="sect" id="rooms" style="padding-top:0">
+    <div class="wrap">
+      <h2 data-reveal>四种坐法</h2>
+      <div class="bento">
+        <figure class="cell c1" data-reveal>
+          <img src="https://picsum.photos/seed/shishan-room-private/900/900" alt="可容十人的私宴厅" loading="lazy" width="900" height="900">
+        </figure>
+        <figure class="cell c2" data-reveal>
+          <img src="https://picsum.photos/seed/shishan-room-hall/1400/1000" alt="老洋房挑高大堂" loading="lazy" width="1400" height="1000">
+        </figure>
+        <div class="cell c3" data-reveal>
+          <h3>吧台六个位子，只接待当天走进来的人</h3>
+          <p>不接受预订，六点开放。厨师在你面前收汁，想问什么都可以问。</p>
+        </div>
+        <figure class="cell c4" data-reveal>
+          <img src="https://picsum.photos/seed/shishan-room-terrace/900/1200" alt="二楼露台座位" loading="lazy" width="900" height="1200">
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- MENU -->
+  <section class="sect" id="menu" style="padding-top:0">
+    <div class="wrap">
+      <p class="eyebrow">秋季菜单节选</p>
+      <h2 data-reveal>二十六道，<br>这里先放九道</h2>
+      <div class="menu-grid">
+        <div class="group mg1" data-reveal>
+          <h3>凉碟</h3>
+          <ul>
+            <li><b>折耳根拌野山椒</b><i>¥58</i></li>
+            <li><b>椒麻鸡丝</b><i>¥62</i></li>
+            <li><b>糟醉青梅冬笋</b><i>¥48</i><small>限雅安春笋季，售完即止。</small></li>
+          </ul>
+        </div>
+        <div class="group mg2" data-reveal>
+          <h3>热菜</h3>
+          <ul>
+            <li><b>柴火豆花牛肉</b><i>¥138</i></li>
+            <li><b>青花椒烤江团</b><i>¥228</i><small>整条约一斤四两，需三十分钟，建议落座即点。</small></li>
+            <li><b>藿香鲫鱼</b><i>¥118</i></li>
+            <li><b>甜皮鸭配荞饼</b><i>¥148</i></li>
+          </ul>
+        </div>
+        <div class="group mg3" data-reveal>
+          <h3>主食与甜</h3>
+          <ul>
+            <li><b>荞面刀削鸡枞菌</b><i>¥88</i></li>
+            <li><b>醪糟冻酪</b><i>¥42</i></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE -->
+  <section class="quote sect">
+    <div class="wrap">
+      <blockquote data-reveal>辣得很有分寸，吃完第二天不口渴，这在上海的川菜里不多见。</blockquote>
+      <p class="by" data-reveal>
+        <strong>陈亦舟</strong>
+        <span>《食昧》专栏作者</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- BOOKING -->
+  <section class="sect" id="book">
+    <div class="wrap book">
+      <div>
+        <h2 data-reveal>在线订座</h2>
+        <p class="lead" data-reveal style="margin-top:18px">午市 11:30 起，晚市 17:30 起。八人以上请直接致电，我们会替你留私宴厅。</p>
+
+        <form id="bookForm" novalidate style="margin-top:34px" data-reveal>
+          <div class="form-body">
+            <div class="row2">
+              <div class="field" id="f-name">
+                <label for="i-name">称呼</label>
+                <input id="i-name" name="name" type="text" placeholder="您怎么称呼" autocomplete="name">
+                <p class="err">请填写称呼</p>
+              </div>
+              <div class="field" id="f-phone">
+                <label for="i-phone">手机号</label>
+                <input id="i-phone" name="phone" type="tel" inputmode="tel" placeholder="到店当天联系用" autocomplete="tel">
+                <p class="err">请填写 11 位手机号</p>
+              </div>
+            </div>
+            <div class="row2">
+              <div class="field" id="f-date">
+                <label for="i-date">日期与时间</label>
+                <input id="i-date" name="datetime" type="datetime-local">
+                <p class="err">请选择到店时间</p>
+              </div>
+              <div class="field" id="f-size">
+                <label for="i-size">人数</label>
+                <select id="i-size" name="size">
+                  <option>2 位</option><option>3 位</option><option>4 位</option>
+                  <option>5 位</option><option>6 位</option><option>7 位</option>
+                  <option>8 位及以上</option>
+                </select>
+                <p class="hint">八人以上会安排在私宴厅。</p>
+              </div>
+            </div>
+            <div class="field" id="f-note">
+              <label for="i-note">备注</label>
+              <textarea id="i-note" name="note" rows="3" placeholder="忌口、辣度、纪念日"></textarea>
+              <p class="hint">可不填。写了我们会提前准备。</p>
+            </div>
+            <button class="btn btn-primary" type="submit" id="submitBtn">在线订座</button>
+            <p class="form-note">提交后我们会在两小时内电话确认，未确认的座位不保留。</p>
+          </div>
+
+          <div class="form-ok" role="status" aria-live="polite">
+            <h3>已收到，等我们电话</h3>
+            <p>两小时内会有人打给你确认。若临时有变，直接回拨门店电话就行。</p>
+          </div>
+        </form>
+      </div>
+
+      <aside class="info" data-reveal>
+        <div class="info-img">
+          <img src="https://picsum.photos/seed/shishan-storefront-night/1200/900" alt="拾山愚园路门头" loading="lazy" width="1200" height="900">
+        </div>
+        <dl>
+          <div><dt>地址</dt><dd>上海市静安区愚园路 763 弄 4 号<br>近镇宁路，弄堂进去左手第二栋</dd></div>
+          <div><dt>电话</dt><dd><a href="tel:+862162874193">021 6287 4193</a></dd></div>
+          <div><dt>营业时间</dt><dd>午市 11:30 - 14:00<br>晚市 17:30 - 22:00<br>周二休</dd></div>
+        </dl>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>拾山 SHISHAN · 上海愚园路</span>
+    <nav>
+      <a href="#signature">招牌</a>
+      <a href="#menu">菜单</a>
+      <a href="#rooms">空间</a>
+      <a href="#book">在线订座</a>
+    </nav>
+    <span>&copy; 2026 拾山餐饮</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var nodes = document.querySelectorAll("[data-reveal]");
+
+  if (reduce || !("IntersectionObserver" in window)) {
+    Array.prototype.forEach.call(nodes, function(el){ el.classList.add("in"); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+
+    Array.prototype.forEach.call(nodes, function(el){
+      var i = Array.prototype.indexOf.call(el.parentNode.children, el);
+      el.style.setProperty("--d", Math.min(i, 5) * 70 + "ms");
+      io.observe(el);
+    });
+
+    /* 兜底：观察器若因环境未触发，2.5 秒后强制显示，内容不会消失 */
+    setTimeout(function(){
+      Array.prototype.forEach.call(nodes, function(el){ el.classList.add("in"); });
+      io.disconnect();
+    }, 2500);
+  }
+
+  /* 订座表单：校验 -> 提交中 -> 成功。演示用，无后端。 */
+  var form = document.getElementById("bookForm");
+  var btn  = document.getElementById("submitBtn");
+
+  function mark(id, bad){
+    var f = document.getElementById(id);
+    if (bad) { f.setAttribute("data-invalid", ""); } else { f.removeAttribute("data-invalid"); }
+    return bad;
+  }
+
+  form.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var name  = form.name.value.trim();
+    var phone = form.phone.value.replace(/[\s-]/g, "");
+    var when  = form.datetime.value;
+
+    var bad = false;
+    bad = mark("f-name",  name.length === 0) || bad;
+    bad = mark("f-phone", !/^1\d{10}$/.test(phone)) || bad;
+    bad = mark("f-date",  when === "") || bad;
+
+    if (bad) {
+      var first = form.querySelector("[data-invalid] input");
+      if (first) { first.focus(); }
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "提交中";
+    setTimeout(function(){ form.setAttribute("data-sent", ""); }, 700);
+  });
+
+  ["f-name", "f-phone", "f-date"].forEach(function(id){
+    var input = document.getElementById(id).querySelector("input");
+    input.addEventListener("input", function(){ mark(id, false); });
+  });
+})();
+</script>
+</body>
+</html>
