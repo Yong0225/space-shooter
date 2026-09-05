@@ -114,11 +114,19 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .card-t{font-size:16px;font-weight:650;letter-spacing:-.015em}
 .card-s{font-size:12.5px;color:var(--label-2)}
 .grid-cards{display:grid;gap:14px}
+.grid-cards>*{min-width:0}
 .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
 .split{grid-template-columns:1.55fr 1fr}
 @media (max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}}
 @media (max-width:900px){.split{grid-template-columns:1fr}}
 @media (max-width:640px){.g4,.g3,.g2{grid-template-columns:1fr}}
+@media (max-width:760px){
+  .row.stack{flex-direction:column;align-items:stretch;gap:9px}
+  .row.stack .row-r{margin-left:0;flex-wrap:wrap;justify-content:flex-start}
+  .seg{flex-wrap:wrap}
+  .kv{flex-wrap:wrap;gap:2px}
+  .tbl th,.tbl td{padding:9px 10px}
+}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;
   background:var(--fill-2);color:var(--label);font-size:13.5px;font-weight:600;letter-spacing:-.01em;
@@ -342,6 +350,26 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
   body{background:#fff}
   .card,.sched-wrap{box-shadow:none;border:1px solid #ddd}
 }
+
+/* ============ 员工端 ============ */
+.hero{background:var(--bg-elev);border-radius:var(--r-xl);box-shadow:var(--shadow-1);padding:20px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(140deg,color-mix(in srgb,var(--blue) 13%,transparent),transparent 62%)}
+.hero>*{position:relative}
+.hero-h{font-size:21px;font-weight:700;letter-spacing:-.024em}
+.clock{font-size:30px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.big-btn{width:100%;height:54px;border-radius:16px;font-size:16px;font-weight:650;margin-top:12px}
+.big-btn:active{transform:scale(.976)}
+.pickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;max-width:900px}
+.pickcard{background:var(--bg-elev);border-radius:var(--r-l);padding:18px 14px;display:flex;flex-direction:column;
+  align-items:center;gap:8px;box-shadow:var(--shadow-1);cursor:pointer;text-align:center;
+  transition:transform .14s cubic-bezier(.2,.8,.3,1),box-shadow .2s}
+.pickcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}
+.pickcard:active{transform:scale(.97)}
+#modeSwitch{padding:0 2px 10px}
+#modeSwitch .btn{width:100%;justify-content:center}
+.side-foot .btn.ico{width:30px}
+@media (max-width:900px){ .hero{border-radius:var(--r-l)} }
 </style>
 </head>
 <body>
@@ -351,15 +379,12 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
       <div class="brand-mark">班</div>
       <div>
         <div class="brand-t" id="bizName">拾山 SHISHAN</div>
-        <div class="brand-s">排班 · 工时 · 薪资</div>
+        <div class="brand-s" id="bizTag">排班 · 工时 · 薪资</div>
       </div>
     </div>
+    <div id="modeSwitch"></div>
     <nav id="nav"></nav>
-    <div class="side-foot">
-      <button class="btn sm gho" data-act="theme">◐ 外观</button>
-      <div class="spacer"></div>
-      <span class="tiny dim" id="saveState">已保存</span>
-    </div>
+    <div class="side-foot" id="sideFoot"></div>
   </aside>
   <main class="main" id="main">
     <div class="topbar" id="topbar"></div>
@@ -369,7 +394,499 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
 <nav class="tabbar" id="tabbar"></nav>
 <div class="toasts" id="toasts"></div>
 <script>
-'use strict';
+/* =========================================================================
+   多语言：中文 / English / Bahasa Melayu
+   t('key', {vars}) — 缺失的键回退到中文
+   ========================================================================= */
+const LANGS = { zh: '中文', en: 'English', ms: 'Bahasa Melayu' };
+let LANG = 'zh';
+
+const DOWS = {
+  zh: { s: ['日', '一', '二', '三', '四', '五', '六'], m: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+        l: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'] },
+  en: { s: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'], m: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        l: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] },
+  ms: { s: ['Ah', 'Is', 'Se', 'Ra', 'Kh', 'Ju', 'Sa'], m: ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'],
+        l: ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'] },
+};
+const MONTHS = {
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  ms: ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'],
+};
+
+const I18N = {
+  zh: {
+    'app.tag': '排班 · 工时 · 薪资',
+    'c.save': '保存', 'c.cancel': '取消', 'c.delete': '删除', 'c.close': '关闭', 'c.add': '添加',
+    'c.confirm': '确定', 'c.total': '合计', 'c.role': '岗位', 'c.staff': '员工', 'c.date': '日期',
+    'c.start': '开始', 'c.end': '结束', 'c.note': '备注', 'c.export': '导出 CSV', 'c.print': '打印',
+    'c.perHour': '/小时', 'c.perMonth': '/月', 'c.saved': '已保存', 'c.saving': '保存中…',
+    'c.appearance': '外观', 'c.language': '语言', 'c.thisWeek': '本周', 'c.day': '天', 'c.people': '人',
+    'c.hoursShort': 'h', 'c.shifts': '班次', 'c.rest': '休息', 'c.onLeave': '请假',
+    'nav.ops': '运营', 'nav.admin': '管理', 'nav.more': '更多',
+    'nav.dash': '总览', 'nav.sched': '排班', 'nav.time': '工时', 'nav.pay': '薪资',
+    'nav.staff': '员工', 'nav.leave': '请假', 'nav.set': '设置',
+    'dash.sub': '{biz} · {from} – {to}',
+    'dash.cost': '本周人力成本（含雇主税）', 'dash.vsLast': '对比上周 {v}',
+    'dash.pct': '人力成本占比', 'dash.target': '目标 {p}% · 营业额预估 {v}',
+    'dash.hours': '本周排班工时', 'dash.shiftsStaff': '{n} 个班次 · {m} 名在职员工',
+    'dash.todo': '待处理', 'dash.todoSub': '{a} 条请假待批 · {b} 个排班缺口',
+    'dash.goApprove': '去审批', 'dash.goFill': '去补人', 'dash.ready': '全部就绪',
+    'dash.daily': '每日人力成本', 'dash.dailySub': '按当前排班与时薪估算，含 {p}% 雇主税',
+    'dash.weekTotal': '周合计 {v}', 'dash.today': '今日班次', 'dash.todaySub': '{d} · {n} 人',
+    'dash.noToday': '今天没有排班', 'dash.punched': '已打卡',
+    'dash.ot': '加班预警', 'dash.otSub': '接近或超过每周 {h}h', 'dash.noOT': '本周没有加班风险',
+    'dash.otTag': '加班 {h}h',
+    'dash.pending': '待批请假', 'dash.nReq': '{n} 条申请', 'dash.noPending': '没有待批申请',
+    'dash.gaps': '排班缺口', 'dash.gapsSub': '需求未排满的岗位', 'dash.noGaps': '本周需求已全部排满',
+    'dash.short': '缺 {n} 人',
+    'sched.sub': '拖动班次即可换人换天 · 点击班次编辑',
+    'sched.auto': '✨ 一键智能排班', 'sched.copy': '⧉ 复制上周', 'sched.clear': '清空',
+    'sched.weekHours': '周工时 {h}h', 'sched.cost': '人力成本 {v} · {p}%',
+    'sched.gapCount': '缺口 {n} 人次', 'sched.filled': '需求已排满', 'sched.printBtn': '打印班表',
+    'sched.colHead': '员工 / 日期', 'sched.dayCost': '日成本估算', 'sched.cell': '{n} 班 · {v}',
+    'sched.cant': '不可上班', 'sched.waiting': '待批 {t}',
+    'sched.hint': '提示：按住班次可拖到别的员工或别的一天；灰色斜纹格代表该员工当天不可排班；带 <b style="color:var(--red)">!</b> 的班次存在冲突。',
+    'sh.new': '新增班次', 'sh.edit': '编辑班次', 'sh.addBtn': '添加班次',
+    'sh.tpl': '套用班次模板', 'sh.brk': '无薪休息（分钟）', 'sh.payHours': '计薪工时',
+    'sh.cost': '该班次人力成本', 'sh.conflicts': '⚠︎ {n} 项冲突', 'sh.ok': '✓ 没有冲突',
+    'sh.added': '班次已添加', 'sh.updated': '班次已更新', 'sh.deleted': '班次已删除',
+    'sh.need': '请填写员工和日期', 'sh.moved': '已调整为 {n} · {d}', 'sh.notePh': '例如：负责宴会厅',
+    'cf.leave': '与已批准的请假冲突', 'cf.avail': '超出该员工可上班时段',
+    'cf.overlap': '与同日其他班次重叠', 'cf.max': '本周 {h}h 超过上限 {m}h',
+    'cf.skill': '岗位与员工技能不符', 'cf.noStaff': '员工不存在',
+    'time.sub': '打卡记录与排班对比 · 差异一眼看清', 'time.fill': '⤓ 按排班补录缺卡',
+    'time.sched': '排班工时', 'time.actual': '实际工时', 'time.elapsed': '{a}/7 天已过',
+    'time.diff': '差异', 'time.lateEarly': '迟到 / 早退', 'time.grace': '宽限 {n} 分钟',
+    'time.missing': '缺卡', 'time.missHint': '会按 0 工时计薪，请补录', 'time.complete': '记录完整',
+    'time.late': '迟到', 'time.early': '早退', 'time.detail': '{from} – {to} 工时明细',
+    'time.savePunch': '保存打卡', 'time.saved': '打卡记录已保存',
+    'time.editHint': '修改时间后点「保存打卡」，薪资会自动按新的实际工时重算。',
+    'time.filled': '已按排班补录 {n} 条打卡', 'time.nothing': '没有需要补录的缺卡',
+    'time.schedAt': '排班 {a}–{b} · {r}', 'time.actualAt': '实际 {a}–{b} · {h}h',
+    'pay.sub': '正常工时 / 加班 / 小费 全自动核算',
+    'pay.week': '本周', 'pay.last': '上周', 'pay.biweek': '双周', 'pay.month': '本月',
+    'pay.slipBtn': '生成工资单',
+    'pay.gross': '应发工资总额', 'pay.grossSub': '{n} 名员工 · {from} – {to}',
+    'pay.otPay': '加班费', 'pay.otSub': '加班 {h}h · {m}× 倍率',
+    'pay.tips': '小费分配', 'pay.tipPool': '小费池',
+    'pay.employer': '雇主总成本', 'pay.employerSub': '含 {p}% 雇主税 {v}',
+    'pay.missWarn': '⚠︎ {n} 天缺卡',
+    'pay.missHint': '这些天按 0 工时计薪。建议先去「工时」补录，或把计薪来源改成「按排班」。',
+    'pay.goFix': '去处理', 'pay.method': '计薪方式', 'pay.reg': '正常', 'pay.ot': '加班',
+    'pay.base': '基本', 'pay.taxCol': '雇主税', 'pay.costCol': '合计成本', 'pay.grossCol': '应发',
+    'pay.slip': '{n} · 工资单', 'pay.breakdown': '工时构成', 'pay.byDay': '逐日工时',
+    'pay.regLine': '正常工时', 'pay.otLine': '加班工时（{m}×）', 'pay.dtLine': '双倍工时',
+    'pay.tipLine': '小费分配（按工时）', 'pay.grossLine': '应发合计', 'pay.taxLine': '雇主税费 {p}%',
+    'pay.costLine': '雇主总成本', 'pay.noHours': '本周期没有工时记录',
+    'pay.slipMiss': '⚠︎ 有 {n} 天排了班但没有打卡记录',
+    'pay.srcLine': '计薪来源：<b>{src}</b> · 加班规则：{rules} · 可在',
+    'pay.srcLine2': '中调整',
+    'pay.srcActual': '实际打卡（缺卡按排班/0 处理）', 'pay.srcSched': '按排班表',
+    'pay.ruleWeek': '每周超过 {h}h 按 {m}×', 'pay.ruleDay': '每日超过 {h}h 按 {m}×',
+    'pay.ruleOff': '未启用周加班', 'pay.exported': '薪资表已导出',
+    'pay.fromPunch': '打卡', 'pay.fromSched': '排班', 'pay.fromMiss': '缺卡',
+    'pay.monthly': '月薪 {v}',
+    'staff.sub': '{n} 名在职 · 时薪、可上班时段、技能岗位', 'staff.add': '＋ 新增员工',
+    'staff.new': '新增员工', 'staff.hiredOn': '入职 {d}', 'staff.payLabel': '计薪',
+    'staff.weekSched': '本周排班', 'staff.cap': '上限 {h}h', 'staff.canWork': '可排 {n} 天',
+    'staff.inactive': '已离职', 'staff.name': '姓名', 'staff.phone': '电话',
+    'staff.roles': '可担任岗位（第一个为主岗）', 'staff.payType': '计薪方式',
+    'staff.hourly': '时薪（可算加班）', 'staff.monthly': '月薪（不计加班）',
+    'staff.rate': '时薪 ({c})', 'staff.salary': '月薪 ({c})', 'staff.maxH': '每周工时上限',
+    'staff.hired': '入职日期', 'staff.notePh': '例如：学生 / 只做晚市',
+    'staff.avail': '可上班时段（自动排班会严格遵守）', 'staff.active': '在职',
+    'staff.activeSub': '关闭后不再参与排班', 'staff.needName': '请填写姓名',
+    'staff.added': '已添加 {n}', 'staff.updated': '员工资料已更新', 'staff.delTitle': '删除员工',
+    'staff.delMsg': '确定删除 <b>{n}</b>？该员工的排班与打卡记录也会一并删除，此操作不可撤销。',
+    'staff.deleted': '员工已删除', 'staff.addBtn': '添加员工',
+    'leave.sub': '批准后，自动排班会自动跳过这些日期', 'leave.new': '＋ 新建请假',
+    'leave.pending': '待审批', 'leave.history': '历史记录', 'leave.noPending': '没有待审批的请假',
+    'leave.noHistory': '暂无记录', 'leave.approve': '批准', 'leave.reject': '拒绝',
+    'leave.approved': '已批准', 'leave.rejected': '已拒绝',
+    'leave.clash': '⚠︎ 该期间已排 {n} 个班次，批准后需要补人',
+    'leave.okMsg': '请假已批准', 'leave.okCancel': '已批准 · 取消了 {n} 个班次，记得补人',
+    'leave.rejMsg': '已拒绝该申请', 'leave.type': '类型', 'leave.reason': '说明',
+    'leave.detail': '请假详情', 'leave.submit': '提交申请', 'leave.submitted': '请假申请已提交',
+    'leave.badDate': '结束日期不能早于开始日期', 'leave.days': '{n} 天', 'leave.noReason': '无说明',
+    'leave.head': '{n} · {t} · {d} 天',
+    'set.sub': '加班规则、人力成本目标、班次模板与用人需求',
+    'set.store': '门店', 'set.storeName': '门店名称', 'set.currency': '货币符号',
+    'set.weekStart': '每周起始日', 'set.revenue': '每周营业额预估',
+    'set.revenueSub': '用于计算人力成本占比', 'set.targetPct': '人力成本目标',
+    'set.targetSub': '行业健康区间 25–32%', 'set.rules': '加班与计薪规则',
+    'set.paySrc': '计薪来源', 'set.paySrcSub': '按打卡更准确，按排班更省事',
+    'set.otWeekly': '每周加班（FLSA）', 'set.otWeeklySub': '超过 {h} 小时按 {m} 倍',
+    'set.otWeeklyTh': '每周加班门槛', 'set.otWeeklyThSub': '美国联邦标准为 40 小时',
+    'set.otDaily': '每日加班（加州式）', 'set.otDailySub': '单日超过 {h} 小时按 {m} 倍',
+    'set.otDailyTh': '每日加班门槛', 'set.otDailyThSub': '仅在启用每日加班时生效',
+    'set.otMult': '加班倍率', 'set.otMultSub': '默认 1.5 倍',
+    'set.brk': '休息时间不计薪', 'set.brkSub': '班次中的休息分钟从工时中扣除',
+    'set.tax': '雇主税费比例', 'set.taxSub': 'FICA 7.65% + 失业保险等',
+    'set.grace': '迟到宽限', 'set.graceSub': '超过这个分钟数才算迟到',
+    'set.templates': '班次模板', 'set.tplSub': '{a}–{b} · 休息 {m} 分钟 · 计薪 {h}h',
+    'set.demand': '每日用人需求（自动排班依据）', 'set.dayCol': '星期', 'set.blockCol': '班段',
+    'set.data': '数据', 'set.exportData': '导出全部数据', 'set.exportSub': 'JSON 备份，可在另一台电脑导入',
+    'set.importData': '导入数据', 'set.importSub': '从 JSON 备份恢复',
+    'set.resetData': '重置为示例数据', 'set.resetSub': '清空当前所有排班、打卡与员工',
+    'set.privacy': '数据只保存在这台设备的浏览器里（localStorage），不会上传到任何服务器。',
+    'set.lang': '语言与外观', 'set.langLabel': '界面语言', 'set.themeLabel': '外观',
+    'set.themeAuto': '跟随系统', 'set.themeLight': '浅色', 'set.themeDark': '深色',
+    'set.imported': '数据已导入', 'set.importBad': '文件格式不正确',
+    'set.resetTitle': '重置数据',
+    'set.resetMsg': '将清空当前所有员工、排班、打卡与请假记录，并恢复成示例门店数据。此操作不可撤销。',
+    'set.resetDone': '已重置为示例数据', 'set.backupOK': '备份已导出',
+    'mode.boss': '管理端', 'mode.emp': '员工端', 'mode.toEmp': '切换到员工端',
+    'mode.toBoss': '返回管理端', 'mode.pick': '你是哪位？', 'mode.pickSub': '选择你的名字，进入员工端',
+    'mode.hint': '员工端只能看到自己的班表、工时和请假，不能修改排班或看到别人的工资。',
+    'emp.my': '我的班表', 'emp.hours': '我的工时', 'emp.leave': '请假', 'emp.me': '我的',
+    'emp.hello': '你好，{n}', 'emp.todayShift': '今天的班', 'emp.noToday': '今天休息',
+    'emp.clockIn': '上班打卡', 'emp.clockOut': '下班打卡', 'emp.clockedIn': '{t} 已上班打卡',
+    'emp.done': '今天已完成 · {h}h', 'emp.clockInOK': '上班打卡成功 {t}',
+    'emp.clockOutOK': '下班打卡成功 {t} · 今天 {h}h', 'emp.weekHours': '本周工时',
+    'emp.weekPay': '本周预估工资', 'emp.payNote': '含加班与小费预估，最终以工资单为准',
+    'emp.nextShift': '下一个班', 'emp.thisWeek': '本周班表', 'emp.noShifts': '这一周还没有排班',
+    'emp.reqLeave': '＋ 申请请假', 'emp.myReq': '我的申请', 'emp.noReq': '还没有请假记录',
+    'emp.waiting': '等待批准', 'emp.profile': '个人资料', 'emp.myRate': '我的时薪',
+    'emp.myRoles': '我的岗位', 'emp.myAvail': '我的可上班时段',
+    'emp.availNote': '需要修改可上班时段或时薪？请联系店长。',
+    'emp.signOut': '退出员工端', 'emp.leaveSent': '申请已提交，等待店长批准',
+    'emp.hoursSub': '打卡记录与排班对比', 'emp.mySub': '{r} · {c}',
+    'emp.tomorrow': '明天', 'emp.est': '预估', 'emp.noPunch': '缺卡',
+    'emp.switchUser': '切换员工',
+    'role.mgr': '店长', 'role.chef': '厨师', 'role.prep': '帮厨', 'role.server': '服务员',
+    'role.bar': '吧台', 'role.cashier': '收银', 'role.dish': '洗碗',
+    'tpl.morning': '早班', 'tpl.lunch': '午市', 'tpl.evening': '晚班', 'tpl.close': '打烊', 'tpl.allday': '全天',
+    'lt.personal': '事假', 'lt.sick': '病假', 'lt.annual': '年假', 'lt.unpaid': '无薪假',
+    'set.pin': '管理端密码', 'set.pinSub': '设置后，从员工端返回管理端需要输入；留空表示不上锁',
+    'pin.title': '输入管理端密码', 'pin.wrong': '密码不正确', 'pin.ph': '4–6 位数字', 'pin.ok': '进入',
+    'msg.copied': '已复制 {n} 个班次（跳过请假与冲突）', 'msg.noCopy': '上周没有排班可复制',
+    'msg.autoDone': '已排 {n} 个班次', 'msg.autoGap': '已排 {n} 个班次 · 仍缺 {g} 人次',
+    'msg.autoFull': '本周需求已经排满了', 'msg.autoNoStaff': '没有可用的人，还缺 {g} 个岗位',
+    'msg.clearTitle': '清空本周排班',
+    'msg.clearMsg': '将删除 {from} – {to} 的 <b>{n}</b> 个班次。打卡记录会保留。',
+    'msg.cleared': '已清空 {n} 个班次', 'msg.noWeek': '本周没有排班',
+    'msg.schedExported': '班表已导出', 'msg.theme': '外观：{v}', 'msg.lang': '语言已切换',
+  },
+
+  en: {
+    'app.tag': 'Scheduling · Hours · Payroll',
+    'c.save': 'Save', 'c.cancel': 'Cancel', 'c.delete': 'Delete', 'c.close': 'Close', 'c.add': 'Add',
+    'c.confirm': 'Confirm', 'c.total': 'Total', 'c.role': 'Role', 'c.staff': 'Staff', 'c.date': 'Date',
+    'c.start': 'Start', 'c.end': 'End', 'c.note': 'Note', 'c.export': 'Export CSV', 'c.print': 'Print',
+    'c.perHour': '/hr', 'c.perMonth': '/mo', 'c.saved': 'Saved', 'c.saving': 'Saving…',
+    'c.appearance': 'Theme', 'c.language': 'Language', 'c.thisWeek': 'This week', 'c.day': 'days', 'c.people': 'people',
+    'c.hoursShort': 'h', 'c.shifts': 'shifts', 'c.rest': 'Off', 'c.onLeave': 'On leave',
+    'nav.ops': 'Operations', 'nav.admin': 'Admin', 'nav.more': 'More',
+    'nav.dash': 'Overview', 'nav.sched': 'Schedule', 'nav.time': 'Hours', 'nav.pay': 'Payroll',
+    'nav.staff': 'Staff', 'nav.leave': 'Time off', 'nav.set': 'Settings',
+    'dash.sub': '{biz} · {from} – {to}',
+    'dash.cost': 'Labor cost this week (incl. employer tax)', 'dash.vsLast': 'vs last week {v}',
+    'dash.pct': 'Labor cost ratio', 'dash.target': 'Target {p}% · est. revenue {v}',
+    'dash.hours': 'Scheduled hours', 'dash.shiftsStaff': '{n} shifts · {m} active staff',
+    'dash.todo': 'Needs action', 'dash.todoSub': '{a} leave to approve · {b} open slots',
+    'dash.goApprove': 'Approve', 'dash.goFill': 'Fill slots', 'dash.ready': 'All clear',
+    'dash.daily': 'Daily labor cost', 'dash.dailySub': 'From the current schedule and pay rates, incl. {p}% employer tax',
+    'dash.weekTotal': 'Week total {v}', 'dash.today': "Today's shifts", 'dash.todaySub': '{d} · {n} people',
+    'dash.noToday': 'No shifts today', 'dash.punched': 'Clocked in',
+    'dash.ot': 'Overtime watch', 'dash.otSub': 'At or over {h}h per week', 'dash.noOT': 'No overtime risk this week',
+    'dash.otTag': 'OT {h}h',
+    'dash.pending': 'Leave requests', 'dash.nReq': '{n} requests', 'dash.noPending': 'Nothing pending',
+    'dash.gaps': 'Open slots', 'dash.gapsSub': 'Roles that are not fully staffed', 'dash.noGaps': 'Every slot is filled',
+    'dash.short': '{n} short',
+    'sched.sub': 'Drag a shift to move it · tap to edit',
+    'sched.auto': '✨ Auto-schedule', 'sched.copy': '⧉ Copy last week', 'sched.clear': 'Clear',
+    'sched.weekHours': 'Week {h}h', 'sched.cost': 'Labor {v} · {p}%',
+    'sched.gapCount': '{n} open slots', 'sched.filled': 'Fully staffed', 'sched.printBtn': 'Print schedule',
+    'sched.colHead': 'Staff / Date', 'sched.dayCost': 'Daily cost', 'sched.cell': '{n} shifts · {v}',
+    'sched.cant': 'Unavailable', 'sched.waiting': 'Pending {t}',
+    'sched.hint': 'Tip: press and hold a shift to drag it to another person or day. Hatched cells mean that person is unavailable. Shifts marked <b style="color:var(--red)">!</b> have a conflict.',
+    'sh.new': 'New shift', 'sh.edit': 'Edit shift', 'sh.addBtn': 'Add shift',
+    'sh.tpl': 'Apply a template', 'sh.brk': 'Unpaid break (minutes)', 'sh.payHours': 'Paid hours',
+    'sh.cost': 'Cost of this shift', 'sh.conflicts': '⚠︎ {n} conflicts', 'sh.ok': '✓ No conflicts',
+    'sh.added': 'Shift added', 'sh.updated': 'Shift updated', 'sh.deleted': 'Shift deleted',
+    'sh.need': 'Pick a person and a date', 'sh.moved': 'Moved to {n} · {d}', 'sh.notePh': 'e.g. banquet room',
+    'cf.leave': 'Clashes with approved time off', 'cf.avail': "Outside this person's availability",
+    'cf.overlap': 'Overlaps another shift that day', 'cf.max': '{h}h this week exceeds the {m}h cap',
+    'cf.skill': 'Role is not one of this person’s skills', 'cf.noStaff': 'Staff member not found',
+    'time.sub': 'Punches against the schedule, at a glance', 'time.fill': '⤓ Fill missing punches',
+    'time.sched': 'Scheduled', 'time.actual': 'Actual', 'time.elapsed': '{a}/7 days elapsed',
+    'time.diff': 'Diff', 'time.lateEarly': 'Late / Early out', 'time.grace': '{n} min grace',
+    'time.missing': 'Missing', 'time.missHint': 'Paid as 0 hours — please fill them in', 'time.complete': 'Records complete',
+    'time.late': 'Late', 'time.early': 'Early out', 'time.detail': '{from} – {to} hours detail',
+    'time.savePunch': 'Save punches', 'time.saved': 'Punches saved',
+    'time.editHint': 'Change the times and hit Save — payroll recalculates from the new actual hours.',
+    'time.filled': 'Filled {n} punches from the schedule', 'time.nothing': 'Nothing to fill in',
+    'time.schedAt': 'Scheduled {a}–{b} · {r}', 'time.actualAt': 'Actual {a}–{b} · {h}h',
+    'pay.sub': 'Regular hours, overtime and tips, computed automatically',
+    'pay.week': 'This week', 'pay.last': 'Last week', 'pay.biweek': 'Two weeks', 'pay.month': 'This month',
+    'pay.slipBtn': 'Payslips',
+    'pay.gross': 'Total gross pay', 'pay.grossSub': '{n} staff · {from} – {to}',
+    'pay.otPay': 'Overtime pay', 'pay.otSub': '{h}h overtime · {m}× rate',
+    'pay.tips': 'Tips distributed', 'pay.tipPool': 'Tip pool',
+    'pay.employer': 'Total employer cost', 'pay.employerSub': 'incl. {p}% employer tax {v}',
+    'pay.missWarn': '⚠︎ {n} days with no punch',
+    'pay.missHint': 'Those days are paid as 0 hours. Fill them in under Hours, or switch the pay basis to the schedule.',
+    'pay.goFix': 'Fix now', 'pay.method': 'Pay basis', 'pay.reg': 'Regular', 'pay.ot': 'OT',
+    'pay.base': 'Base', 'pay.taxCol': 'Emp. tax', 'pay.costCol': 'Total cost', 'pay.grossCol': 'Gross',
+    'pay.slip': '{n} · Payslip', 'pay.breakdown': 'Breakdown', 'pay.byDay': 'Day by day',
+    'pay.regLine': 'Regular hours', 'pay.otLine': 'Overtime ({m}×)', 'pay.dtLine': 'Double time',
+    'pay.tipLine': 'Tips (by hours worked)', 'pay.grossLine': 'Gross total', 'pay.taxLine': 'Employer tax {p}%',
+    'pay.costLine': 'Total employer cost', 'pay.noHours': 'No hours in this period',
+    'pay.slipMiss': '⚠︎ {n} scheduled days have no punch record',
+    'pay.srcLine': 'Pay basis: <b>{src}</b> · Overtime: {rules} · change it in ',
+    'pay.srcLine2': '',
+    'pay.srcActual': 'Actual punches (missing ones count as 0)', 'pay.srcSched': 'Scheduled hours',
+    'pay.ruleWeek': 'over {h}h per week at {m}×', 'pay.ruleDay': 'over {h}h per day at {m}×',
+    'pay.ruleOff': 'weekly overtime off', 'pay.exported': 'Payroll exported',
+    'pay.fromPunch': 'punch', 'pay.fromSched': 'schedule', 'pay.fromMiss': 'missing',
+    'pay.monthly': 'Salary {v}',
+    'staff.sub': '{n} active · pay rates, availability and skills', 'staff.add': '＋ Add staff',
+    'staff.new': 'New staff member', 'staff.hiredOn': 'Joined {d}', 'staff.payLabel': 'Pay',
+    'staff.weekSched': 'Scheduled this week', 'staff.cap': 'cap {h}h', 'staff.canWork': 'available {n} days',
+    'staff.inactive': 'Inactive', 'staff.name': 'Name', 'staff.phone': 'Phone',
+    'staff.roles': 'Roles they can work (first one is primary)', 'staff.payType': 'Pay basis',
+    'staff.hourly': 'Hourly (overtime applies)', 'staff.monthly': 'Monthly salary (no overtime)',
+    'staff.rate': 'Hourly rate ({c})', 'staff.salary': 'Monthly salary ({c})', 'staff.maxH': 'Weekly hour cap',
+    'staff.hired': 'Start date', 'staff.notePh': 'e.g. student / evenings only',
+    'staff.avail': 'Availability (auto-scheduling respects this strictly)', 'staff.active': 'Active',
+    'staff.activeSub': 'Turn off to exclude from scheduling', 'staff.needName': 'Please enter a name',
+    'staff.added': '{n} added', 'staff.updated': 'Staff details updated', 'staff.delTitle': 'Delete staff member',
+    'staff.delMsg': 'Delete <b>{n}</b>? Their shifts and punch records go too. This cannot be undone.',
+    'staff.deleted': 'Staff member deleted', 'staff.addBtn': 'Add staff member',
+    'leave.sub': 'Approved days are skipped by auto-scheduling', 'leave.new': '＋ New request',
+    'leave.pending': 'Awaiting approval', 'leave.history': 'History', 'leave.noPending': 'Nothing waiting for approval',
+    'leave.noHistory': 'Nothing yet', 'leave.approve': 'Approve', 'leave.reject': 'Reject',
+    'leave.approved': 'Approved', 'leave.rejected': 'Rejected',
+    'leave.clash': '⚠︎ {n} shifts are already scheduled in this period — you will need cover',
+    'leave.okMsg': 'Time off approved', 'leave.okCancel': 'Approved · {n} shifts cancelled, arrange cover',
+    'leave.rejMsg': 'Request rejected', 'leave.type': 'Type', 'leave.reason': 'Reason',
+    'leave.detail': 'Request detail', 'leave.submit': 'Submit request', 'leave.submitted': 'Request submitted',
+    'leave.badDate': 'The end date cannot be before the start date', 'leave.days': '{n} days', 'leave.noReason': 'No reason given',
+    'leave.head': '{n} · {t} · {d} days',
+    'set.sub': 'Overtime rules, cost targets, shift templates and staffing needs',
+    'set.store': 'Store', 'set.storeName': 'Store name', 'set.currency': 'Currency symbol',
+    'set.weekStart': 'Week starts on', 'set.revenue': 'Weekly revenue estimate',
+    'set.revenueSub': 'Used for the labor cost ratio', 'set.targetPct': 'Labor cost target',
+    'set.targetSub': 'A healthy range is 25–32%', 'set.rules': 'Overtime & pay rules',
+    'set.paySrc': 'Pay basis', 'set.paySrcSub': 'Punches are accurate; the schedule is less work',
+    'set.otWeekly': 'Weekly overtime (FLSA)', 'set.otWeeklySub': 'over {h} hours paid at {m}×',
+    'set.otWeeklyTh': 'Weekly overtime threshold', 'set.otWeeklyThSub': 'US federal standard is 40 hours',
+    'set.otDaily': 'Daily overtime (California style)', 'set.otDailySub': 'over {h} hours in a day paid at {m}×',
+    'set.otDailyTh': 'Daily overtime threshold', 'set.otDailyThSub': 'Only applies when daily overtime is on',
+    'set.otMult': 'Overtime multiplier', 'set.otMultSub': 'Default is 1.5×',
+    'set.brk': 'Breaks are unpaid', 'set.brkSub': 'Break minutes are deducted from paid hours',
+    'set.tax': 'Employer tax rate', 'set.taxSub': 'FICA 7.65% plus unemployment insurance etc.',
+    'set.grace': 'Late grace period', 'set.graceSub': 'Only counts as late beyond this many minutes',
+    'set.templates': 'Shift templates', 'set.tplSub': '{a}–{b} · {m} min break · {h}h paid',
+    'set.demand': 'Daily staffing needs (what auto-scheduling fills)', 'set.dayCol': 'Day', 'set.blockCol': 'Block',
+    'set.data': 'Data', 'set.exportData': 'Export all data', 'set.exportSub': 'JSON backup you can import elsewhere',
+    'set.importData': 'Import data', 'set.importSub': 'Restore from a JSON backup',
+    'set.resetData': 'Reset to sample data', 'set.resetSub': 'Clears all shifts, punches and staff',
+    'set.privacy': 'Data stays in this browser (localStorage). Nothing is uploaded to any server.',
+    'set.lang': 'Language & appearance', 'set.langLabel': 'Interface language', 'set.themeLabel': 'Appearance',
+    'set.themeAuto': 'System', 'set.themeLight': 'Light', 'set.themeDark': 'Dark',
+    'set.imported': 'Data imported', 'set.importBad': 'That file format is not recognised',
+    'set.resetTitle': 'Reset data',
+    'set.resetMsg': 'This clears every staff member, shift, punch and leave request, and restores the sample store. It cannot be undone.',
+    'set.resetDone': 'Reset to sample data', 'set.backupOK': 'Backup exported',
+    'mode.boss': 'Manager', 'mode.emp': 'Employee', 'mode.toEmp': 'Switch to employee view',
+    'mode.toBoss': 'Back to manager view', 'mode.pick': 'Who are you?', 'mode.pickSub': 'Pick your name to open the employee view',
+    'mode.hint': 'The employee view only shows your own shifts, hours and time off — it cannot change the schedule or see anyone else’s pay.',
+    'emp.my': 'My shifts', 'emp.hours': 'My hours', 'emp.leave': 'Time off', 'emp.me': 'Me',
+    'emp.hello': 'Hi {n}', 'emp.todayShift': "Today's shift", 'emp.noToday': 'No shift today',
+    'emp.clockIn': 'Clock in', 'emp.clockOut': 'Clock out', 'emp.clockedIn': 'Clocked in at {t}',
+    'emp.done': 'Done for today · {h}h', 'emp.clockInOK': 'Clocked in at {t}',
+    'emp.clockOutOK': 'Clocked out at {t} · {h}h today', 'emp.weekHours': 'Hours this week',
+    'emp.weekPay': 'Estimated pay this week', 'emp.payNote': 'Includes overtime and tips; the payslip is final',
+    'emp.nextShift': 'Next shift', 'emp.thisWeek': 'This week', 'emp.noShifts': 'No shifts scheduled this week',
+    'emp.reqLeave': '＋ Request time off', 'emp.myReq': 'My requests', 'emp.noReq': 'No requests yet',
+    'emp.waiting': 'Awaiting approval', 'emp.profile': 'My profile', 'emp.myRate': 'My pay rate',
+    'emp.myRoles': 'My roles', 'emp.myAvail': 'My availability',
+    'emp.availNote': 'To change your availability or pay rate, ask your manager.',
+    'emp.signOut': 'Leave employee view', 'emp.leaveSent': 'Request sent — waiting for your manager',
+    'emp.hoursSub': 'Your punches against your schedule', 'emp.mySub': '{r} · {c}',
+    'emp.tomorrow': 'Tomorrow', 'emp.est': 'est.', 'emp.noPunch': 'No punch',
+    'emp.switchUser': 'Switch person',
+    'role.mgr': 'Manager', 'role.chef': 'Cook', 'role.prep': 'Prep', 'role.server': 'Server',
+    'role.bar': 'Bar', 'role.cashier': 'Cashier', 'role.dish': 'Dishwasher',
+    'tpl.morning': 'Morning', 'tpl.lunch': 'Lunch', 'tpl.evening': 'Evening', 'tpl.close': 'Closing', 'tpl.allday': 'All day',
+    'lt.personal': 'Personal', 'lt.sick': 'Sick', 'lt.annual': 'Annual', 'lt.unpaid': 'Unpaid',
+    'set.pin': 'Manager passcode', 'set.pinSub': 'Required to leave the employee view. Leave empty for no lock.',
+    'pin.title': 'Enter the manager passcode', 'pin.wrong': 'Wrong passcode', 'pin.ph': '4–6 digits', 'pin.ok': 'Enter',
+    'msg.copied': 'Copied {n} shifts (skipping leave and conflicts)', 'msg.noCopy': 'Last week has no shifts to copy',
+    'msg.autoDone': 'Scheduled {n} shifts', 'msg.autoGap': 'Scheduled {n} shifts · {g} slots still open',
+    'msg.autoFull': 'This week is already fully staffed', 'msg.autoNoStaff': 'Nobody available — {g} slots still open',
+    'msg.clearTitle': 'Clear this week',
+    'msg.clearMsg': 'This deletes the <b>{n}</b> shifts between {from} and {to}. Punch records are kept.',
+    'msg.cleared': 'Cleared {n} shifts', 'msg.noWeek': 'No shifts this week',
+    'msg.schedExported': 'Schedule exported', 'msg.theme': 'Appearance: {v}', 'msg.lang': 'Language changed',
+  },
+
+  ms: {
+    'app.tag': 'Jadual · Jam · Gaji',
+    'c.save': 'Simpan', 'c.cancel': 'Batal', 'c.delete': 'Padam', 'c.close': 'Tutup', 'c.add': 'Tambah',
+    'c.confirm': 'Sahkan', 'c.total': 'Jumlah', 'c.role': 'Jawatan', 'c.staff': 'Pekerja', 'c.date': 'Tarikh',
+    'c.start': 'Mula', 'c.end': 'Tamat', 'c.note': 'Nota', 'c.export': 'Eksport CSV', 'c.print': 'Cetak',
+    'c.perHour': '/jam', 'c.perMonth': '/bulan', 'c.saved': 'Disimpan', 'c.saving': 'Menyimpan…',
+    'c.appearance': 'Tema', 'c.language': 'Bahasa', 'c.thisWeek': 'Minggu ini', 'c.day': 'hari', 'c.people': 'orang',
+    'c.hoursShort': 'j', 'c.shifts': 'syif', 'c.rest': 'Rehat', 'c.onLeave': 'Bercuti',
+    'nav.ops': 'Operasi', 'nav.admin': 'Pentadbiran', 'nav.more': 'Lagi',
+    'nav.dash': 'Ringkasan', 'nav.sched': 'Jadual', 'nav.time': 'Jam Kerja', 'nav.pay': 'Gaji',
+    'nav.staff': 'Pekerja', 'nav.leave': 'Cuti', 'nav.set': 'Tetapan',
+    'dash.sub': '{biz} · {from} – {to}',
+    'dash.cost': 'Kos buruh minggu ini (termasuk cukai majikan)', 'dash.vsLast': 'berbanding minggu lalu {v}',
+    'dash.pct': 'Peratus kos buruh', 'dash.target': 'Sasaran {p}% · anggaran jualan {v}',
+    'dash.hours': 'Jam berjadual', 'dash.shiftsStaff': '{n} syif · {m} pekerja aktif',
+    'dash.todo': 'Perlu tindakan', 'dash.todoSub': '{a} cuti menunggu · {b} slot kosong',
+    'dash.goApprove': 'Luluskan', 'dash.goFill': 'Isi slot', 'dash.ready': 'Semua siap',
+    'dash.daily': 'Kos buruh harian', 'dash.dailySub': 'Anggaran dari jadual dan kadar semasa, termasuk {p}% cukai majikan',
+    'dash.weekTotal': 'Jumlah minggu {v}', 'dash.today': 'Syif hari ini', 'dash.todaySub': '{d} · {n} orang',
+    'dash.noToday': 'Tiada syif hari ini', 'dash.punched': 'Sudah daftar',
+    'dash.ot': 'Amaran kerja lebih masa', 'dash.otSub': 'Menghampiri atau melebihi {h}j seminggu', 'dash.noOT': 'Tiada risiko OT minggu ini',
+    'dash.otTag': 'OT {h}j',
+    'dash.pending': 'Permohonan cuti', 'dash.nReq': '{n} permohonan', 'dash.noPending': 'Tiada permohonan',
+    'dash.gaps': 'Slot kosong', 'dash.gapsSub': 'Jawatan yang belum penuh', 'dash.noGaps': 'Semua slot telah diisi',
+    'dash.short': 'kurang {n}',
+    'sched.sub': 'Seret syif untuk tukar orang atau hari · ketik untuk sunting',
+    'sched.auto': '✨ Jadual auto', 'sched.copy': '⧉ Salin minggu lalu', 'sched.clear': 'Kosongkan',
+    'sched.weekHours': 'Minggu {h}j', 'sched.cost': 'Kos buruh {v} · {p}%',
+    'sched.gapCount': '{n} slot kosong', 'sched.filled': 'Sudah penuh', 'sched.printBtn': 'Cetak jadual',
+    'sched.colHead': 'Pekerja / Tarikh', 'sched.dayCost': 'Kos harian', 'sched.cell': '{n} syif · {v}',
+    'sched.cant': 'Tidak boleh', 'sched.waiting': 'Menunggu {t}',
+    'sched.hint': 'Petua: tekan dan seret syif ke pekerja atau hari lain. Petak berjalur bermakna pekerja itu tidak boleh bekerja. Syif bertanda <b style="color:var(--red)">!</b> ada konflik.',
+    'sh.new': 'Syif baharu', 'sh.edit': 'Sunting syif', 'sh.addBtn': 'Tambah syif',
+    'sh.tpl': 'Guna templat syif', 'sh.brk': 'Rehat tanpa gaji (minit)', 'sh.payHours': 'Jam dibayar',
+    'sh.cost': 'Kos syif ini', 'sh.conflicts': '⚠︎ {n} konflik', 'sh.ok': '✓ Tiada konflik',
+    'sh.added': 'Syif ditambah', 'sh.updated': 'Syif dikemas kini', 'sh.deleted': 'Syif dipadam',
+    'sh.need': 'Sila pilih pekerja dan tarikh', 'sh.moved': 'Dipindah ke {n} · {d}', 'sh.notePh': 'cth: dewan jamuan',
+    'cf.leave': 'Bertindih dengan cuti yang diluluskan', 'cf.avail': 'Di luar masa boleh bekerja pekerja ini',
+    'cf.overlap': 'Bertindih dengan syif lain pada hari yang sama', 'cf.max': '{h}j minggu ini melebihi had {m}j',
+    'cf.skill': 'Jawatan bukan kemahiran pekerja ini', 'cf.noStaff': 'Pekerja tidak dijumpai',
+    'time.sub': 'Rekod daftar masuk berbanding jadual', 'time.fill': '⤓ Isi rekod yang tiada',
+    'time.sched': 'Berjadual', 'time.actual': 'Sebenar', 'time.elapsed': '{a}/7 hari berlalu',
+    'time.diff': 'Beza', 'time.lateEarly': 'Lewat / Balik awal', 'time.grace': 'Toleransi {n} minit',
+    'time.missing': 'Tiada rekod', 'time.missHint': 'Dikira 0 jam — sila isi', 'time.complete': 'Rekod lengkap',
+    'time.late': 'Lewat', 'time.early': 'Balik awal', 'time.detail': 'Butiran jam {from} – {to}',
+    'time.savePunch': 'Simpan rekod', 'time.saved': 'Rekod disimpan',
+    'time.editHint': 'Ubah masa dan tekan Simpan — gaji akan dikira semula ikut jam sebenar.',
+    'time.filled': '{n} rekod diisi dari jadual', 'time.nothing': 'Tiada yang perlu diisi',
+    'time.schedAt': 'Berjadual {a}–{b} · {r}', 'time.actualAt': 'Sebenar {a}–{b} · {h}j',
+    'pay.sub': 'Jam biasa, kerja lebih masa dan tip dikira automatik',
+    'pay.week': 'Minggu ini', 'pay.last': 'Minggu lalu', 'pay.biweek': 'Dua minggu', 'pay.month': 'Bulan ini',
+    'pay.slipBtn': 'Slip gaji',
+    'pay.gross': 'Jumlah gaji kasar', 'pay.grossSub': '{n} pekerja · {from} – {to}',
+    'pay.otPay': 'Bayaran OT', 'pay.otSub': 'OT {h}j · kadar {m}×',
+    'pay.tips': 'Agihan tip', 'pay.tipPool': 'Kumpulan tip',
+    'pay.employer': 'Jumlah kos majikan', 'pay.employerSub': 'termasuk cukai majikan {p}% {v}',
+    'pay.missWarn': '⚠︎ {n} hari tiada rekod daftar',
+    'pay.missHint': 'Hari tersebut dikira 0 jam. Isi di halaman Jam Kerja, atau tukar asas gaji kepada jadual.',
+    'pay.goFix': 'Betulkan', 'pay.method': 'Asas gaji', 'pay.reg': 'Biasa', 'pay.ot': 'OT',
+    'pay.base': 'Asas', 'pay.taxCol': 'Cukai majikan', 'pay.costCol': 'Jumlah kos', 'pay.grossCol': 'Kasar',
+    'pay.slip': '{n} · Slip gaji', 'pay.breakdown': 'Pecahan jam', 'pay.byDay': 'Jam harian',
+    'pay.regLine': 'Jam biasa', 'pay.otLine': 'Jam OT ({m}×)', 'pay.dtLine': 'Masa berganda',
+    'pay.tipLine': 'Tip (ikut jam kerja)', 'pay.grossLine': 'Jumlah kasar', 'pay.taxLine': 'Cukai majikan {p}%',
+    'pay.costLine': 'Jumlah kos majikan', 'pay.noHours': 'Tiada jam dalam tempoh ini',
+    'pay.slipMiss': '⚠︎ {n} hari berjadual tiada rekod daftar',
+    'pay.srcLine': 'Asas gaji: <b>{src}</b> · OT: {rules} · boleh diubah dalam ',
+    'pay.srcLine2': '',
+    'pay.srcActual': 'Rekod sebenar (yang tiada dikira 0)', 'pay.srcSched': 'Ikut jadual',
+    'pay.ruleWeek': 'lebih {h}j seminggu pada {m}×', 'pay.ruleDay': 'lebih {h}j sehari pada {m}×',
+    'pay.ruleOff': 'OT mingguan dimatikan', 'pay.exported': 'Senarai gaji dieksport',
+    'pay.fromPunch': 'rekod', 'pay.fromSched': 'jadual', 'pay.fromMiss': 'tiada',
+    'pay.monthly': 'Gaji bulanan {v}',
+    'staff.sub': '{n} aktif · kadar gaji, masa boleh bekerja dan kemahiran', 'staff.add': '＋ Tambah pekerja',
+    'staff.new': 'Pekerja baharu', 'staff.hiredOn': 'Mula {d}', 'staff.payLabel': 'Gaji',
+    'staff.weekSched': 'Berjadual minggu ini', 'staff.cap': 'had {h}j', 'staff.canWork': 'boleh {n} hari',
+    'staff.inactive': 'Tidak aktif', 'staff.name': 'Nama', 'staff.phone': 'Telefon',
+    'staff.roles': 'Jawatan yang boleh dipegang (pertama = utama)', 'staff.payType': 'Asas gaji',
+    'staff.hourly': 'Kadar sejam (OT dikira)', 'staff.monthly': 'Gaji bulanan (tiada OT)',
+    'staff.rate': 'Kadar sejam ({c})', 'staff.salary': 'Gaji bulanan ({c})', 'staff.maxH': 'Had jam seminggu',
+    'staff.hired': 'Tarikh mula', 'staff.notePh': 'cth: pelajar / malam sahaja',
+    'staff.avail': 'Masa boleh bekerja (dipatuhi sepenuhnya oleh jadual auto)', 'staff.active': 'Aktif',
+    'staff.activeSub': 'Matikan untuk keluar daripada jadual', 'staff.needName': 'Sila isi nama',
+    'staff.added': '{n} ditambah', 'staff.updated': 'Maklumat pekerja dikemas kini', 'staff.delTitle': 'Padam pekerja',
+    'staff.delMsg': 'Padam <b>{n}</b>? Syif dan rekod daftar beliau turut dipadam. Tindakan ini tidak boleh dibatalkan.',
+    'staff.deleted': 'Pekerja dipadam', 'staff.addBtn': 'Tambah pekerja',
+    'leave.sub': 'Selepas diluluskan, jadual auto akan melangkau tarikh tersebut', 'leave.new': '＋ Permohonan baharu',
+    'leave.pending': 'Menunggu kelulusan', 'leave.history': 'Sejarah', 'leave.noPending': 'Tiada permohonan menunggu',
+    'leave.noHistory': 'Tiada rekod lagi', 'leave.approve': 'Lulus', 'leave.reject': 'Tolak',
+    'leave.approved': 'Diluluskan', 'leave.rejected': 'Ditolak',
+    'leave.clash': '⚠︎ {n} syif telah dijadualkan dalam tempoh ini — anda perlu cari ganti',
+    'leave.okMsg': 'Cuti diluluskan', 'leave.okCancel': 'Diluluskan · {n} syif dibatalkan, sila cari ganti',
+    'leave.rejMsg': 'Permohonan ditolak', 'leave.type': 'Jenis', 'leave.reason': 'Sebab',
+    'leave.detail': 'Butiran permohonan', 'leave.submit': 'Hantar permohonan', 'leave.submitted': 'Permohonan dihantar',
+    'leave.badDate': 'Tarikh tamat tidak boleh sebelum tarikh mula', 'leave.days': '{n} hari', 'leave.noReason': 'Tiada sebab',
+    'leave.head': '{n} · {t} · {d} hari',
+    'set.sub': 'Peraturan OT, sasaran kos, templat syif dan keperluan pekerja',
+    'set.store': 'Kedai', 'set.storeName': 'Nama kedai', 'set.currency': 'Simbol mata wang',
+    'set.weekStart': 'Minggu bermula pada', 'set.revenue': 'Anggaran jualan seminggu',
+    'set.revenueSub': 'Digunakan untuk peratus kos buruh', 'set.targetPct': 'Sasaran kos buruh',
+    'set.targetSub': 'Julat sihat industri 25–32%', 'set.rules': 'Peraturan OT & gaji',
+    'set.paySrc': 'Asas gaji', 'set.paySrcSub': 'Rekod daftar lebih tepat; jadual lebih mudah',
+    'set.otWeekly': 'OT mingguan (FLSA)', 'set.otWeeklySub': 'lebih {h} jam dibayar {m}×',
+    'set.otWeeklyTh': 'Had OT mingguan', 'set.otWeeklyThSub': 'Standard persekutuan AS ialah 40 jam',
+    'set.otDaily': 'OT harian (gaya California)', 'set.otDailySub': 'lebih {h} jam sehari dibayar {m}×',
+    'set.otDailyTh': 'Had OT harian', 'set.otDailyThSub': 'Hanya berkesan bila OT harian dihidupkan',
+    'set.otMult': 'Kadar OT', 'set.otMultSub': 'Lalai 1.5×',
+    'set.brk': 'Rehat tidak dibayar', 'set.brkSub': 'Minit rehat ditolak daripada jam dibayar',
+    'set.tax': 'Kadar cukai majikan', 'set.taxSub': 'FICA 7.65% campur insurans pengangguran dll.',
+    'set.grace': 'Toleransi lewat', 'set.graceSub': 'Dikira lewat hanya selepas minit ini',
+    'set.templates': 'Templat syif', 'set.tplSub': '{a}–{b} · rehat {m} minit · {h}j dibayar',
+    'set.demand': 'Keperluan pekerja harian (asas jadual auto)', 'set.dayCol': 'Hari', 'set.blockCol': 'Blok',
+    'set.data': 'Data', 'set.exportData': 'Eksport semua data', 'set.exportSub': 'Sandaran JSON, boleh diimport di komputer lain',
+    'set.importData': 'Import data', 'set.importSub': 'Pulihkan daripada sandaran JSON',
+    'set.resetData': 'Set semula kepada data contoh', 'set.resetSub': 'Kosongkan semua jadual, rekod dan pekerja',
+    'set.privacy': 'Data disimpan dalam pelayar peranti ini (localStorage) sahaja, tiada muat naik ke mana-mana pelayan.',
+    'set.lang': 'Bahasa & penampilan', 'set.langLabel': 'Bahasa antara muka', 'set.themeLabel': 'Penampilan',
+    'set.themeAuto': 'Ikut sistem', 'set.themeLight': 'Cerah', 'set.themeDark': 'Gelap',
+    'set.imported': 'Data diimport', 'set.importBad': 'Format fail tidak dikenali',
+    'set.resetTitle': 'Set semula data',
+    'set.resetMsg': 'Ini akan mengosongkan semua pekerja, syif, rekod daftar dan cuti, serta memulihkan data kedai contoh. Tidak boleh dibatalkan.',
+    'set.resetDone': 'Telah diset semula kepada data contoh', 'set.backupOK': 'Sandaran dieksport',
+    'mode.boss': 'Mod pengurus', 'mode.emp': 'Mod pekerja', 'mode.toEmp': 'Tukar ke mod pekerja',
+    'mode.toBoss': 'Kembali ke mod pengurus', 'mode.pick': 'Siapa anda?', 'mode.pickSub': 'Pilih nama anda untuk masuk mod pekerja',
+    'mode.hint': 'Mod pekerja hanya menunjukkan syif, jam dan cuti anda sendiri — tidak boleh ubah jadual atau lihat gaji orang lain.',
+    'emp.my': 'Syif Saya', 'emp.hours': 'Jam Saya', 'emp.leave': 'Cuti', 'emp.me': 'Saya',
+    'emp.hello': 'Hai {n}', 'emp.todayShift': 'Syif hari ini', 'emp.noToday': 'Tiada syif hari ini',
+    'emp.clockIn': 'Daftar masuk', 'emp.clockOut': 'Daftar keluar', 'emp.clockedIn': 'Masuk pada {t}',
+    'emp.done': 'Selesai hari ini · {h}j', 'emp.clockInOK': 'Daftar masuk {t}',
+    'emp.clockOutOK': 'Daftar keluar {t} · {h}j hari ini', 'emp.weekHours': 'Jam minggu ini',
+    'emp.weekPay': 'Anggaran gaji minggu ini', 'emp.payNote': 'Termasuk OT dan tip; slip gaji adalah muktamad',
+    'emp.nextShift': 'Syif seterusnya', 'emp.thisWeek': 'Minggu ini', 'emp.noShifts': 'Tiada syif minggu ini',
+    'emp.reqLeave': '＋ Mohon cuti', 'emp.myReq': 'Permohonan saya', 'emp.noReq': 'Tiada permohonan lagi',
+    'emp.waiting': 'Menunggu kelulusan', 'emp.profile': 'Profil saya', 'emp.myRate': 'Kadar gaji saya',
+    'emp.myRoles': 'Jawatan saya', 'emp.myAvail': 'Masa boleh bekerja saya',
+    'emp.availNote': 'Untuk menukar masa bekerja atau kadar gaji, sila hubungi pengurus.',
+    'emp.signOut': 'Keluar mod pekerja', 'emp.leaveSent': 'Permohonan dihantar — menunggu kelulusan pengurus',
+    'emp.hoursSub': 'Rekod daftar berbanding jadual anda', 'emp.mySub': '{r} · {c}',
+    'emp.tomorrow': 'Esok', 'emp.est': 'anggaran', 'emp.noPunch': 'Tiada rekod',
+    'emp.switchUser': 'Tukar pekerja',
+    'role.mgr': 'Pengurus', 'role.chef': 'Tukang masak', 'role.prep': 'Pembantu dapur', 'role.server': 'Pelayan',
+    'role.bar': 'Bar', 'role.cashier': 'Juruwang', 'role.dish': 'Pencuci pinggan',
+    'tpl.morning': 'Syif pagi', 'tpl.lunch': 'Tengah hari', 'tpl.evening': 'Syif petang', 'tpl.close': 'Syif tutup', 'tpl.allday': 'Sepanjang hari',
+    'lt.personal': 'Cuti peribadi', 'lt.sick': 'Cuti sakit', 'lt.annual': 'Cuti tahunan', 'lt.unpaid': 'Cuti tanpa gaji',
+    'set.pin': 'Kata laluan pengurus', 'set.pinSub': 'Diperlukan untuk keluar daripada mod pekerja. Kosongkan untuk tiada kunci.',
+    'pin.title': 'Masukkan kata laluan pengurus', 'pin.wrong': 'Kata laluan salah', 'pin.ph': '4–6 digit', 'pin.ok': 'Masuk',
+    'msg.copied': '{n} syif disalin (cuti dan konflik dilangkau)', 'msg.noCopy': 'Tiada syif minggu lalu untuk disalin',
+    'msg.autoDone': '{n} syif dijadualkan', 'msg.autoGap': '{n} syif dijadualkan · {g} slot masih kosong',
+    'msg.autoFull': 'Minggu ini sudah penuh', 'msg.autoNoStaff': 'Tiada pekerja tersedia — {g} slot masih kosong',
+    'msg.clearTitle': 'Kosongkan minggu ini',
+    'msg.clearMsg': 'Ini akan memadam <b>{n}</b> syif antara {from} dan {to}. Rekod daftar dikekalkan.',
+    'msg.cleared': '{n} syif dikosongkan', 'msg.noWeek': 'Tiada syif minggu ini',
+    'msg.schedExported': 'Jadual dieksport', 'msg.theme': 'Penampilan: {v}', 'msg.lang': 'Bahasa ditukar',
+  },
+};
+
+function t(k, v) {
+  let s = (I18N[LANG] && I18N[LANG][k] != null) ? I18N[LANG][k] : (I18N.zh[k] != null ? I18N.zh[k] : k);
+  if (v) for (const key in v) s = s.split('{' + key + '}').join(v[key]);
+  return s;
+}
+const DOW_S = i => DOWS[LANG].s[i];
+const DOW_M = i => DOWS[LANG].m[i];
+const DOW_L = i => DOWS[LANG].l[i];
+const LEAVE_TYPES = ['personal', 'sick', 'annual', 'unpaid'];
 /* =========================================================================
    班表 — 餐饮排班 / 工时 / 薪资自动化
    单文件应用，无依赖。数据存 localStorage。
@@ -388,10 +905,17 @@ const parseISO = s => { const [y, m, d] = s.split('-').map(Number); return new D
 const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + n); return iso(d); };
 const dowOf = s => parseISO(s).getDay();
 const TODAY = iso(new Date());
-const DOW_S = ['日', '一', '二', '三', '四', '五', '六'];
-const DOW_L = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-const fmtMD = s => { const d = parseISO(s); return `${d.getMonth() + 1}月${d.getDate()}日`; };
-const fmtMDs = s => { const d = parseISO(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
+const fmtMD = s => {
+  const d = parseISO(s), m = d.getMonth(), dd = d.getDate();
+  if (LANG === 'zh') return `${m + 1}月${dd}日`;
+  if (LANG === 'ms') return `${dd} ${MONTHS.ms[m]}`;
+  return `${MONTHS.en[m]} ${dd}`;
+};
+const fmtDW = d => LANG === 'zh' ? `${fmtMD(d)} ${DOW_L(dowOf(d))}` : `${DOW_L(dowOf(d))}, ${fmtMD(d)}`;
+const fmtMDs = s => {
+  const d = parseISO(s), m = d.getMonth() + 1, dd = d.getDate();
+  return LANG === 'zh' ? `${m}/${dd}` : `${dd}/${m}`;
+};
 const daysBetween = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
 const rangeDays = (from, n) => Array.from({ length: n }, (_, i) => addDays(from, i));
 
@@ -410,15 +934,17 @@ function money0(v) {
 
 /* ---------------- 岗位 ---------------- */
 const ROLES = {
-  mgr: { n: '店长', c: 'indigo', tip: false },
-  chef: { n: '厨师', c: 'orange', tip: false },
-  prep: { n: '帮厨', c: 'yellow', tip: false },
-  server: { n: '服务员', c: 'blue', tip: true },
-  bar: { n: '吧台', c: 'purple', tip: true },
-  cashier: { n: '收银', c: 'pink', tip: true },
-  dish: { n: '洗碗', c: 'teal', tip: false },
+  mgr: { c: 'indigo', tip: false },
+  chef: { c: 'orange', tip: false },
+  prep: { c: 'yellow', tip: false },
+  server: { c: 'blue', tip: true },
+  bar: { c: 'purple', tip: true },
+  cashier: { c: 'pink', tip: true },
+  dish: { c: 'teal', tip: false },
 };
-const roleName = r => (ROLES[r] || { n: r }).n;
+const roleName = r => ROLES[r] ? t('role.' + r) : r;
+const leaveName = k => t('lt.' + k) !== 'lt.' + k ? t('lt.' + k) : k;
+const tplName = x => x && x.k ? t(x.k) : (x ? x.n : '');
 const roleColor = r => (ROLES[r] || { c: 'blue' }).c;
 const tint = (c, pct) => `color-mix(in srgb, var(--${c}) ${pct}%, var(--bg-elev))`;
 function chipStyle(r) {
@@ -429,7 +955,7 @@ function chipStyle(r) {
 /* ---------------- 默认数据 ---------------- */
 function defaultSettings() {
   return {
-    biz: '拾山 SHISHAN', cur: '$', weekStart: 1,
+    biz: '拾山 SHISHAN', cur: '$', weekStart: 1, lang: 'zh', bossPin: '',
     otWeeklyOn: true, otWeekly: 40, otMult: 1.5,
     otDailyOn: false, otDaily: 8,
     dtOn: false, dtDaily: 12, dtMult: 2,
@@ -440,11 +966,11 @@ function defaultSettings() {
 }
 function defaultTemplates() {
   return [
-    { id: 'tp1', n: '早班', start: '09:00', end: '15:00', brk: 0 },
-    { id: 'tp2', n: '午市', start: '10:30', end: '16:00', brk: 30 },
-    { id: 'tp3', n: '晚班', start: '16:00', end: '22:30', brk: 30 },
-    { id: 'tp4', n: '打烊', start: '17:00', end: '23:30', brk: 30 },
-    { id: 'tp5', n: '全天', start: '10:00', end: '21:00', brk: 60 },
+    { id: 'tp1', k: 'tpl.morning', n: '早班', start: '09:00', end: '15:00', brk: 0 },
+    { id: 'tp2', k: 'tpl.lunch', n: '午市', start: '10:30', end: '16:00', brk: 30 },
+    { id: 'tp3', k: 'tpl.evening', n: '晚班', start: '16:00', end: '22:30', brk: 30 },
+    { id: 'tp4', k: 'tpl.close', n: '打烊', start: '17:00', end: '23:30', brk: 30 },
+    { id: 'tp5', k: 'tpl.allday', n: '全天', start: '10:00', end: '21:00', brk: 60 },
   ];
 }
 /* 每日用人需求：按星期几 → [{tpl, need:{岗位:人数}}] */
@@ -510,10 +1036,19 @@ function load() {
       DB = JSON.parse(raw);
       DB.settings = Object.assign(defaultSettings(), DB.settings || {});
       DB.tips = DB.tips || {};
+      migrate();
       return;
     } catch (e) { console.warn('数据损坏，重建', e); }
   }
   seed();
+}
+
+/* 旧版本数据升级：中文枚举 → 语言无关的 key */
+function migrate() {
+  const LT = { '事假': 'personal', '病假': 'sick', '年假': 'annual', '无薪假': 'unpaid' };
+  const TP = { '早班': 'tpl.morning', '午市': 'tpl.lunch', '晚班': 'tpl.evening', '打烊': 'tpl.close', '全天': 'tpl.allday' };
+  (DB.timeoff || []).forEach(x => { if (LT[x.type]) x.type = LT[x.type]; });
+  (DB.templates || []).forEach(x => { if (!x.k && TP[x.n]) x.k = TP[x.n]; });
 }
 
 /* ---------------- 种子数据 ---------------- */
@@ -529,9 +1064,9 @@ function seed() {
   // 请假样例
   const s = DB.staff;
   DB.timeoff = [
-    { id: uid(), staffId: s[6].id, from: addDays(ws, 9), to: addDays(ws, 10), type: '事假', reason: '家里有事，需要回一趟', status: 'pending', at: addDays(TODAY, -1) },
-    { id: uid(), staffId: s[4].id, from: addDays(ws, 3), to: addDays(ws, 3), type: '病假', reason: '发烧看医生', status: 'approved', at: addDays(TODAY, -3) },
-    { id: uid(), staffId: s[8].id, from: addDays(ws, 12), to: addDays(ws, 13), type: '年假', reason: '朋友婚礼', status: 'pending', at: TODAY },
+    { id: uid(), staffId: s[6].id, from: addDays(ws, 9), to: addDays(ws, 10), type: 'personal', reason: '家里有事，需要回一趟', status: 'pending', at: addDays(TODAY, -1) },
+    { id: uid(), staffId: s[4].id, from: addDays(ws, 3), to: addDays(ws, 3), type: 'sick', reason: '发烧看医生', status: 'approved', at: addDays(TODAY, -3) },
+    { id: uid(), staffId: s[8].id, from: addDays(ws, 12), to: addDays(ws, 13), type: 'annual', reason: '朋友婚礼', status: 'pending', at: TODAY },
   ];
   // 前一周 / 本周 / 下一周 自动排班
   [addDays(ws, -7), ws, addDays(ws, 7)].forEach(w => autoSchedule(w, { silent: true }));
@@ -606,13 +1141,13 @@ function weekMinutes(staffId, wkStart, skipId) {
 /* 单个班次的所有冲突原因 */
 function conflictsOf(sh) {
   const s = staffById(sh.staffId); const out = [];
-  if (!s) return ['员工不存在'];
-  if (leaveOn(s.id, sh.date)) out.push('与已批准的请假冲突');
-  if (!availOK(s, sh.date, sh.start, sh.end)) out.push('超出该员工可上班时段');
-  if (overlapsExisting(s.id, sh.date, sh.start, sh.end, sh.id)) out.push('与同日其他班次重叠');
+  if (!s) return [t('cf.noStaff')];
+  if (leaveOn(s.id, sh.date)) out.push(t('cf.leave'));
+  if (!availOK(s, sh.date, sh.start, sh.end)) out.push(t('cf.avail'));
+  if (overlapsExisting(s.id, sh.date, sh.start, sh.end, sh.id)) out.push(t('cf.overlap'));
   const wk = weekMinutes(s.id, weekStartOf(sh.date));
-  if (wk > s.maxH * 60) out.push(`本周 ${hh(wk)}h 超过上限 ${s.maxH}h`);
-  if (!s.roles.includes(sh.role)) out.push('岗位与员工技能不符');
+  if (wk > s.maxH * 60) out.push(t('cf.max', { h: hh(wk), m: s.maxH }));
+  if (!s.roles.includes(sh.role)) out.push(t('cf.skill'));
   return out;
 }
 
@@ -638,7 +1173,7 @@ function autoSchedule(wkStart, opts = {}) {
             && !overlapsExisting(s.id, date, tpl.start, tpl.end)
             && (load[s.id] + dur) <= s.maxH * 60
           );
-          if (!cands.length) { gaps.push({ date, role, tpl: tpl.n }); continue; }
+          if (!cands.length) { gaps.push({ date, role, tpl: tplName(tpl) }); continue; }
           cands.sort((a, b) => {
             const fa = load[a.id] / (a.maxH * 60), fb = load[b.id] / (b.maxH * 60);
             if (Math.abs(fa - fb) > 0.04) return fa - fb;                       // 先给工时最少的人
@@ -666,8 +1201,10 @@ function tipEligible(s) {
 function workedMin(staffId, date) {
   const p = DB.punches.find(x => x.staffId === staffId && x.date === date);
   if (p && p.in && p.out) {
-    let a = t2m(p.in), b = t2m(p.out); if (b <= a) b += 1440;
-    return b - a - (DB.settings.breakUnpaid ? (p.brk || 0) : 0);
+    let a = t2m(p.in), b = t2m(p.out); if (b <= a) b += 1440;   // 跨夜班
+    let d = b - a;
+    if (d > 16 * 60) d = Math.max(0, d - 1440);                 // 同一分钟内重复打卡，不算成一整天
+    return Math.max(0, d - (DB.settings.breakUnpaid ? (p.brk || 0) : 0));
   }
   return null;
 }
@@ -768,7 +1305,7 @@ function weekGaps(wkStart) {
       const tpl = tplById(blk.tpl); if (!tpl) return;
       Object.entries(blk.need).forEach(([role, count]) => {
         const have = DB.shifts.filter(x => x.date === date && x.role === role && x.start === tpl.start).length;
-        if (have < count) gaps.push({ date, role, tpl: tpl.n, miss: count - have });
+        if (have < count) gaps.push({ date, role, tpl: tplName(tpl), miss: count - have });
       });
     });
   });
@@ -812,7 +1349,7 @@ function openSheet({ title, sub, body, footer, wide, onMount }) {
   sheet.innerHTML =
     `<div class="sheet-grab"><i></i></div>
      <div class="sheet-h"><div><div class="sheet-t">${title}</div>${sub ? `<div class="sheet-s">${sub}</div>` : ''}</div>
-       <button class="sheet-x" data-act="closeSheet" aria-label="关闭">✕</button></div>
+       <button class="sheet-x" data-act="closeSheet" aria-label="${t('c.close')}">✕</button></div>
      <div class="sheet-b">${body}</div>
      ${footer ? `<div class="sheet-f">${footer}</div>` : ''}`;
   document.body.appendChild(scrim); document.body.appendChild(sheet);
@@ -919,48 +1456,76 @@ function confirmSheet(title, msg, okLabel, onOK, danger = true) {
   openSheet({
     title, sub: '',
     body: `<div class="hint" style="font-size:14px;line-height:1.55">${msg}</div>`,
-    footer: `<button class="btn" data-act="closeSheet">取消</button>
+    footer: `<button class="btn" data-act="closeSheet">${t('c.cancel')}</button>
              <button class="btn ${danger ? 'pri' : 'pri'}" style="${danger ? 'background:var(--red);box-shadow:none' : ''}" data-act="confirmYes">${okLabel}</button>`,
   });
   ACT.confirmYes = () => { closeSheet(); onOK(); };
 }
 
+
 /* =========================================================================
-   路由 / 导航
+   路由 / 导航（管理端 boss / 员工端 emp 两套）
    ========================================================================= */
 const state = {
-  view: 'dash',
+  mode: 'boss',          // boss = 老板/店长，emp = 员工
+  me: null,              // 员工端当前登录的员工 id
+  view: 'dash',          // 管理端页面
+  eview: 'my',           // 员工端页面
   week: null,
   payFrom: null, payTo: null,
-  timeDay: null,
-  staffFilter: 'all',
 };
 
-const NAVS = [
-  { g: '运营', items: [['dash', '总览', '◎'], ['sched', '排班', '▦'], ['time', '工时', '◷'], ['pay', '薪资', '＄']] },
-  { g: '管理', items: [['staff', '员工', '☺'], ['leave', '请假', '✈'], ['set', '设置', '⚙']] },
+const BOSS_NAV = [
+  { g: 'nav.ops', items: [['dash', 'nav.dash', '◎'], ['sched', 'nav.sched', '▦'], ['time', 'nav.time', '◷'], ['pay', 'nav.pay', '＄']] },
+  { g: 'nav.admin', items: [['staff', 'nav.staff', '☺'], ['leave', 'nav.leave', '✈'], ['set', 'nav.set', '⚙']] },
 ];
+const EMP_NAV = [['my', 'emp.my', '▦'], ['ehours', 'emp.hours', '◷'], ['eleave', 'emp.leave', '✈'], ['eme', 'emp.me', '☺']];
+
 function renderNav() {
-  const pend = DB.timeoff.filter(t => t.status === 'pending').length;
-  $('#nav').innerHTML = NAVS.map(g =>
-    `<div class="nav-sec">${g.g}</div>` + g.items.map(([id, n, i]) =>
-      `<button class="nav-item ${state.view === id ? 'on' : ''}" data-act="go" data-v="${id}">
-        <span class="ni-ico">${i}</span><span>${n}</span>
-        ${id === 'leave' && pend ? `<span class="ni-badge">${pend}</span>` : ''}
-      </button>`).join('')).join('');
-  const tabs = [['dash', '总览', '◎'], ['sched', '排班', '▦'], ['time', '工时', '◷'], ['pay', '薪资', '＄'], ['more', '更多', '⋯']];
-  $('#tabbar').innerHTML = tabs.map(([id, n, i]) =>
-    `<button class="tab ${state.view === id ? 'on' : ''}" data-act="${id === 'more' ? 'moreMenu' : 'go'}" data-v="${id}">
-      <span class="tab-ico">${i}</span><span>${n}</span>${id === 'more' && pend ? '<span style="position:absolute"></span>' : ''}
-    </button>`).join('');
+  const pend = DB.timeoff.filter(x => x.status === 'pending').length;
+  const emp = state.mode === 'emp';
+
+  if (emp) {
+    $('#nav').innerHTML = `<div class="nav-sec">${t('mode.emp')}</div>` + EMP_NAV.map(([id, k, i]) =>
+      `<button class="nav-item ${state.eview === id ? 'on' : ''}" data-act="ego" data-v="${id}">
+        <span class="ni-ico">${i}</span><span>${t(k)}</span></button>`).join('');
+    $('#tabbar').innerHTML = EMP_NAV.map(([id, k, i]) =>
+      `<button class="tab ${state.eview === id ? 'on' : ''}" data-act="ego" data-v="${id}">
+        <span class="tab-ico">${i}</span><span>${t(k)}</span></button>`).join('');
+  } else {
+    $('#nav').innerHTML = BOSS_NAV.map(g =>
+      `<div class="nav-sec">${t(g.g)}</div>` + g.items.map(([id, k, i]) =>
+        `<button class="nav-item ${state.view === id ? 'on' : ''}" data-act="go" data-v="${id}">
+          <span class="ni-ico">${i}</span><span>${t(k)}</span>
+          ${id === 'leave' && pend ? `<span class="ni-badge">${pend}</span>` : ''}</button>`).join('')).join('');
+    const tabs = [['dash', 'nav.dash', '◎'], ['sched', 'nav.sched', '▦'], ['time', 'nav.time', '◷'], ['pay', 'nav.pay', '＄'], ['more', 'nav.more', '⋯']];
+    $('#tabbar').innerHTML = tabs.map(([id, k, i]) =>
+      `<button class="tab ${state.view === id ? 'on' : ''}" data-act="${id === 'more' ? 'moreMenu' : 'go'}" data-v="${id}">
+        <span class="tab-ico">${i}</span><span>${t(k)}</span></button>`).join('');
+  }
+
+  $('#sideFoot').innerHTML =
+    `<button class="btn sm gho" data-act="langMenu">🌐 ${LANGS[LANG]}</button>
+     <button class="btn sm gho ico" data-act="theme" title="${t('c.appearance')}">◐</button>
+     <div class="spacer"></div>
+     <span class="tiny dim" id="saveState">${t('c.saved')}</span>`;
+  $('#modeSwitch').innerHTML = emp
+    ? `<button class="btn sm" data-act="toBoss">↩ ${t('mode.toBoss')}</button>`
+    : `<button class="btn sm" data-act="toEmp">${t('mode.toEmp')} ›</button>`;
   $('#bizName').textContent = DB.settings.biz;
+  $('#bizTag').textContent = emp ? t('mode.emp') : t('app.tag');
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
 }
 
-function go(v) { state.view = v; render(); $('#main').scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }); }
+function go(v) { state.view = v; state.mode = 'boss'; render(); scrollTop(); }
+function ego(v) { state.eview = v; render(); scrollTop(); }
+function scrollTop() { $('#main').scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }); }
 
 function render() {
   renderNav();
-  const v = VIEWS[state.view] || VIEWS.dash;
+  const v = state.mode === 'emp'
+    ? (state.me && staffById(state.me) ? EVIEWS[state.eview] : EVIEWS.pick)
+    : (VIEWS[state.view] || VIEWS.dash);
   $('#topbar').innerHTML = v.top();
   const page = $('#page');
   page.innerHTML = v.body();
@@ -968,7 +1533,6 @@ function render() {
   v.after && v.after();
 }
 
-/* 顶栏骨架 */
 function topbarHTML(title, sub, right = '') {
   return `<div><div class="tb-title">${title}</div><div class="tb-sub">${sub}</div></div><div class="tb-right">${right}</div>`;
 }
@@ -976,24 +1540,23 @@ function weekNav() {
   const ws = state.week, we = addDays(ws, 6);
   const isNow = ws === weekStartOf(TODAY);
   return `<div class="seg"><button data-act="wk" data-d="-1">‹</button>
-    <button data-act="wk" data-d="0" class="${isNow ? 'on' : ''}">本周</button>
+    <button data-act="wk" data-d="0" class="${isNow ? 'on' : ''}">${t('c.thisWeek')}</button>
     <button data-act="wk" data-d="1">›</button></div>
     <span class="tiny dim nowrap">${fmtMD(ws)} – ${fmtMD(we)}</span>`;
 }
-
-/* =========================================================================
-   视图：总览
-   ========================================================================= */
 function statCard(label, value, sub, extra = '') {
   return `<div class="card"><div class="stat">
     <div class="stat-l">${label}</div><div class="stat-v">${value}</div><div class="stat-d">${sub}</div>${extra}
   </div></div>`;
 }
-const VIEWS = {};
+const VIEWS = {}, EVIEWS = {};
 
+/* =========================================================================
+   管理端：总览
+   ========================================================================= */
 VIEWS.dash = {
-  top: () => topbarHTML('总览', `${DB.settings.biz} · ${fmtMD(state.week)} 那一周`,
-    `${weekNav()}<button class="btn pri" data-act="autoWeek">✨ 一键智能排班</button>`),
+  top: () => topbarHTML(t('nav.dash'), t('dash.sub', { biz: esc(DB.settings.biz), from: fmtMD(state.week), to: fmtMD(addDays(state.week, 6)) }),
+    `${weekNav()}<button class="btn pri" data-act="autoWeek">${t('sched.auto')}</button>`),
   body() {
     const ws = state.week, we = addDays(ws, 6);
     const c = weekCost(ws), prev = weekCost(addDays(ws, -7));
@@ -1001,52 +1564,49 @@ VIEWS.dash = {
     const pct = DB.settings.weeklyRevenue ? c.withTax / DB.settings.weeklyRevenue * 100 : 0;
     const target = DB.settings.targetLaborPct;
     const gaps = weekGaps(ws);
-    const pend = DB.timeoff.filter(t => t.status === 'pending');
+    const pend = DB.timeoff.filter(x => x.status === 'pending');
     const shiftCount = DB.shifts.filter(x => x.date >= ws && x.date <= we).length;
-
-    // 加班预警
     const ot = DB.staff.map(s => ({ s, m: weekMinutes(s.id, ws) }))
       .filter(x => x.m > 0 && x.s.pay === 'hourly' && x.m > DB.settings.otWeekly * 60 * 0.92)
       .sort((a, b) => b.m - a.m);
-    // 今日班次
     const today = DB.shifts.filter(x => x.date === TODAY).sort((a, b) => t2m(a.start) - t2m(b.start));
     const maxCost = Math.max(...rangeDays(ws, 7).map(d => c.per[d] || 0), 1);
 
     return `
     <div class="grid-cards g4" style="margin-bottom:14px">
-      ${statCard('本周人力成本（含雇主税）', money0(c.withTax),
-      `${delta >= 0 ? '<span class="up">▲' : '<span class="down">▼'} ${Math.abs(delta).toFixed(1)}%</span> 对比上周 ${money0(prev.withTax)}`)}
-      ${statCard('人力成本占比', pct.toFixed(1) + '%',
-        `目标 ${target}% · 营业额预估 ${money0(DB.settings.weeklyRevenue)}`,
+      ${statCard(t('dash.cost'), money0(c.withTax),
+      `${delta >= 0 ? '<span class="up">▲' : '<span class="down">▼'} ${Math.abs(delta).toFixed(1)}%</span> ${t('dash.vsLast', { v: money0(prev.withTax) })}`)}
+      ${statCard(t('dash.pct'), pct.toFixed(1) + '%',
+        t('dash.target', { p: target, v: money0(DB.settings.weeklyRevenue) }),
         `<div class="meter" style="margin-top:9px"><i style="width:${clamp(pct / Math.max(target * 1.6, 1) * 100, 2, 100)}%;background:${pct > target ? 'var(--red)' : 'var(--green)'}"></i></div>`)}
-      ${statCard('本周排班工时', hh(c.minutes) + 'h', `${shiftCount} 个班次 · ${DB.staff.filter(s => s.active).length} 名在职员工`)}
-      ${statCard('待处理', String(pend.length + gaps.length),
-          `${pend.length} 条请假待批 · ${gaps.length} 个排班缺口`,
-          `<div style="display:flex;gap:6px;margin-top:9px">
-            ${pend.length ? `<button class="btn sm" data-act="go" data-v="leave">去审批</button>` : ''}
-            ${gaps.length ? `<button class="btn sm" data-act="go" data-v="sched">去补人</button>` : ''}
-            ${!pend.length && !gaps.length ? '<span class="pill g">全部就绪</span>' : ''}
-          </div>`)}
+      ${statCard(t('dash.hours'), hh(c.minutes) + t('c.hoursShort'),
+          t('dash.shiftsStaff', { n: shiftCount, m: DB.staff.filter(s => s.active).length }))}
+      ${statCard(t('dash.todo'), String(pend.length + gaps.length),
+            t('dash.todoSub', { a: pend.length, b: gaps.length }),
+            `<div style="display:flex;gap:6px;margin-top:9px">
+            ${pend.length ? `<button class="btn sm" data-act="go" data-v="leave">${t('dash.goApprove')}</button>` : ''}
+            ${gaps.length ? `<button class="btn sm" data-act="go" data-v="sched">${t('dash.goFill')}</button>` : ''}
+            ${!pend.length && !gaps.length ? `<span class="pill g">${t('dash.ready')}</span>` : ''}</div>`)}
     </div>
 
     <div class="grid-cards split" style="margin-bottom:14px">
       <div class="card">
-        <div class="card-h"><div><div class="card-t">每日人力成本</div>
-          <div class="card-s">按当前排班与时薪估算，含 ${DB.settings.payerTaxPct}% 雇主税</div></div>
-          <div class="spacer"></div><span class="pill b">周合计 ${money0(c.withTax)}</span></div>
+        <div class="card-h"><div><div class="card-t">${t('dash.daily')}</div>
+          <div class="card-s">${t('dash.dailySub', { p: DB.settings.payerTaxPct })}</div></div>
+          <div class="spacer"></div><span class="pill b">${t('dash.weekTotal', { v: money0(c.withTax) })}</span></div>
         <div class="bars">
           ${rangeDays(ws, 7).map(d => {
-            const v = (c.per[d] || 0) * (1 + DB.settings.payerTaxPct / 100);
-            const wk = [0, 6].includes(dowOf(d));
-            return `<div class="b ${wk ? 'wk' : ''}"><em>${v ? money0(v).replace(DB.settings.cur, '') : '–'}</em>
+      const v = (c.per[d] || 0) * (1 + DB.settings.payerTaxPct / 100);
+      const wk = [0, 6].includes(dowOf(d));
+      return `<div class="b ${wk ? 'wk' : ''}"><em>${v ? money0(v).replace(DB.settings.cur, '') : '–'}</em>
               <i style="height:${clamp(v / (maxCost * 1.18) * 100, 2, 100)}%"></i>
-              <span style="${d === TODAY ? 'color:var(--blue);font-weight:700' : ''}">${DOW_S[dowOf(d)]}</span></div>`;
-          }).join('')}
+              <span style="${d === TODAY ? 'color:var(--blue);font-weight:700' : ''}">${DOW_S(dowOf(d))}</span></div>`;
+    }).join('')}
         </div>
       </div>
       <div class="card pad0">
-        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">今日班次</div>
-          <div class="card-s">${fmtMD(TODAY)} ${DOW_L[dowOf(TODAY)]} · ${today.length} 人</div></div></div>
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">${t('dash.today')}</div>
+          <div class="card-s">${t('dash.todaySub', { d: fmtDW(TODAY), n: today.length })}</div></div></div>
         <div style="max-height:262px;overflow:auto">
         ${today.length ? today.map(sh => {
       const s = staffById(sh.staffId); if (!s) return '';
@@ -1054,61 +1614,61 @@ VIEWS.dash = {
       return `<div class="row tap" data-act="editShift" data-id="${sh.id}">
             <div class="avatar" style="background:${avaColor(s)}">${initials(s.n)}</div>
             <div class="row-m"><div class="row-t">${esc(s.n)}</div>
-              <div class="row-s">${roleName(sh.role)} · ${hh(shiftMin(sh))}h</div></div>
+              <div class="row-s">${roleName(sh.role)} · ${hh(shiftMin(sh))}${t('c.hoursShort')}</div></div>
             <div class="row-r"><span class="mono">${sh.start}–${sh.end}</span>
-              ${p ? '<span class="pill g">已打卡</span>' : ''}</div></div>`;
-    }).join('') : '<div class="empty"><span class="e-ico">☕</span>今天没有排班</div>'}
+              ${p ? `<span class="pill g">${t('dash.punched')}</span>` : ''}</div></div>`;
+    }).join('') : `<div class="empty"><span class="e-ico">☕</span>${t('dash.noToday')}</div>`}
         </div>
       </div>
     </div>
 
     <div class="grid-cards g3">
       <div class="card pad0">
-        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">加班预警</div>
-          <div class="card-s">接近或超过每周 ${DB.settings.otWeekly}h</div></div></div>
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">${t('dash.ot')}</div>
+          <div class="card-s">${t('dash.otSub', { h: DB.settings.otWeekly })}</div></div></div>
         ${ot.length ? ot.map(({ s, m }) => {
       const over = m > DB.settings.otWeekly * 60;
       return `<div class="row tap" data-act="openStaff" data-id="${s.id}">
             <div class="avatar sm" style="background:${avaColor(s)}">${initials(s.n)}</div>
             <div class="row-m"><div class="row-t">${esc(s.n)}</div>
-              <div class="row-s">${roleName(primaryRole(s))} · ${money(s.rate)}/h</div></div>
-            <div class="row-r"><span class="pill ${over ? 'r' : 'o'}">${hh(m)}h${over ? ` · 加班 ${hh(m - DB.settings.otWeekly * 60)}h` : ''}</span></div></div>`;
-    }).join('') : '<div class="empty"><span class="e-ico">✓</span>本周没有加班风险</div>'}
+              <div class="row-s">${roleName(primaryRole(s))} · ${money(s.rate)}${t('c.perHour')}</div></div>
+            <div class="row-r"><span class="pill ${over ? 'r' : 'o'}">${hh(m)}${t('c.hoursShort')}${over ? ' · ' + t('dash.otTag', { h: hh(m - DB.settings.otWeekly * 60) }) : ''}</span></div></div>`;
+    }).join('') : `<div class="empty"><span class="e-ico">✓</span>${t('dash.noOT')}</div>`}
       </div>
       <div class="card pad0">
-        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">待批请假</div>
-          <div class="card-s">${pend.length} 条申请</div></div></div>
-        ${pend.length ? pend.slice(0, 5).map(t => {
-      const s = staffById(t.staffId); if (!s) return '';
-      return `<div class="row tap" data-act="openLeave" data-id="${t.id}">
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">${t('dash.pending')}</div>
+          <div class="card-s">${t('dash.nReq', { n: pend.length })}</div></div></div>
+        ${pend.length ? pend.slice(0, 5).map(x => {
+      const s = staffById(x.staffId); if (!s) return '';
+      return `<div class="row tap" data-act="openLeave" data-id="${x.id}">
             <div class="avatar sm" style="background:${avaColor(s)}">${initials(s.n)}</div>
-            <div class="row-m"><div class="row-t">${esc(s.n)} · ${t.type}</div>
-              <div class="row-s">${fmtMDs(t.from)}${t.from !== t.to ? ' – ' + fmtMDs(t.to) : ''} · ${esc(t.reason)}</div></div>
+            <div class="row-m"><div class="row-t">${esc(s.n)} · ${leaveName(x.type)}</div>
+              <div class="row-s">${fmtMDs(x.from)}${x.from !== x.to ? ' – ' + fmtMDs(x.to) : ''} · ${esc(x.reason)}</div></div>
             <span class="chev">›</span></div>`;
-    }).join('') : '<div class="empty"><span class="e-ico">✓</span>没有待批申请</div>'}
+    }).join('') : `<div class="empty"><span class="e-ico">✓</span>${t('dash.noPending')}</div>`}
       </div>
       <div class="card pad0">
-        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">排班缺口</div>
-          <div class="card-s">需求未排满的岗位</div></div></div>
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">${t('dash.gaps')}</div>
+          <div class="card-s">${t('dash.gapsSub')}</div></div></div>
         ${gaps.length ? gaps.slice(0, 6).map(g =>
-      `<div class="row"><div class="row-m"><div class="row-t">${fmtMDs(g.date)} ${DOW_L[dowOf(g.date)]} · ${g.tpl}</div>
+      `<div class="row"><div class="row-m"><div class="row-t">${fmtMDs(g.date)} ${DOW_M(dowOf(g.date))} · ${g.tpl}</div>
               <div class="row-s">${roleName(g.role)}</div></div>
-            <div class="row-r"><span class="pill r">缺 ${g.miss} 人</span></div></div>`).join('')
-        : '<div class="empty"><span class="e-ico">✓</span>本周需求已全部排满</div>'}
+            <div class="row-r"><span class="pill r">${t('dash.short', { n: g.miss })}</span></div></div>`).join('')
+        : `<div class="empty"><span class="e-ico">✓</span>${t('dash.noGaps')}</div>`}
       </div>
     </div>`;
   }
 };
 
 /* =========================================================================
-   视图：排班
+   管理端：排班
    ========================================================================= */
 VIEWS.sched = {
-  top: () => topbarHTML('排班', '拖动班次即可换人换天 · 点击班次编辑',
+  top: () => topbarHTML(t('nav.sched'), t('sched.sub'),
     `${weekNav()}
-     <button class="btn" data-act="copyWeek">⧉ 复制上周</button>
-     <button class="btn" data-act="clearWeek">清空</button>
-     <button class="btn pri" data-act="autoWeek">✨ 一键智能排班</button>`),
+     <button class="btn" data-act="copyWeek">${t('sched.copy')}</button>
+     <button class="btn" data-act="clearWeek">${t('sched.clear')}</button>
+     <button class="btn pri" data-act="autoWeek">${t('sched.auto')}</button>`),
   body() {
     const ws = state.week;
     const days = rangeDays(ws, 7);
@@ -1116,13 +1676,14 @@ VIEWS.sched = {
     const nc = innerWidth <= 900 ? 118 : 158;
     const staff = DB.staff.filter(s => s.active);
     const maxDay = Math.max(...days.map(d => c.per[d] || 0), 1);
+    const pct = c.withTax / Math.max(DB.settings.weeklyRevenue, 1) * 100;
 
-    const head = `<div class="sh corner" style="--x:0">员工 / 日期</div>` + days.map(d => {
+    const head = `<div class="sh corner">${t('sched.colHead')}</div>` + days.map(d => {
       const cost = (c.per[d] || 0) * (1 + DB.settings.payerTaxPct / 100);
       const n = DB.shifts.filter(x => x.date === d).length;
       return `<div class="sh ${d === TODAY ? 'today' : ''}">
-        <div class="sh-d">${DOW_L[dowOf(d)]}</div><div class="sh-n">${parseISO(d).getDate()}</div>
-        <div class="sh-c">${n} 班 · ${money0(cost)}</div></div>`;
+        <div class="sh-d">${DOW_M(dowOf(d))}</div><div class="sh-n">${parseISO(d).getDate()}</div>
+        <div class="sh-c">${t('sched.cell', { n, v: money0(cost) })}</div></div>`;
     }).join('');
 
     const rows = staff.map(s => {
@@ -1132,7 +1693,7 @@ VIEWS.sched = {
           <div class="avatar sm" style="background:${avaColor(s)}">${initials(s.n)}</div>
           <div class="snc-m"><div class="snc-n">${esc(s.n)}</div>
             <div class="snc-s">${s.roles.map(roleName).join('/')}</div></div>
-          <div class="snc-h ${over ? 'ot' : ''}">${hh(wm)}h</div>
+          <div class="snc-h ${over ? 'ot' : ''}">${hh(wm)}${t('c.hoursShort')}</div>
         </div>` +
         days.map(d => {
           const lv = leaveOn(s.id, d), pl = pendingLeaveOn(s.id, d);
@@ -1141,16 +1702,16 @@ VIEWS.sched = {
           const cls = ['scell']; if ([0, 6].includes(dowOf(d))) cls.push('wknd');
           if (!avail && !lv) cls.push('off');
           return `<div class="${cls.join(' ')}" data-cell="${d}|${s.id}">
-            ${lv ? `<div class="offtag" style="color:var(--purple)">✈ ${lv.type}</div>` : ''}
-            ${!lv && pl ? `<div class="offtag" style="color:var(--orange)">待批 ${pl.type}</div>` : ''}
-            ${!lv && !avail ? `<div class="offtag">不可上班</div>` : ''}
+            ${lv ? `<div class="offtag" style="color:var(--purple)">✈ ${leaveName(lv.type)}</div>` : ''}
+            ${!lv && pl ? `<div class="offtag" style="color:var(--orange)">${t('sched.waiting', { t: leaveName(pl.type) })}</div>` : ''}
+            ${!lv && !avail ? `<div class="offtag">${t('sched.cant')}</div>` : ''}
             ${list.map(sh => chipHTML(sh)).join('')}
             <button class="addcell" data-act="newShift" data-d="${d}" data-s="${s.id}">＋</button>
           </div>`;
         }).join('');
     }).join('');
 
-    const costRow = `<div class="cb-l">日成本估算</div>` + days.map(d => {
+    const costRow = `<div class="cb-l">${t('sched.dayCost')}</div>` + days.map(d => {
       const v = (c.per[d] || 0) * (1 + DB.settings.payerTaxPct / 100);
       return `<div class="cb-c"><div class="cb-v">${v ? money0(v) : '–'}</div>
         <div class="cb-t"><i style="width:${clamp((c.per[d] || 0) / maxDay * 100, 0, 100)}%"></i></div></div>`;
@@ -1158,13 +1719,13 @@ VIEWS.sched = {
 
     return `
     <div class="rowline" style="margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <span class="pill b">周工时 ${hh(c.minutes)}h</span>
-      <span class="pill ${c.withTax / Math.max(DB.settings.weeklyRevenue, 1) * 100 > DB.settings.targetLaborPct ? 'r' : 'g'}">
-        人力成本 ${money0(c.withTax)} · ${(c.withTax / Math.max(DB.settings.weeklyRevenue, 1) * 100).toFixed(1)}%</span>
-      ${gaps.length ? `<span class="pill r">缺口 ${gaps.reduce((n, g) => n + g.miss, 0)} 人次</span>` : '<span class="pill g">需求已排满</span>'}
+      <span class="pill b">${t('sched.weekHours', { h: hh(c.minutes) })}</span>
+      <span class="pill ${pct > DB.settings.targetLaborPct ? 'r' : 'g'}">${t('sched.cost', { v: money0(c.withTax), p: pct.toFixed(1) })}</span>
+      ${gaps.length ? `<span class="pill r">${t('sched.gapCount', { n: gaps.reduce((n, g) => n + g.miss, 0) })}</span>`
+        : `<span class="pill g">${t('sched.filled')}</span>`}
       <div class="spacer"></div>
-      <button class="btn sm" data-act="exportSched">导出 CSV</button>
-      <button class="btn sm" data-act="printPage">打印班表</button>
+      <button class="btn sm" data-act="exportSched">${t('c.export')}</button>
+      <button class="btn sm" data-act="printPage">${t('sched.printBtn')}</button>
     </div>
     <div class="sched-wrap">
       <div class="sched" id="schedScroll">
@@ -1172,9 +1733,7 @@ VIEWS.sched = {
         <div class="costbar" style="--namecol:${nc}px">${costRow}</div>
       </div>
     </div>
-    <div class="hint" style="margin-top:12px">
-      提示：按住班次可拖到别的员工或别的一天；灰色斜纹格代表该员工当天不可排班；带 <b style="color:var(--red)">!</b> 的班次存在冲突。
-    </div>`;
+    <div class="hint" style="margin-top:12px">${t('sched.hint')}</div>`;
   },
   after() { enableDrag(); }
 };
@@ -1183,7 +1742,7 @@ function chipHTML(sh) {
   const cf = conflictsOf(sh);
   return `<div class="chip ${cf.length ? 'conflict' : ''}" style="${chipStyle(sh.role)}" data-shift="${sh.id}">
     <div class="ct">${sh.start}–${sh.end}</div>
-    <div class="cr">${roleName(sh.role)} · ${hh(shiftMin(sh))}h</div>
+    <div class="cr">${roleName(sh.role)} · ${hh(shiftMin(sh))}${t('c.hoursShort')}</div>
   </div>`;
 }
 
@@ -1267,8 +1826,10 @@ function applyMove(sh, { date, staffId }) {
   save(); render();
   const cf = conflictsOf(sh);
   if (cf.length) toast(`${s.n} · ${cf[0]}`, 'warn');
-  else toast(`已调整为 ${s.n} · ${fmtMDs(date)}`, 'ok');
+  else toast(t('sh.moved', { n: s.n, d: fmtMDs(date) }), 'ok');
 }
+
+/* ---------------- 班次编辑面板 ---------------- */
 
 /* ---------------- 班次编辑面板 ---------------- */
 function openShiftEditor(sh, isNew) {
@@ -1278,30 +1839,30 @@ function openShiftEditor(sh, isNew) {
     `<option value="${s.id}" ${s.id === draft.staffId ? 'selected' : ''}>${esc(s.n)} · ${s.roles.map(roleName).join('/')}</option>`).join('');
   const body = `
     <div class="frow">
-      <div class="field"><label>员工</label><select class="inp" id="f_staff">${staffOpts}</select></div>
-      <div class="field"><label>日期</label><input class="inp" type="date" id="f_date" value="${draft.date}"></div>
+      <div class="field"><label>${t('c.staff')}</label><select class="inp" id="f_staff">${staffOpts}</select></div>
+      <div class="field"><label>${t('c.date')}</label><input class="inp" type="date" id="f_date" value="${draft.date}"></div>
     </div>
-    <div class="field"><label>套用班次模板</label>
-      <div class="chips-row">${DB.templates.map(t =>
-      `<button class="tglchip" data-act="applyTpl" data-id="${t.id}">${t.n} ${t.start}–${t.end}</button>`).join('')}</div>
-    </div>
-    <div class="frow">
-      <div class="field"><label>开始</label><input class="inp" type="time" id="f_start" value="${draft.start}"></div>
-      <div class="field"><label>结束</label><input class="inp" type="time" id="f_end" value="${draft.end}"></div>
+    <div class="field"><label>${t('sh.tpl')}</label>
+      <div class="chips-row">${DB.templates.map(x =>
+    `<button class="tglchip" data-act="applyTpl" data-id="${x.id}">${tplName(x)} ${x.start}–${x.end}</button>`).join('')}</div>
     </div>
     <div class="frow">
-      <div class="field"><label>岗位</label><select class="inp" id="f_role">${Object.keys(ROLES).map(r =>
-        `<option value="${r}" ${r === draft.role ? 'selected' : ''}>${ROLES[r].n}</option>`).join('')}</select></div>
-      <div class="field"><label>无薪休息（分钟）</label><input class="inp" type="number" min="0" step="15" id="f_brk" value="${draft.brk || 0}"></div>
+      <div class="field"><label>${t('c.start')}</label><input class="inp" type="time" id="f_start" value="${draft.start}"></div>
+      <div class="field"><label>${t('c.end')}</label><input class="inp" type="time" id="f_end" value="${draft.end}"></div>
     </div>
-    <div class="field"><label>备注</label><input class="inp" id="f_note" value="${esc(draft.note || '')}" placeholder="例如：负责宴会厅"></div>
+    <div class="frow">
+      <div class="field"><label>${t('c.role')}</label><select class="inp" id="f_role">${Object.keys(ROLES).map(r =>
+      `<option value="${r}" ${r === draft.role ? 'selected' : ''}>${roleName(r)}</option>`).join('')}</select></div>
+      <div class="field"><label>${t('sh.brk')}</label><input class="inp" type="number" min="0" step="15" id="f_brk" value="${draft.brk || 0}"></div>
+    </div>
+    <div class="field"><label>${t('c.note')}</label><input class="inp" id="f_note" value="${esc(draft.note || '')}" placeholder="${t('sh.notePh')}"></div>
     <div id="f_warn"></div>`;
   openSheet({
-    title: isNew ? '新增班次' : '编辑班次',
-    sub: isNew ? '' : `${fmtMD(sh.date)} ${DOW_L[dowOf(sh.date)]}`,
+    title: isNew ? t('sh.new') : t('sh.edit'),
+    sub: isNew ? '' : fmtDW(sh.date),
     body,
-    footer: `${isNew ? '' : '<button class="btn dgr" data-act="delShift">删除</button>'}
-             <button class="btn pri" data-act="saveShift">${isNew ? '添加班次' : '保存'}</button>`,
+    footer: `${isNew ? '' : `<button class="btn dgr" data-act="delShift">${t('c.delete')}</button>`}
+             <button class="btn pri" data-act="saveShift">${isNew ? t('sh.addBtn') : t('c.save')}</button>`,
     onMount(el) {
       const sync = () => {
         draft.staffId = $('#f_staff', el).value; draft.date = $('#f_date', el).value;
@@ -1312,123 +1873,139 @@ function openShiftEditor(sh, isNew) {
         const s = staffById(draft.staffId);
         const cost = s ? shiftMin(draft) / 60 * effRate(s) : 0;
         $('#f_warn', el).innerHTML =
-          `<div class="kv"><span class="dim">计薪工时</span><b>${hh(shiftMin(draft))}h</b></div>
-           <div class="kv"><span class="dim">该班次人力成本</span><b>${money(cost)}</b></div>` +
+          `<div class="kv"><span class="dim">${t('sh.payHours')}</span><b>${hh(shiftMin(draft))}${t('c.hoursShort')}</b></div>
+           <div class="kv"><span class="dim">${t('sh.cost')}</span><b>${money(cost)}</b></div>` +
           (cf.length ? `<div style="margin-top:10px;background:#ff950014;border-radius:12px;padding:11px 13px">
-              <div style="font-size:12.5px;font-weight:700;color:var(--orange);margin-bottom:4px">⚠︎ ${cf.length} 项冲突</div>
+              <div style="font-size:12.5px;font-weight:700;color:var(--orange);margin-bottom:4px">${t('sh.conflicts', { n: cf.length })}</div>
               ${cf.map(x => `<div class="hint" style="color:var(--orange)">· ${x}</div>`).join('')}</div>`
-            : `<div style="margin-top:10px" class="pill g">✓ 没有冲突</div>`);
+            : `<div style="margin-top:10px" class="pill g">${t('sh.ok')}</div>`);
       };
       $$('.inp', el).forEach(i => i.addEventListener('input', sync));
       sync();
       ACT.applyTpl = b => {
-        const t = tplById(b.dataset.id); if (!t) return;
-        $('#f_start', el).value = t.start; $('#f_end', el).value = t.end; $('#f_brk', el).value = t.brk;
-        $$('.tglchip', el).forEach(x => x.classList.toggle('on', x === b));
+        const x = tplById(b.dataset.id); if (!x) return;
+        $('#f_start', el).value = x.start; $('#f_end', el).value = x.end; $('#f_brk', el).value = x.brk;
+        $$('.tglchip', el).forEach(y => y.classList.toggle('on', y === b));
         sync();
       };
       ACT.saveShift = () => {
         sync();
-        if (!draft.staffId || !draft.date) return toast('请填写员工和日期', 'err');
+        if (!draft.staffId || !draft.date) return toast(t('sh.need'), 'err');
         if (isNew) DB.shifts.push(Object.assign({ id: uid() }, draft));
         else Object.assign(sh, draft);
-        save(); closeSheet(); render(); toast(isNew ? '班次已添加' : '班次已更新');
+        save(); closeSheet(); render(); toast(isNew ? t('sh.added') : t('sh.updated'));
       };
       ACT.delShift = () => {
         DB.shifts = DB.shifts.filter(x => x.id !== sh.id);
         DB.punches = DB.punches.filter(p => p.shiftId !== sh.id);
-        save(); closeSheet(); render(); toast('班次已删除', 'info');
+        save(); closeSheet(); render(); toast(t('sh.deleted'), 'info');
       };
     }
   });
 }
 
 /* =========================================================================
-   视图：工时
+   管理端：工时
    ========================================================================= */
+function weekTimeRows(ws) {
+  const days = rangeDays(ws, 7);
+  return DB.staff.map(s => {
+    let sch = 0, act = 0, late = 0, miss = 0, early = 0;
+    days.forEach(d => {
+      const sm = schedMin(s.id, d); sch += sm;
+      const w = workedMin(s.id, d);
+      if (w != null) act += w;
+      else if (sm > 0 && d < TODAY) miss++;
+      const p = DB.punches.find(x => x.staffId === s.id && x.date === d);
+      const sh = shiftsOf(d, s.id)[0];
+      if (p && sh) {
+        if (t2m(p.in) - t2m(sh.start) > DB.settings.lateGrace) late++;
+        if (t2m(sh.end) - t2m(p.out) > DB.settings.lateGrace) early++;
+      }
+    });
+    return { s, sch, act, late, miss, early };
+  }).filter(r => r.sch > 0 || r.act > 0);
+}
+
 VIEWS.time = {
-  top: () => topbarHTML('工时', '打卡记录与排班对比 · 差异一眼看清',
-    `${weekNav()}<button class="btn" data-act="fillPunch">⤓ 按排班补录缺卡</button>`),
+  top: () => topbarHTML(t('nav.time'), t('time.sub'),
+    `${weekNav()}<button class="btn" data-act="fillPunch">${t('time.fill')}</button>`),
   body() {
     const ws = state.week, days = rangeDays(ws, 7);
-    const rows = DB.staff.map(s => {
-      let sch = 0, act = 0, late = 0, miss = 0, early = 0;
-      days.forEach(d => {
-        const sm = schedMin(s.id, d); sch += sm;
-        const w = workedMin(s.id, d);
-        if (w != null) act += w;
-        else if (sm > 0 && d < TODAY) miss++;
-        const p = DB.punches.find(x => x.staffId === s.id && x.date === d);
-        const sh = shiftsOf(d, s.id)[0];
-        if (p && sh) {
-          if (t2m(p.in) - t2m(sh.start) > DB.settings.lateGrace) late++;
-          if (t2m(sh.end) - t2m(p.out) > DB.settings.lateGrace) early++;
-        }
-      });
-      return { s, sch, act, late, miss, early };
-    }).filter(r => r.sch > 0 || r.act > 0);
-
-    const t = k => rows.reduce((n, r) => n + r[k], 0);
+    const rows = weekTimeRows(ws);
+    const tot = k => rows.reduce((n, r) => n + r[k], 0);
+    const H = t('c.hoursShort');
     return `
     <div class="grid-cards g4" style="margin-bottom:14px">
-      ${statCard('排班工时', hh(t('sch')) + 'h', `${days.filter(d => d <= TODAY).length}/7 天已过`)}
-      ${statCard('实际工时', hh(t('act')) + 'h', `差异 ${t('act') - t('sch') >= 0 ? '+' : ''}${hh(t('act') - t('sch'))}h`)}
-      ${statCard('迟到 / 早退', `${t('late')} / ${t('early')}`, `宽限 ${DB.settings.lateGrace} 分钟`)}
-      ${statCard('缺卡', String(t('miss')), t('miss') ? '会按 0 工时计薪，请补录' : '记录完整')}
+      ${statCard(t('time.sched'), hh(tot('sch')) + H, t('time.elapsed', { a: days.filter(d => d <= TODAY).length }))}
+      ${statCard(t('time.actual'), hh(tot('act')) + H, `${t('time.diff')} ${tot('act') - tot('sch') >= 0 ? '+' : ''}${hh(tot('act') - tot('sch'))}${H}`)}
+      ${statCard(t('time.lateEarly'), `${tot('late')} / ${tot('early')}`, t('time.grace', { n: DB.settings.lateGrace }))}
+      ${statCard(t('time.missing'), String(tot('miss')), tot('miss') ? t('time.missHint') : t('time.complete'))}
     </div>
     <div class="card pad0"><div class="scrollx"><table class="tbl">
-      <thead><tr><th>员工</th><th>岗位</th><th class="num">排班</th><th class="num">实际</th><th class="num">差异</th>
-        <th class="num">迟到</th><th class="num">早退</th><th class="num">缺卡</th><th></th></tr></thead>
+      <thead><tr><th>${t('c.staff')}</th><th>${t('c.role')}</th><th class="num">${t('time.sched')}</th>
+        <th class="num">${t('time.actual')}</th><th class="num">${t('time.diff')}</th>
+        <th class="num">${t('time.late')}</th><th class="num">${t('time.early')}</th>
+        <th class="num">${t('time.missing')}</th><th></th></tr></thead>
       <tbody>${rows.map(r => {
       const diff = r.act - r.sch;
       return `<tr data-act="openTime" data-id="${r.s.id}" style="cursor:pointer">
           <td><div class="rowline"><div class="avatar sm" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
             <b>${esc(r.s.n)}</b></div></td>
           <td class="dim">${r.s.roles.map(roleName).join(' / ')}</td>
-          <td class="num">${hh(r.sch)}h</td><td class="num">${hh(r.act)}h</td>
+          <td class="num">${hh(r.sch)}${H}</td><td class="num">${hh(r.act)}${H}</td>
           <td class="num" style="color:${Math.abs(diff) < 30 ? 'var(--label-2)' : diff > 0 ? 'var(--orange)' : 'var(--blue)'}">
-            ${diff >= 0 ? '+' : ''}${hh(diff)}h</td>
+            ${diff >= 0 ? '+' : ''}${hh(diff)}${H}</td>
           <td class="num">${r.late ? `<span class="pill o">${r.late}</span>` : '–'}</td>
           <td class="num">${r.early ? `<span class="pill n">${r.early}</span>` : '–'}</td>
           <td class="num">${r.miss ? `<span class="pill r">${r.miss}</span>` : '–'}</td>
           <td class="num chev">›</td></tr>`;
     }).join('')}</tbody>
-      <tfoot><tr><td>合计</td><td></td><td class="num">${hh(t('sch'))}h</td><td class="num">${hh(t('act'))}h</td>
-        <td class="num">${t('act') - t('sch') >= 0 ? '+' : ''}${hh(t('act') - t('sch'))}h</td>
-        <td class="num">${t('late')}</td><td class="num">${t('early')}</td><td class="num">${t('miss')}</td><td></td></tr></tfoot>
+      <tfoot><tr><td>${t('c.total')}</td><td></td><td class="num">${hh(tot('sch'))}${H}</td><td class="num">${hh(tot('act'))}${H}</td>
+        <td class="num">${tot('act') - tot('sch') >= 0 ? '+' : ''}${hh(tot('act') - tot('sch'))}${H}</td>
+        <td class="num">${tot('late')}</td><td class="num">${tot('early')}</td><td class="num">${tot('miss')}</td><td></td></tr></tfoot>
     </table></div></div>`;
   }
 };
 
-function openTimeSheet(staffId) {
-  const s = staffById(staffId); if (!s) return;
-  const ws = state.week, days = rangeDays(ws, 7);
-  const build = () => days.map(d => {
+function punchRowsHTML(staffId, ws, editable) {
+  const s = staffById(staffId);
+  return rangeDays(ws, 7).map(d => {
     const sh = shiftsOf(d, s.id)[0];
     const p = DB.punches.find(x => x.staffId === s.id && x.date === d);
     const lv = leaveOn(s.id, d);
     const late = p && sh && (t2m(p.in) - t2m(sh.start) > DB.settings.lateGrace);
+    const w = workedMin(s.id, d);
     return `<div class="row">
-      <div style="width:64px;flex:none">
+      <div style="width:66px;flex:none">
         <div class="row-t" style="font-size:13px">${fmtMDs(d)}</div>
-        <div class="row-s">${DOW_L[dowOf(d)]}</div></div>
+        <div class="row-s">${DOW_M(dowOf(d))}</div></div>
       <div class="row-m">
-        ${sh ? `<div class="row-s">排班 ${sh.start}–${sh.end} · ${roleName(sh.role)}</div>` :
-        lv ? `<div class="row-s" style="color:var(--purple)">请假 · ${lv.type}</div>` : '<div class="row-s">休息</div>'}
-        ${p ? `<div class="row-t" style="font-size:13px">实际 ${p.in}–${p.out} · ${hh(workedMin(s.id, d) || 0)}h ${late ? '<span class="pill o">迟到</span>' : ''}</div>`
-        : sh && d < TODAY ? '<div class="row-t" style="font-size:13px;color:var(--red)">缺卡</div>' : ''}
+        ${sh ? `<div class="row-s">${t('time.schedAt', { a: sh.start, b: sh.end, r: roleName(sh.role) })}</div>`
+        : lv ? `<div class="row-s" style="color:var(--purple)">${t('c.onLeave')} · ${leaveName(lv.type)}</div>`
+          : `<div class="row-s">${t('c.rest')}</div>`}
+        ${p ? `<div class="row-t" style="font-size:13px">${t('time.actualAt', { a: p.in, b: p.out, h: hh(w || 0) })}
+              ${late ? `<span class="pill o">${t('time.late')}</span>` : ''}</div>`
+        : sh && d < TODAY ? `<div class="row-t" style="font-size:13px;color:var(--red)">${t('time.missing')}</div>` : ''}
       </div>
       <div class="row-r" style="gap:5px">
-        <input class="inp" style="width:98px;height:32px" type="time" data-punch="${d}" data-k="in" value="${p ? p.in : (sh ? sh.start : '')}">
-        <input class="inp" style="width:98px;height:32px" type="time" data-punch="${d}" data-k="out" value="${p ? p.out : (sh ? sh.end : '')}">
+        ${editable
+        ? `<input class="inp" style="width:98px;height:32px" type="time" data-punch="${d}" data-k="in" value="${p ? p.in : (sh ? sh.start : '')}">
+             <input class="inp" style="width:98px;height:32px" type="time" data-punch="${d}" data-k="out" value="${p ? p.out : (sh ? sh.end : '')}">`
+        : `<b class="mono">${p ? hh(w) + t('c.hoursShort') : sh ? '–' : ''}</b>`}
       </div></div>`;
   }).join('');
+}
 
+function openTimeSheet(staffId) {
+  const s = staffById(staffId); if (!s) return;
+  const ws = state.week, days = rangeDays(ws, 7);
   openSheet({
-    title: s.n, sub: `${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))} 工时明细`, wide: true,
-    body: `<div class="list" id="tlist">${build()}</div>
-           <div class="hint">修改时间后点“保存打卡”，薪资会自动按新的实际工时重算。</div>`,
-    footer: `<button class="btn" data-act="closeSheet">取消</button><button class="btn pri" data-act="savePunch">保存打卡</button>`,
+    title: s.n, sub: t('time.detail', { from: fmtMD(ws), to: fmtMD(addDays(ws, 6)) }), wide: true,
+    body: `<div class="list">${punchRowsHTML(s.id, ws, true)}</div>
+           <div class="hint">${t('time.editHint')}</div>`,
+    footer: `<button class="btn" data-act="closeSheet">${t('c.cancel')}</button>
+             <button class="btn pri" data-act="savePunch">${t('time.savePunch')}</button>`,
     onMount(el) {
       ACT.savePunch = () => {
         days.forEach(d => {
@@ -1440,14 +2017,14 @@ function openTimeSheet(staffId) {
           const rec = { id: idx > -1 ? DB.punches[idx].id : uid(), shiftId: sh ? sh.id : null, staffId: s.id, date: d, in: i, out: o, brk: sh ? sh.brk : 0 };
           if (idx > -1) DB.punches[idx] = rec; else DB.punches.push(rec);
         });
-        save(); closeSheet(); render(); toast('打卡记录已保存');
+        save(); closeSheet(); render(); toast(t('time.saved'));
       };
     }
   });
 }
 
 /* =========================================================================
-   视图：薪资
+   管理端：薪资
    ========================================================================= */
 function payPeriod() {
   const p = DB.settings.period, ws = weekStartOf(TODAY);
@@ -1460,41 +2037,43 @@ function payPeriod() {
 VIEWS.pay = {
   top() {
     const p = DB.settings.period;
-    const seg = [['week', '本周'], ['last', '上周'], ['biweek', '双周'], ['month', '本月']]
-      .map(([k, n]) => `<button data-act="period" data-p="${k}" class="${p === k && !state.payFrom ? 'on' : ''}">${n}</button>`).join('');
-    return topbarHTML('薪资', '正常工时 / 加班 / 小费 全自动核算',
+    const seg = [['week', 'pay.week'], ['last', 'pay.last'], ['biweek', 'pay.biweek'], ['month', 'pay.month']]
+      .map(([k, n]) => `<button data-act="period" data-p="${k}" class="${p === k ? 'on' : ''}">${t(n)}</button>`).join('');
+    return topbarHTML(t('nav.pay'), t('pay.sub'),
       `<div class="seg">${seg}</div>
-       <button class="btn" data-act="exportPay">导出 CSV</button>
-       <button class="btn pri" data-act="printPage">生成工资单</button>`);
+       <button class="btn" data-act="exportPay">${t('c.export')}</button>
+       <button class="btn pri" data-act="printPage">${t('pay.slipBtn')}</button>`);
   },
   body() {
     const [from, to] = payPeriod();
     const P = computePayroll(from, to);
-    const st = DB.settings;
+    const st = DB.settings, H = t('c.hoursShort');
+    const rules = [st.otWeeklyOn ? t('pay.ruleWeek', { h: st.otWeekly, m: st.otMult }) : t('pay.ruleOff'),
+    st.otDailyOn ? t('pay.ruleDay', { h: st.otDaily, m: st.otMult }) : ''].filter(Boolean).join(' · ');
     return `
     <div class="grid-cards g4" style="margin-bottom:14px">
-      ${statCard('应发工资总额', money0(P.tot.gross), `${P.rows.length} 名员工 · ${fmtMD(from)} – ${fmtMD(to)}`)}
-      ${statCard('加班费', money0(P.tot.otPay), `加班 ${hh(P.tot.ot)}h · ${st.otMult}× 倍率`)}
-      ${statCard('小费分配', money0(P.tot.tips),
-      `<span class="rowline" style="gap:6px">小费池
+      ${statCard(t('pay.gross'), money0(P.tot.gross), t('pay.grossSub', { n: P.rows.length, from: fmtMD(from), to: fmtMD(to) }))}
+      ${statCard(t('pay.otPay'), money0(P.tot.otPay), t('pay.otSub', { h: hh(P.tot.ot), m: st.otMult }))}
+      ${statCard(t('pay.tips'), money0(P.tot.tips),
+      `<span class="rowline" style="gap:6px">${t('pay.tipPool')}
         <input class="inp" style="height:26px;width:104px;font-size:13px" type="number" min="0" step="10"
           value="${P.tipPool}" data-act="setTips" data-k="${periodKey(from, to)}"></span>`)}
-      ${statCard('雇主总成本', money0(P.tot.total), `含 ${st.payerTaxPct}% 雇主税 ${money0(P.tot.employer)}`)}
+      ${statCard(t('pay.employer'), money0(P.tot.total), t('pay.employerSub', { p: st.payerTaxPct, v: money0(P.tot.employer) }))}
     </div>
     ${P.tot.missing ? `<div class="card" style="margin-bottom:14px;background:#ff950012">
-      <div class="rowline"><span class="pill o">⚠︎ ${P.tot.missing} 天缺卡</span>
-      <span class="hint">这些天按 0 工时计薪。建议先去「工时」补录，或把计薪来源改成「按排班」。</span>
-      <div class="spacer"></div><button class="btn sm" data-act="go" data-v="time">去处理</button></div></div>` : ''}
+      <div class="rowline" style="flex-wrap:wrap;gap:8px"><span class="pill o">${t('pay.missWarn', { n: P.tot.missing })}</span>
+      <span class="hint">${t('pay.missHint')}</span>
+      <div class="spacer"></div><button class="btn sm" data-act="go" data-v="time">${t('pay.goFix')}</button></div></div>` : ''}
     <div class="card pad0"><div class="scrollx"><table class="tbl">
-      <thead><tr><th>员工</th><th>计薪方式</th><th class="num">正常</th><th class="num">加班</th>
-        <th class="num">基本</th><th class="num">加班费</th><th class="num">小费</th><th class="num">应发</th>
-        <th class="num">雇主税</th><th class="num">合计成本</th><th></th></tr></thead>
+      <thead><tr><th>${t('c.staff')}</th><th>${t('pay.method')}</th><th class="num">${t('pay.reg')}</th><th class="num">${t('pay.ot')}</th>
+        <th class="num">${t('pay.base')}</th><th class="num">${t('pay.otPay')}</th><th class="num">${t('pay.tips')}</th>
+        <th class="num">${t('pay.grossCol')}</th><th class="num">${t('pay.taxCol')}</th><th class="num">${t('pay.costCol')}</th><th></th></tr></thead>
       <tbody>${P.rows.map(r => `<tr data-act="openSlip" data-id="${r.s.id}" style="cursor:pointer">
         <td><div class="rowline"><div class="avatar sm" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
           <div><b>${esc(r.s.n)}</b><div class="row-s">${r.s.roles.map(roleName).join(' / ')}</div></div></div></td>
-        <td class="dim">${r.salaried ? '月薪 ' + money0(r.s.rate) : money(r.s.rate) + '/h'}</td>
-        <td class="num">${hh(r.reg)}h</td>
-        <td class="num" style="${r.ot ? 'color:var(--orange);font-weight:650' : ''}">${r.ot ? hh(r.ot) + 'h' : '–'}</td>
+        <td class="dim">${r.salaried ? t('pay.monthly', { v: money0(r.s.rate) }) : money(r.s.rate) + t('c.perHour')}</td>
+        <td class="num">${hh(r.reg)}${H}</td>
+        <td class="num" style="${r.ot ? 'color:var(--orange);font-weight:650' : ''}">${r.ot ? hh(r.ot) + H : '–'}</td>
         <td class="num">${money(r.base)}</td>
         <td class="num">${r.otPay ? money(r.otPay) : '–'}</td>
         <td class="num">${r.tips ? money(r.tips) : '–'}</td>
@@ -1502,58 +2081,63 @@ VIEWS.pay = {
         <td class="num dim">${money(r.employer)}</td>
         <td class="num">${money(r.total)}</td>
         <td class="num chev">›</td></tr>`).join('')}</tbody>
-      <tfoot><tr><td>合计</td><td></td><td class="num">${hh(P.tot.reg)}h</td><td class="num">${hh(P.tot.ot)}h</td>
+      <tfoot><tr><td>${t('c.total')}</td><td></td><td class="num">${hh(P.tot.reg)}${H}</td><td class="num">${hh(P.tot.ot)}${H}</td>
         <td class="num">${money(P.tot.base)}</td><td class="num">${money(P.tot.otPay)}</td>
         <td class="num">${money(P.tot.tips)}</td><td class="num">${money(P.tot.gross)}</td>
         <td class="num">${money(P.tot.employer)}</td><td class="num">${money(P.tot.total)}</td><td></td></tr></tfoot>
     </table></div></div>
     <div class="hint" style="margin-top:12px">
-      计薪来源：<b>${st.payFrom === 'actual' ? '实际打卡（缺卡按排班/0 处理）' : '按排班表'}</b> ·
-      加班规则：${st.otWeeklyOn ? `每周超过 ${st.otWeekly}h 按 ${st.otMult}×` : '未启用周加班'}${st.otDailyOn ? ` · 每日超过 ${st.otDaily}h 按 ${st.otMult}×` : ''} ·
-      可在<button class="btn sm gho" data-act="go" data-v="set">设置</button>中调整
+      ${t('pay.srcLine', { src: st.payFrom === 'actual' ? t('pay.srcActual') : t('pay.srcSched'), rules })}
+      <button class="btn sm gho" data-act="go" data-v="set">${t('nav.set')}</button>${t('pay.srcLine2')}
     </div>`;
   }
 };
+
+function slipBody(r, from, to) {
+  const H = t('c.hoursShort'), st = DB.settings;
+  const srcName = { punch: t('pay.fromPunch'), sched: t('pay.fromSched'), missing: t('pay.fromMiss') };
+  const days = r.dayList.map(d => `<div class="kv"><span>${fmtMDs(d.date)} ${DOW_M(dowOf(d.date))}
+      <span class="tiny dim">${srcName[d.from]}</span></span><b>${hh(d.min)}${H}</b></div>`).join('');
+  return `
+      <div class="rowline"><div class="avatar lg" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
+        <div><div style="font-weight:700;font-size:16px">${esc(r.s.n)}</div>
+          <div class="row-s">${r.s.roles.map(roleName).join(' / ')} · ${r.salaried ? t('staff.monthly') : money(r.s.rate) + t('c.perHour')}</div></div>
+        <div class="spacer"></div><div style="text-align:right"><div class="tiny dim">${t('pay.grossCol')}</div>
+          <div style="font-size:24px;font-weight:700;letter-spacing:-.02em">${money(r.gross)}</div></div></div>
+      <div class="hr"></div>
+      <div class="sec-t">${t('pay.breakdown')}</div>
+      <div class="kv"><span>${t('pay.regLine')}</span><b>${hh(r.reg)}${H} × ${money(r.s.rate)} = ${money(r.base)}</b></div>
+      ${r.ot ? `<div class="kv"><span style="color:var(--orange)">${t('pay.otLine', { m: st.otMult })}</span>
+        <b style="color:var(--orange)">${hh(r.ot)}${H} × ${money(r.s.rate * st.otMult)} = ${money(r.otPay)}</b></div>` : ''}
+      ${r.dt ? `<div class="kv"><span>${t('pay.dtLine')}</span><b>${hh(r.dt)}${H} = ${money(r.dtPay)}</b></div>` : ''}
+      ${r.tips ? `<div class="kv"><span>${t('pay.tipLine')}</span><b>${money(r.tips)}</b></div>` : ''}
+      <div class="kv"><span><b>${t('pay.grossLine')}</b></span><b style="font-size:16px">${money(r.gross)}</b></div>
+      <div class="kv"><span class="dim">${t('pay.taxLine', { p: st.payerTaxPct })}</span><span class="dim">${money(r.employer)}</span></div>
+      <div class="kv"><span class="dim">${t('pay.costLine')}</span><span class="dim">${money(r.total)}</span></div>
+      <div class="sec-t">${t('pay.byDay')}</div>${days || `<div class="hint">${t('pay.noHours')}</div>`}
+      ${r.missing ? `<div class="hint" style="color:var(--orange);margin-top:8px">${t('pay.slipMiss', { n: r.missing })}</div>` : ''}`;
+}
 
 function openSlip(staffId) {
   const [from, to] = payPeriod();
   const P = computePayroll(from, to);
   const r = P.rows.find(x => x.s.id === staffId); if (!r) return;
-  const rows = r.dayList.map(d => `<div class="kv"><span>${fmtMDs(d.date)} ${DOW_L[dowOf(d.date)]}
-      <span class="tiny dim">${d.from === 'punch' ? '打卡' : d.from === 'sched' ? '排班' : '缺卡'}</span></span>
-    <b>${hh(d.min)}h</b></div>`).join('');
   openSheet({
-    title: `${r.s.n} · 工资单`, sub: `${fmtMD(from)} – ${fmtMD(to)}`,
-    body: `
-      <div class="rowline"><div class="avatar lg" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
-        <div><div style="font-weight:700;font-size:16px">${esc(r.s.n)}</div>
-          <div class="row-s">${r.s.roles.map(roleName).join(' / ')} · ${r.salaried ? '月薪制' : money(r.s.rate) + '/小时'}</div></div>
-        <div class="spacer"></div><div style="text-align:right"><div class="tiny dim">应发</div>
-          <div style="font-size:24px;font-weight:700;letter-spacing:-.02em">${money(r.gross)}</div></div></div>
-      <div class="hr"></div>
-      <div class="sec-t">工时构成</div>
-      <div class="kv"><span>正常工时</span><b>${hh(r.reg)}h × ${money(r.s.rate)} = ${money(r.base)}</b></div>
-      ${r.ot ? `<div class="kv"><span style="color:var(--orange)">加班工时（${DB.settings.otMult}×）</span>
-        <b style="color:var(--orange)">${hh(r.ot)}h × ${money(r.s.rate * DB.settings.otMult)} = ${money(r.otPay)}</b></div>` : ''}
-      ${r.dt ? `<div class="kv"><span>双倍工时</span><b>${hh(r.dt)}h = ${money(r.dtPay)}</b></div>` : ''}
-      ${r.tips ? `<div class="kv"><span>小费分配（按工时）</span><b>${money(r.tips)}</b></div>` : ''}
-      <div class="kv"><span><b>应发合计</b></span><b style="font-size:16px">${money(r.gross)}</b></div>
-      <div class="kv"><span class="dim">雇主税费 ${DB.settings.payerTaxPct}%</span><span class="dim">${money(r.employer)}</span></div>
-      <div class="kv"><span class="dim">雇主总成本</span><span class="dim">${money(r.total)}</span></div>
-      <div class="sec-t">逐日工时</div>${rows || '<div class="hint">本周期没有工时记录</div>'}
-      ${r.missing ? `<div class="hint" style="color:var(--orange);margin-top:8px">⚠︎ 有 ${r.missing} 天排了班但没有打卡记录</div>` : ''}`,
-    footer: `<button class="btn" data-act="closeSheet">关闭</button><button class="btn pri" data-act="printPage">打印</button>`
+    title: t('pay.slip', { n: r.s.n }), sub: `${fmtMD(from)} – ${fmtMD(to)}`,
+    body: slipBody(r, from, to),
+    footer: `<button class="btn" data-act="closeSheet">${t('c.close')}</button>
+             <button class="btn pri" data-act="printPage">${t('c.print')}</button>`
   });
 }
 
 /* =========================================================================
-   视图：员工
+   管理端：员工
    ========================================================================= */
 VIEWS.staff = {
-  top: () => topbarHTML('员工', `${DB.staff.filter(s => s.active).length} 名在职 · 时薪、可上班时段、技能岗位`,
-    `<button class="btn pri" data-act="addStaff">＋ 新增员工</button>`),
+  top: () => topbarHTML(t('nav.staff'), t('staff.sub', { n: DB.staff.filter(s => s.active).length }),
+    `<button class="btn pri" data-act="addStaff">${t('staff.add')}</button>`),
   body() {
-    const ws = state.week;
+    const ws = state.week, H = t('c.hoursShort');
     return `<div class="grid-cards g3">${DB.staff.map(s => {
       const wm = weekMinutes(s.id, ws);
       const days = [0, 1, 2, 3, 4, 5, 6].filter(d => s.avail[d]).length;
@@ -1561,22 +2145,38 @@ VIEWS.staff = {
         <div class="rowline" style="margin-bottom:12px">
           <div class="avatar lg" style="background:${avaColor(s)}">${initials(s.n)}</div>
           <div style="min-width:0"><div style="font-weight:680;font-size:15.5px;letter-spacing:-.015em">${esc(s.n)}
-            ${s.active ? '' : '<span class="pill n">已离职</span>'}</div>
+            ${s.active ? '' : `<span class="pill n">${t('staff.inactive')}</span>`}</div>
             <div class="row-s">${s.roles.map(roleName).join(' / ')}${s.note ? ' · ' + esc(s.note) : ''}</div></div>
           <div class="spacer"></div><span class="chev">›</span></div>
-        <div class="kv"><span class="dim">计薪</span><b>${s.pay === 'monthly' ? money0(s.rate) + ' / 月' : money(s.rate) + ' / 小时'}</b></div>
-        <div class="kv"><span class="dim">本周排班</span><b class="${wm > DB.settings.otWeekly * 60 ? 'up' : ''}">${hh(wm)}h / 上限 ${s.maxH}h</b></div>
+        <div class="kv"><span class="dim">${t('staff.payLabel')}</span>
+          <b>${s.pay === 'monthly' ? money0(s.rate) + ' ' + t('c.perMonth') : money(s.rate) + ' ' + t('c.perHour')}</b></div>
+        <div class="kv"><span class="dim">${t('staff.weekSched')}</span>
+          <b class="${wm > DB.settings.otWeekly * 60 ? 'up' : ''}">${hh(wm)}${H} / ${t('staff.cap', { h: s.maxH })}</b></div>
         <div class="meter" style="margin-top:8px"><i style="width:${clamp(wm / (s.maxH * 60) * 100, 0, 100)}%;
           background:${wm > s.maxH * 60 ? 'var(--red)' : wm > DB.settings.otWeekly * 60 ? 'var(--orange)' : 'var(--green)'}"></i></div>
         <div class="rowline tiny dim" style="margin-top:10px;gap:5px">
-          ${[0, 1, 2, 3, 4, 5, 6].map(d => `<span style="width:22px;height:22px;border-radius:6px;display:grid;place-items:center;
+          ${[0, 1, 2, 3, 4, 5, 6].map(d => `<span style="width:24px;height:22px;border-radius:6px;display:grid;place-items:center;
             background:${s.avail[d] ? 'color-mix(in srgb,var(--green) 16%,var(--bg-elev))' : 'var(--fill)'};
-            color:${s.avail[d] ? 'var(--green)' : 'var(--label-3)'};font-weight:700">${DOW_S[d]}</span>`).join('')}
-          <span style="margin-left:4px">可排 ${days} 天</span></div>
+            color:${s.avail[d] ? 'var(--green)' : 'var(--label-3)'};font-weight:700">${DOW_S(d)}</span>`).join('')}
+          <span style="margin-left:4px">${t('staff.canWork', { n: days })}</span></div>
       </div>`;
     }).join('')}</div>`;
   }
 };
+
+function availRowsHTML(av, editable) {
+  return [1, 2, 3, 4, 5, 6, 0].map(d => `
+    <div class="avail-grid" style="margin-bottom:8px" data-av="${d}">
+      <div class="rowline" style="gap:7px">
+        ${editable ? `<div class="switch ${av[d] ? 'on' : ''}" data-act="tglAvail" data-d="${d}" style="width:40px;height:24px"></div>` : ''}
+        <span class="d">${DOW_L(d)}</span></div>
+      ${editable
+      ? `<input class="inp" type="time" data-k="s" value="${av[d] ? m2t(av[d][0]) : '09:00'}" ${av[d] ? '' : 'disabled'}>
+           <input class="inp" type="time" data-k="e" value="${av[d] ? m2t(Math.min(av[d][1], 1439)) : '22:00'}" ${av[d] ? '' : 'disabled'}>`
+      : `<div class="mono" style="grid-column:span 2;text-align:right;font-weight:600;color:${av[d] ? 'var(--label)' : 'var(--label-3)'}">
+             ${av[d] ? `${m2t(av[d][0])} – ${m2t(Math.min(av[d][1], 1439))}` : t('sched.cant')}</div>`}
+    </div>`).join('');
+}
 
 function openStaffEditor(id) {
   const isNew = !id;
@@ -1584,61 +2184,54 @@ function openStaffEditor(id) {
     ? { id: uid(), n: '', roles: ['server'], pay: 'hourly', rate: 15, maxH: 30, avail: FULL_AVAIL(), active: true, hired: TODAY, phone: '', note: '' }
     : Object.assign({}, staffById(id));
   const av = JSON.parse(JSON.stringify(s.avail));
-  const roleChips = Object.keys(ROLES).map(r =>
-    `<button class="tglchip ${s.roles.includes(r) ? 'on' : ''}" data-act="tglRole" data-r="${r}">${ROLES[r].n}</button>`).join('');
-  const availRows = [1, 2, 3, 4, 5, 6, 0].map(d => `
-    <div class="avail-grid" style="margin-bottom:8px" data-av="${d}">
-      <div class="rowline" style="gap:7px"><div class="switch ${av[d] ? 'on' : ''}" data-act="tglAvail" data-d="${d}"
-        style="width:40px;height:24px"></div><span class="d">${DOW_L[d].slice(1)}</span></div>
-      <input class="inp" type="time" data-k="s" value="${av[d] ? m2t(av[d][0]) : '09:00'}" ${av[d] ? '' : 'disabled'}>
-      <input class="inp" type="time" data-k="e" value="${av[d] ? m2t(Math.min(av[d][1], 1439)) : '22:00'}" ${av[d] ? '' : 'disabled'}>
-    </div>`).join('');
-
   openSheet({
-    title: isNew ? '新增员工' : s.n, sub: isNew ? '' : `入职 ${s.hired}`,
+    title: isNew ? t('staff.new') : s.n, sub: isNew ? '' : t('staff.hiredOn', { d: s.hired }),
     body: `
       <div class="frow">
-        <div class="field"><label>姓名</label><input class="inp" id="s_n" value="${esc(s.n)}" placeholder="张三"></div>
-        <div class="field"><label>电话</label><input class="inp" id="s_p" value="${esc(s.phone || '')}" placeholder="(919) 555-0100"></div>
+        <div class="field"><label>${t('staff.name')}</label><input class="inp" id="s_n" value="${esc(s.n)}"></div>
+        <div class="field"><label>${t('staff.phone')}</label><input class="inp" id="s_p" value="${esc(s.phone || '')}"></div>
       </div>
-      <div class="field"><label>可担任岗位（第一个为主岗）</label><div class="chips-row" id="s_roles">${roleChips}</div></div>
+      <div class="field"><label>${t('staff.roles')}</label><div class="chips-row" id="s_roles">
+        ${Object.keys(ROLES).map(r => `<button class="tglchip ${s.roles.includes(r) ? 'on' : ''}" data-act="tglRole" data-r="${r}">${roleName(r)}</button>`).join('')}
+      </div></div>
       <div class="frow">
-        <div class="field"><label>计薪方式</label><select class="inp" id="s_pay">
-          <option value="hourly" ${s.pay === 'hourly' ? 'selected' : ''}>时薪（可算加班）</option>
-          <option value="monthly" ${s.pay === 'monthly' ? 'selected' : ''}>月薪（不计加班）</option></select></div>
-        <div class="field"><label id="s_rl">时薪 (${DB.settings.cur})</label>
+        <div class="field"><label>${t('staff.payType')}</label><select class="inp" id="s_pay">
+          <option value="hourly" ${s.pay === 'hourly' ? 'selected' : ''}>${t('staff.hourly')}</option>
+          <option value="monthly" ${s.pay === 'monthly' ? 'selected' : ''}>${t('staff.monthly')}</option></select></div>
+        <div class="field"><label id="s_rl">${t(s.pay === 'monthly' ? 'staff.salary' : 'staff.rate', { c: DB.settings.cur })}</label>
           <input class="inp" type="number" step="0.5" min="0" id="s_rate" value="${s.rate}"></div>
       </div>
       <div class="frow">
-        <div class="field"><label>每周工时上限</label><input class="inp" type="number" min="1" max="80" id="s_max" value="${s.maxH}"></div>
-        <div class="field"><label>入职日期</label><input class="inp" type="date" id="s_h" value="${s.hired}"></div>
+        <div class="field"><label>${t('staff.maxH')}</label><input class="inp" type="number" min="1" max="80" id="s_max" value="${s.maxH}"></div>
+        <div class="field"><label>${t('staff.hired')}</label><input class="inp" type="date" id="s_h" value="${s.hired}"></div>
       </div>
-      <div class="field"><label>备注</label><input class="inp" id="s_note" value="${esc(s.note || '')}" placeholder="例如：学生 / 只做晚市"></div>
-      <div class="sec-t">可上班时段（自动排班会严格遵守）</div>
-      <div id="s_av">${availRows}</div>
+      <div class="field"><label>${t('c.note')}</label><input class="inp" id="s_note" value="${esc(s.note || '')}" placeholder="${t('staff.notePh')}"></div>
+      <div class="sec-t">${t('staff.avail')}</div>
+      <div id="s_av">${availRowsHTML(av, true)}</div>
       <div class="row" style="border-radius:12px;background:var(--fill);margin-top:4px">
-        <div class="row-m"><div class="row-t">在职</div><div class="row-s">关闭后不再参与排班</div></div>
+        <div class="row-m"><div class="row-t">${t('staff.active')}</div><div class="row-s">${t('staff.activeSub')}</div></div>
         <div class="switch ${s.active ? 'on' : ''}" data-act="tglActive"></div></div>`,
-    footer: `${isNew ? '' : '<button class="btn dgr" data-act="delStaff">删除</button>'}
-             <button class="btn pri" data-act="saveStaff">${isNew ? '添加员工' : '保存'}</button>`,
+    footer: `${isNew ? '' : `<button class="btn dgr" data-act="delStaff">${t('c.delete')}</button>`}
+             <button class="btn pri" data-act="saveStaff">${isNew ? t('staff.addBtn') : t('c.save')}</button>`,
     onMount(el) {
       const roles = s.roles.slice();
       let active = s.active;
-      const payLbl = () => $('#s_rl', el).textContent = ($('#s_pay', el).value === 'monthly' ? '月薪' : '时薪') + ` (${DB.settings.cur})`;
-      $('#s_pay', el).addEventListener('change', payLbl);
+      $('#s_pay', el).addEventListener('change', () => {
+        $('#s_rl', el).textContent = t($('#s_pay', el).value === 'monthly' ? 'staff.salary' : 'staff.rate', { c: DB.settings.cur });
+      });
       ACT.tglRole = b => {
         const r = b.dataset.r, i = roles.indexOf(r);
         if (i > -1) { if (roles.length > 1) roles.splice(i, 1); } else roles.push(r);
         $$('#s_roles .tglchip', el).forEach(x => x.classList.toggle('on', roles.includes(x.dataset.r)));
       };
       ACT.tglAvail = b => {
-        const d = b.dataset.d; const on = b.classList.toggle('on');
+        const d = b.dataset.d, on = b.classList.toggle('on');
         $$(`[data-av="${d}"] input`, el).forEach(i => i.disabled = !on);
       };
       ACT.tglActive = b => { active = b.classList.toggle('on'); };
       ACT.saveStaff = () => {
         const n = $('#s_n', el).value.trim();
-        if (!n) return toast('请填写姓名', 'err');
+        if (!n) return toast(t('staff.needName'), 'err');
         const avail = {};
         [0, 1, 2, 3, 4, 5, 6].forEach(d => {
           const box = $(`[data-av="${d}"]`, el);
@@ -1650,172 +2243,416 @@ function openStaffEditor(id) {
           maxH: Number($('#s_max', el).value) || 40, hired: $('#s_h', el).value, phone: $('#s_p', el).value,
           note: $('#s_note', el).value, avail, active,
         };
-        if (isNew) DB.staff.push(rec);
-        else Object.assign(staffById(s.id), rec);
-        save(); closeSheet(); render(); toast(isNew ? `已添加 ${n}` : '员工资料已更新');
+        if (isNew) DB.staff.push(rec); else Object.assign(staffById(s.id), rec);
+        save(); closeSheet(); render(); toast(isNew ? t('staff.added', { n }) : t('staff.updated'));
       };
-      ACT.delStaff = () => confirmSheet('删除员工', `确定删除 <b>${esc(s.n)}</b>？该员工的排班与打卡记录也会一并删除，此操作不可撤销。`, '删除', () => {
+      ACT.delStaff = () => confirmSheet(t('staff.delTitle'), t('staff.delMsg', { n: esc(s.n) }), t('c.delete'), () => {
         DB.staff = DB.staff.filter(x => x.id !== s.id);
         DB.shifts = DB.shifts.filter(x => x.staffId !== s.id);
         DB.punches = DB.punches.filter(x => x.staffId !== s.id);
         DB.timeoff = DB.timeoff.filter(x => x.staffId !== s.id);
-        save(); closeSheet(); render(); toast('员工已删除', 'info');
+        if (state.me === s.id) state.me = null;
+        save(); closeSheet(); render(); toast(t('staff.deleted'), 'info');
       });
     }
   });
 }
 
 /* =========================================================================
-   视图：请假
+   管理端：请假
    ========================================================================= */
+function leaveCard(x, actions) {
+  const s = staffById(x.staffId); if (!s) return '';
+  const n = daysBetween(x.from, x.to) + 1;
+  const clash = DB.shifts.filter(y => y.staffId === x.staffId && y.date >= x.from && y.date <= x.to);
+  return `<div class="row">
+    <div class="avatar" style="background:${avaColor(s)}">${initials(s.n)}</div>
+    <div class="row-m"><div class="row-t">${t('leave.head', { n: esc(s.n), t: leaveName(x.type), d: n })}</div>
+      <div class="row-s">${fmtMD(x.from)}${x.from !== x.to ? ' – ' + fmtMD(x.to) : ''} · ${esc(x.reason || t('leave.noReason'))}</div>
+      ${clash.length && x.status !== 'rejected' ? `<div class="tiny" style="color:var(--orange);margin-top:2px">${t('leave.clash', { n: clash.length })}</div>` : ''}</div>
+    <div class="row-r">${actions}</div></div>`;
+}
+
 VIEWS.leave = {
-  top: () => topbarHTML('请假', '批准后，自动排班会自动跳过这些日期',
-    `<button class="btn pri" data-act="newLeave">＋ 新建请假</button>`),
+  top: () => topbarHTML(t('nav.leave'), t('leave.sub'), `<button class="btn pri" data-act="newLeave">${t('leave.new')}</button>`),
   body() {
-    const pend = DB.timeoff.filter(t => t.status === 'pending').sort((a, b) => a.from < b.from ? -1 : 1);
-    const done = DB.timeoff.filter(t => t.status !== 'pending').sort((a, b) => a.from > b.from ? -1 : 1);
-    const card = (t, actions) => {
-      const s = staffById(t.staffId); if (!s) return '';
-      const n = daysBetween(t.from, t.to) + 1;
-      const clash = DB.shifts.filter(x => x.staffId === t.staffId && x.date >= t.from && x.date <= t.to);
-      return `<div class="row">
-        <div class="avatar" style="background:${avaColor(s)}">${initials(s.n)}</div>
-        <div class="row-m"><div class="row-t">${esc(s.n)} · ${t.type} · ${n} 天</div>
-          <div class="row-s">${fmtMD(t.from)}${t.from !== t.to ? ' – ' + fmtMD(t.to) : ''} · ${esc(t.reason || '无说明')}</div>
-          ${clash.length && t.status !== 'rejected' ? `<div class="tiny" style="color:var(--orange);margin-top:2px">
-            ⚠︎ 该期间已排 ${clash.length} 个班次，批准后需要补人</div>` : ''}</div>
-        <div class="row-r">${actions}</div></div>`;
-    };
+    const pend = DB.timeoff.filter(x => x.status === 'pending').sort((a, b) => a.from < b.from ? -1 : 1);
+    const done = DB.timeoff.filter(x => x.status !== 'pending').sort((a, b) => a.from > b.from ? -1 : 1);
     return `
     <div class="grid-cards g2">
       <div class="card pad0">
-        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">待审批</div>
-          <div class="card-s">${pend.length} 条申请</div></div></div>
-        ${pend.length ? pend.map(t => card(t,
-      `<button class="btn sm dgr" data-act="rejectLeave" data-id="${t.id}">拒绝</button>
-           <button class="btn sm grn" data-act="approveLeave" data-id="${t.id}">批准</button>`)).join('')
-        : '<div class="empty"><span class="e-ico">✓</span>没有待审批的请假</div>'}
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">${t('leave.pending')}</div>
+          <div class="card-s">${t('dash.nReq', { n: pend.length })}</div></div></div>
+        ${pend.length ? pend.map(x => leaveCard(x,
+      `<button class="btn sm dgr" data-act="rejectLeave" data-id="${x.id}">${t('leave.reject')}</button>
+           <button class="btn sm grn" data-act="approveLeave" data-id="${x.id}">${t('leave.approve')}</button>`)).join('')
+        : `<div class="empty"><span class="e-ico">✓</span>${t('leave.noPending')}</div>`}
       </div>
       <div class="card pad0">
-        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">历史记录</div>
-          <div class="card-s">${done.length} 条</div></div></div>
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">${t('leave.history')}</div>
+          <div class="card-s">${done.length}</div></div></div>
         <div style="max-height:520px;overflow:auto">
-        ${done.length ? done.map(t => card(t,
-          `<span class="pill ${t.status === 'approved' ? 'g' : 'n'}">${t.status === 'approved' ? '已批准' : '已拒绝'}</span>
-           <button class="btn sm ico dgr" data-act="delLeave" data-id="${t.id}">✕</button>`)).join('')
-          : '<div class="empty">暂无记录</div>'}
+        ${done.length ? done.map(x => leaveCard(x,
+          `<span class="pill ${x.status === 'approved' ? 'g' : 'n'}">${x.status === 'approved' ? t('leave.approved') : t('leave.rejected')}</span>
+           <button class="btn sm ico dgr" data-act="delLeave" data-id="${x.id}">✕</button>`)).join('')
+          : `<div class="empty">${t('leave.noHistory')}</div>`}
         </div>
       </div>
     </div>`;
   }
 };
-function openLeaveEditor(id) {
+
+function openLeaveEditor(id, asEmployee) {
   const isNew = !id;
-  const t = isNew ? { id: uid(), staffId: DB.staff[0].id, from: TODAY, to: TODAY, type: '事假', reason: '', status: 'pending', at: TODAY } : DB.timeoff.find(x => x.id === id);
+  const me = asEmployee ? staffById(state.me) : null;
+  const x = isNew
+    ? { id: uid(), staffId: me ? me.id : DB.staff[0].id, from: TODAY, to: TODAY, type: 'personal', reason: '', status: 'pending', at: TODAY }
+    : DB.timeoff.find(y => y.id === id);
   openSheet({
-    title: isNew ? '新建请假' : '请假详情',
+    title: isNew ? (asEmployee ? t('emp.reqLeave').replace('＋ ', '') : t('leave.new').replace('＋ ', '')) : t('leave.detail'),
     body: `
-      <div class="field"><label>员工</label><select class="inp" id="l_s">${DB.staff.map(s =>
-      `<option value="${s.id}" ${s.id === t.staffId ? 'selected' : ''}>${esc(s.n)}</option>`).join('')}</select></div>
+      ${asEmployee ? '' : `<div class="field"><label>${t('c.staff')}</label><select class="inp" id="l_s">${DB.staff.map(s =>
+      `<option value="${s.id}" ${s.id === x.staffId ? 'selected' : ''}>${esc(s.n)}</option>`).join('')}</select></div>`}
       <div class="frow">
-        <div class="field"><label>开始</label><input class="inp" type="date" id="l_f" value="${t.from}"></div>
-        <div class="field"><label>结束</label><input class="inp" type="date" id="l_t" value="${t.to}"></div>
+        <div class="field"><label>${t('c.start')}</label><input class="inp" type="date" id="l_f" value="${x.from}"></div>
+        <div class="field"><label>${t('c.end')}</label><input class="inp" type="date" id="l_t" value="${x.to}"></div>
       </div>
-      <div class="field"><label>类型</label><select class="inp" id="l_ty">${['事假', '病假', '年假', '无薪假'].map(x =>
-        `<option ${x === t.type ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
-      <div class="field"><label>说明</label><textarea class="inp" id="l_r">${esc(t.reason)}</textarea></div>`,
+      <div class="field"><label>${t('leave.type')}</label><select class="inp" id="l_ty">${LEAVE_TYPES.map(k =>
+        `<option value="${k}" ${k === x.type ? 'selected' : ''}>${leaveName(k)}</option>`).join('')}</select></div>
+      <div class="field"><label>${t('leave.reason')}</label><textarea class="inp" id="l_r">${esc(x.reason)}</textarea></div>
+      ${!isNew && x.status !== 'pending' ? `<div class="pill ${x.status === 'approved' ? 'g' : 'n'}">${x.status === 'approved' ? t('leave.approved') : t('leave.rejected')}</div>` : ''}`,
     footer: isNew
-      ? `<button class="btn" data-act="closeSheet">取消</button><button class="btn pri" data-act="saveLeave">提交申请</button>`
-      : `<button class="btn dgr" data-act="rejectLeave" data-id="${t.id}">拒绝</button>
-         <button class="btn grn" data-act="approveLeave" data-id="${t.id}">批准</button>`,
+      ? `<button class="btn" data-act="closeSheet">${t('c.cancel')}</button>
+         <button class="btn pri" data-act="saveLeave">${t('leave.submit')}</button>`
+      : (asEmployee || x.status !== 'pending'
+        ? `<button class="btn" data-act="closeSheet">${t('c.close')}</button>`
+        : `<button class="btn dgr" data-act="rejectLeave" data-id="${x.id}">${t('leave.reject')}</button>
+           <button class="btn grn" data-act="approveLeave" data-id="${x.id}">${t('leave.approve')}</button>`),
     onMount(el) {
       ACT.saveLeave = () => {
-        t.staffId = $('#l_s', el).value; t.from = $('#l_f', el).value; t.to = $('#l_t', el).value;
-        t.type = $('#l_ty', el).value; t.reason = $('#l_r', el).value;
-        if (t.to < t.from) return toast('结束日期不能早于开始日期', 'err');
-        DB.timeoff.push(t); save(); closeSheet(); render(); toast('请假申请已提交');
+        if (!asEmployee) x.staffId = $('#l_s', el).value;
+        x.from = $('#l_f', el).value; x.to = $('#l_t', el).value;
+        x.type = $('#l_ty', el).value; x.reason = $('#l_r', el).value;
+        if (x.to < x.from) return toast(t('leave.badDate'), 'err');
+        DB.timeoff.push(x); save(); closeSheet(); render();
+        toast(asEmployee ? t('emp.leaveSent') : t('leave.submitted'));
       };
     }
   });
 }
 
 /* =========================================================================
-   视图：设置
+   管理端：设置
    ========================================================================= */
 VIEWS.set = {
-  top: () => topbarHTML('设置', '加班规则、人力成本目标、班次模板与用人需求', ''),
+  top: () => topbarHTML(t('nav.set'), t('set.sub'), ''),
   body() {
     const st = DB.settings;
-    const sw = (k, t, s) => `<div class="row"><div class="row-m"><div class="row-t">${t}</div><div class="row-s">${s}</div></div>
+    const sw = (k, title, sub) => `<div class="row"><div class="row-m"><div class="row-t">${title}</div><div class="row-s">${sub}</div></div>
       <div class="switch ${st[k] ? 'on' : ''}" data-act="tglSet" data-k="${k}"></div></div>`;
-    const num = (k, t, s, step = 1, suffix = '') => `<div class="row"><div class="row-m"><div class="row-t">${t}</div>
-      <div class="row-s">${s}</div></div><div class="row-r">
+    const num = (k, title, sub, step = 1, suffix = '') => `<div class="row"><div class="row-m"><div class="row-t">${title}</div>
+      <div class="row-s">${sub}</div></div><div class="row-r">
       <input class="inp" style="width:96px;height:32px;text-align:right" type="number" step="${step}" data-set="${k}" value="${st[k]}">
       <span class="dim tiny">${suffix}</span></div></div>`;
+    const theme = document.documentElement.dataset.theme;
     return `
     <div class="grid-cards g2">
       <div>
-        <div class="sec-t">门店</div>
+        <div class="sec-t">${t('set.lang')}</div>
         <div class="list" style="margin-bottom:16px">
-          <div class="row"><div class="row-m"><div class="row-t">门店名称</div></div>
-            <div class="row-r"><input class="inp" style="width:180px;height:32px" data-set="biz" value="${esc(st.biz)}"></div></div>
-          <div class="row"><div class="row-m"><div class="row-t">货币符号</div></div>
-            <div class="row-r"><input class="inp" style="width:70px;height:32px;text-align:center" data-set="cur" value="${st.cur}"></div></div>
-          <div class="row"><div class="row-m"><div class="row-t">每周起始日</div></div>
-            <div class="row-r"><select class="inp" style="width:110px;height:32px" data-set="weekStart">
-              ${[1, 0, 6].map(d => `<option value="${d}" ${st.weekStart === d ? 'selected' : ''}>${DOW_L[d]}</option>`).join('')}</select></div></div>
-          ${num('weeklyRevenue', '每周营业额预估', '用于计算人力成本占比', 500, st.cur)}
-          ${num('targetLaborPct', '人力成本目标', '行业健康区间 25–32%', 0.5, '%')}
+          <div class="row stack"><div class="row-m"><div class="row-t">${t('set.langLabel')}</div></div>
+            <div class="row-r"><div class="seg">${Object.keys(LANGS).map(l =>
+      `<button data-act="setLang" data-l="${l}" class="${LANG === l ? 'on' : ''}">${LANGS[l]}</button>`).join('')}</div></div></div>
+          <div class="row stack"><div class="row-m"><div class="row-t">${t('set.themeLabel')}</div></div>
+            <div class="row-r"><div class="seg">
+              ${[['auto', 'set.themeAuto'], ['light', 'set.themeLight'], ['dark', 'set.themeDark']].map(([v, k]) =>
+        `<button data-act="setTheme" data-v="${v}" class="${theme === v ? 'on' : ''}">${t(k)}</button>`).join('')}
+            </div></div></div>
         </div>
 
-        <div class="sec-t">加班与计薪规则</div>
+        <div class="sec-t">${t('set.store')}</div>
         <div class="list" style="margin-bottom:16px">
-          <div class="row"><div class="row-m"><div class="row-t">计薪来源</div>
-            <div class="row-s">按打卡更准确，按排班更省事</div></div>
-            <div class="row-r"><div class="seg"><button data-act="payFrom" data-v="actual" class="${st.payFrom === 'actual' ? 'on' : ''}">实际打卡</button>
-              <button data-act="payFrom" data-v="sched" class="${st.payFrom === 'sched' ? 'on' : ''}">按排班</button></div></div></div>
-          ${sw('otWeeklyOn', '每周加班（FLSA）', `超过 ${st.otWeekly} 小时按 ${st.otMult} 倍`)}
-          ${num('otWeekly', '每周加班门槛', '美国联邦标准为 40 小时', 1, '小时')}
-          ${sw('otDailyOn', '每日加班（加州式）', `单日超过 ${st.otDaily} 小时按 ${st.otMult} 倍`)}
-          ${num('otDaily', '每日加班门槛', '仅在启用每日加班时生效', 1, '小时')}
-          ${num('otMult', '加班倍率', '默认 1.5 倍', 0.25, '×')}
-          ${sw('breakUnpaid', '休息时间不计薪', '班次中的休息分钟从工时中扣除')}
-          ${num('payerTaxPct', '雇主税费比例', 'FICA 7.65% + 失业保险等', 0.05, '%')}
-          ${num('lateGrace', '迟到宽限', '超过这个分钟数才算迟到', 1, '分钟')}
+          <div class="row"><div class="row-m"><div class="row-t">${t('set.storeName')}</div></div>
+            <div class="row-r"><input class="inp" style="width:180px;height:32px" data-set="biz" value="${esc(st.biz)}"></div></div>
+          <div class="row"><div class="row-m"><div class="row-t">${t('set.currency')}</div></div>
+            <div class="row-r"><input class="inp" style="width:70px;height:32px;text-align:center" data-set="cur" value="${st.cur}"></div></div>
+          <div class="row"><div class="row-m"><div class="row-t">${t('set.weekStart')}</div></div>
+            <div class="row-r"><select class="inp" style="width:130px;height:32px" data-set="weekStart">
+              ${[1, 0, 6].map(d => `<option value="${d}" ${st.weekStart === d ? 'selected' : ''}>${DOW_L(d)}</option>`).join('')}</select></div></div>
+          ${num('weeklyRevenue', t('set.revenue'), t('set.revenueSub'), 500, st.cur)}
+          ${num('targetLaborPct', t('set.targetPct'), t('set.targetSub'), 0.5, '%')}
+          <div class="row"><div class="row-m"><div class="row-t">${t('set.pin')}</div>
+            <div class="row-s">${t('set.pinSub')}</div></div>
+            <div class="row-r"><input class="inp" style="width:96px;height:32px;text-align:center;letter-spacing:.15em"
+              inputmode="numeric" maxlength="6" data-set="bossPin" value="${esc(st.bossPin || '')}" placeholder="––––"></div></div>
+        </div>
+
+        <div class="sec-t">${t('set.rules')}</div>
+        <div class="list" style="margin-bottom:16px">
+          <div class="row stack"><div class="row-m"><div class="row-t">${t('set.paySrc')}</div>
+            <div class="row-s">${t('set.paySrcSub')}</div></div>
+            <div class="row-r"><div class="seg">
+              <button data-act="payFrom" data-v="actual" class="${st.payFrom === 'actual' ? 'on' : ''}">${t('pay.fromPunch')}</button>
+              <button data-act="payFrom" data-v="sched" class="${st.payFrom === 'sched' ? 'on' : ''}">${t('pay.fromSched')}</button></div></div></div>
+          ${sw('otWeeklyOn', t('set.otWeekly'), t('set.otWeeklySub', { h: st.otWeekly, m: st.otMult }))}
+          ${num('otWeekly', t('set.otWeeklyTh'), t('set.otWeeklyThSub'), 1, '')}
+          ${sw('otDailyOn', t('set.otDaily'), t('set.otDailySub', { h: st.otDaily, m: st.otMult }))}
+          ${num('otDaily', t('set.otDailyTh'), t('set.otDailyThSub'), 1, '')}
+          ${num('otMult', t('set.otMult'), t('set.otMultSub'), 0.25, '×')}
+          ${sw('breakUnpaid', t('set.brk'), t('set.brkSub'))}
+          ${num('payerTaxPct', t('set.tax'), t('set.taxSub'), 0.05, '%')}
+          ${num('lateGrace', t('set.grace'), t('set.graceSub'), 1, '')}
         </div>
       </div>
 
       <div>
-        <div class="sec-t">班次模板</div>
+        <div class="sec-t">${t('set.templates')}</div>
         <div class="list" style="margin-bottom:16px">
-          ${DB.templates.map(t => `<div class="row">
-            <div class="row-m"><div class="row-t">${esc(t.n)}</div>
-              <div class="row-s">${t.start}–${t.end} · 休息 ${t.brk} 分钟 · 计薪 ${hh(shiftMin(t))}h</div></div>
-            <div class="row-r"><input class="inp" style="width:104px;height:32px" type="time" data-tpl="${t.id}" data-k="start" value="${t.start}">
-              <input class="inp" style="width:104px;height:32px" type="time" data-tpl="${t.id}" data-k="end" value="${t.end}"></div></div>`).join('')}
+          ${DB.templates.map(x => `<div class="row">
+            <div class="row-m"><div class="row-t">${tplName(x)}</div>
+              <div class="row-s">${t('set.tplSub', { a: x.start, b: x.end, m: x.brk, h: hh(shiftMin(x)) })}</div></div>
+            <div class="row-r"><input class="inp" style="width:104px;height:32px" type="time" data-tpl="${x.id}" data-k="start" value="${x.start}">
+              <input class="inp" style="width:104px;height:32px" type="time" data-tpl="${x.id}" data-k="end" value="${x.end}"></div></div>`).join('')}
         </div>
 
-        <div class="sec-t">每日用人需求（自动排班依据）</div>
+        <div class="sec-t">${t('set.demand')}</div>
         <div class="card pad0" style="margin-bottom:16px"><div class="scrollx"><table class="tbl">
-          <thead><tr><th>星期</th><th>班段</th>${Object.keys(ROLES).map(r => `<th class="num">${ROLES[r].n}</th>`).join('')}</tr></thead>
+          <thead><tr><th>${t('set.dayCol')}</th><th>${t('set.blockCol')}</th>
+            ${Object.keys(ROLES).map(r => `<th class="num">${roleName(r)}</th>`).join('')}</tr></thead>
           <tbody>${[1, 2, 3, 4, 5, 6, 0].map(d => (DB.demand[d] || []).map((blk, bi) => {
-      const t = tplById(blk.tpl);
-      return `<tr><td>${DOW_L[d]}</td><td class="dim">${t ? t.n + ' ' + t.start : '?'}</td>
+      const x = tplById(blk.tpl);
+      return `<tr><td>${DOW_L(d)}</td><td class="dim">${x ? tplName(x) + ' ' + x.start : '?'}</td>
               ${Object.keys(ROLES).map(r => `<td class="num"><input class="inp" style="width:52px;height:28px;text-align:center;padding:0"
                 type="number" min="0" max="9" data-dem="${d}|${bi}|${r}" value="${blk.need[r] || 0}"></td>`).join('')}</tr>`;
     }).join('')).join('')}</tbody>
         </table></div></div>
 
-        <div class="sec-t">数据</div>
+        <div class="sec-t">${t('set.data')}</div>
         <div class="list">
-          <div class="row tap" data-act="exportData"><div class="row-m"><div class="row-t">导出全部数据</div>
-            <div class="row-s">JSON 备份，可在另一台电脑导入</div></div><span class="chev">›</span></div>
-          <div class="row tap" data-act="importData"><div class="row-m"><div class="row-t">导入数据</div>
-            <div class="row-s">从 JSON 备份恢复</div></div><span class="chev">›</span></div>
-          <div class="row tap" data-act="resetData"><div class="row-m"><div class="row-t" style="color:var(--red)">重置为示例数据</div>
-            <div class="row-s">清空当前所有排班、打卡与员工</div></div><span class="chev">›</span></div>
+          <div class="row tap" data-act="exportData"><div class="row-m"><div class="row-t">${t('set.exportData')}</div>
+            <div class="row-s">${t('set.exportSub')}</div></div><span class="chev">›</span></div>
+          <div class="row tap" data-act="importData"><div class="row-m"><div class="row-t">${t('set.importData')}</div>
+            <div class="row-s">${t('set.importSub')}</div></div><span class="chev">›</span></div>
+          <div class="row tap" data-act="resetData"><div class="row-m"><div class="row-t" style="color:var(--red)">${t('set.resetData')}</div>
+            <div class="row-s">${t('set.resetSub')}</div></div><span class="chev">›</span></div>
         </div>
-        <div class="hint" style="margin-top:12px">数据只保存在这台设备的浏览器里（localStorage），不会上传到任何服务器。</div>
+        <div class="hint" style="margin-top:12px">${t('set.privacy')}</div>
+      </div>
+    </div>`;
+  }
+};
+
+/* =========================================================================
+   员工端：只看得到自己的班表、工时和请假
+   ========================================================================= */
+const me = () => staffById(state.me);
+const nowHM = () => { const d = new Date(); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+const todayShiftOf = id => shiftsOf(TODAY, id).sort((a, b) => t2m(a.start) - t2m(b.start))[0];
+const punchOf = (id, d) => DB.punches.find(p => p.staffId === id && p.date === d);
+let empTimer = null;
+
+/* 选人进入员工端 */
+EVIEWS.pick = {
+  top: () => topbarHTML(t('mode.pick'), t('mode.pickSub'),
+    `<button class="btn" data-act="toBoss">↩ ${t('mode.toBoss')}</button>`),
+  body() {
+    return `<div class="pickgrid">${DB.staff.filter(s => s.active).map(s => `
+      <button class="pickcard" data-act="pickMe" data-id="${s.id}">
+        <div class="avatar lg" style="background:${avaColor(s)}">${initials(s.n)}</div>
+        <div style="font-weight:650;font-size:15px">${esc(s.n)}</div>
+        <div class="row-s">${s.roles.map(roleName).join(' / ')}</div>
+      </button>`).join('')}</div>
+      <div class="hint" style="margin-top:16px;max-width:520px">${t('mode.hint')}</div>`;
+  }
+};
+
+/* 我的班表 + 打卡 */
+EVIEWS.my = {
+  top: () => topbarHTML(t('emp.my'), `${esc(me().n)} · ${me().roles.map(roleName).join(' / ')}`, weekNav()),
+  body() {
+    const s = me(), H = t('c.hoursShort');
+    const sh = todayShiftOf(s.id), p = punchOf(s.id, TODAY);
+    const ws = state.week;
+    const wm = weekMinutes(s.id, ws);
+    const P = computePayroll(ws, addDays(ws, 6));
+    const pr = P.rows.find(x => x.s.id === s.id);
+    const next = DB.shifts.filter(x => x.staffId === s.id && (x.date > TODAY || (x.date === TODAY && !sh)))
+      .sort((a, b) => a.date < b.date ? -1 : 1)[0];
+
+    let clockBlock;
+    if (!sh) {
+      clockBlock = `<div class="row" style="padding-left:0"><div class="row-m">
+          <div class="row-t">${t('emp.noToday')}</div>
+          ${next ? `<div class="row-s">${t('emp.nextShift')}: ${fmtDW(next.date)} ${next.start}–${next.end} · ${roleName(next.role)}</div>` : ''}
+        </div></div>`;
+    } else if (!p) {
+      clockBlock = `<div class="kv" style="border:0;padding-top:0"><span class="dim">${t('emp.todayShift')}</span>
+          <b class="mono">${sh.start}–${sh.end} · ${roleName(sh.role)}</b></div>
+        <button class="btn pri big-btn" data-act="clockIn">⏻ ${t('emp.clockIn')}</button>`;
+    } else if (!p.out) {
+      clockBlock = `<div class="kv" style="border:0;padding-top:0"><span class="dim">${t('emp.clockedIn', { t: p.in })}</span>
+          <b class="mono">${sh.start}–${sh.end}</b></div>
+        <button class="btn grn big-btn" data-act="clockOut">⏻ ${t('emp.clockOut')}</button>`;
+    } else {
+      clockBlock = `<div class="kv" style="border:0;padding-top:0"><span class="dim">${p.in} – ${p.out}</span>
+          <b>${t('emp.done', { h: hh(workedMin(s.id, TODAY) || 0) })}</b></div>
+        <button class="btn big-btn" disabled>✓ ${t('emp.done', { h: hh(workedMin(s.id, TODAY) || 0) })}</button>`;
+    }
+
+    const days = rangeDays(ws, 7).map(d => {
+      const list = shiftsOf(d, s.id).sort((a, b) => t2m(a.start) - t2m(b.start));
+      const lv = leaveOn(s.id, d), pl = pendingLeaveOn(s.id, d);
+      const isToday = d === TODAY;
+      return `<div class="row ${isToday ? '' : ''}" style="${isToday ? 'background:color-mix(in srgb,var(--blue) 7%,var(--bg-elev))' : ''}">
+        <div style="width:64px;flex:none;text-align:center">
+          <div class="row-s">${DOW_M(dowOf(d))}</div>
+          <div class="row-t" style="font-size:17px;${isToday ? 'color:var(--blue)' : ''}">${parseISO(d).getDate()}</div></div>
+        <div class="row-m">
+          ${list.length ? list.map(x => `<div class="row-t">${x.start}–${x.end}
+              <span class="pill" style="${chipStyle(x.role)};height:19px">${roleName(x.role)}</span></div>
+              <div class="row-s">${hh(shiftMin(x))}${H}${x.note ? ' · ' + esc(x.note) : ''}</div>`).join('')
+          : lv ? `<div class="row-t" style="color:var(--purple)">✈ ${t('c.onLeave')} · ${leaveName(lv.type)}</div>`
+            : pl ? `<div class="row-t" style="color:var(--orange)">${t('sched.waiting', { t: leaveName(pl.type) })}</div>`
+              : `<div class="row-t dim">${t('c.rest')}</div>`}
+        </div>
+        <div class="row-r mono">${list.length ? hh(list.reduce((n, x) => n + shiftMin(x), 0)) + H : ''}</div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="hero" style="margin-bottom:14px">
+      <div class="rowline" style="margin-bottom:12px">
+        <div class="avatar lg" style="background:${avaColor(s)}">${initials(s.n)}</div>
+        <div><div class="hero-h">${t('emp.hello', { n: esc(s.n) })}</div>
+          <div class="row-s">${fmtDW(TODAY)}</div></div>
+        <div class="spacer"></div>
+        <div class="clock" id="nowClock">${nowHM()}</div>
+      </div>
+      ${clockBlock}
+    </div>
+
+    <div class="grid-cards g2" style="margin-bottom:14px">
+      ${statCard(t('emp.weekHours'), hh(wm) + H,
+      `${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))}`,
+      `<div class="meter" style="margin-top:9px"><i style="width:${clamp(wm / (s.maxH * 60) * 100, 0, 100)}%;
+          background:${wm > DB.settings.otWeekly * 60 ? 'var(--orange)' : 'var(--green)'}"></i></div>`)}
+      ${statCard(t('emp.weekPay'), pr ? money0(pr.gross) : money0(0), t('emp.payNote'))}
+    </div>
+
+    <div class="card pad0">
+      <div style="padding:16px 18px 8px" class="card-h"><div><div class="card-t">${t('emp.thisWeek')}</div>
+        <div class="card-s">${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))}</div></div></div>
+      ${DB.shifts.some(x => x.staffId === s.id && x.date >= ws && x.date <= addDays(ws, 6))
+        ? days
+        : `<div class="empty" style="padding:20px"><span class="e-ico">☕</span>${t('emp.noShifts')}</div>` + days}
+    </div>`;
+  },
+  after() {
+    clearInterval(empTimer);
+    empTimer = setInterval(() => { const el = $('#nowClock'); if (el) el.textContent = nowHM(); else clearInterval(empTimer); }, 20000);
+  }
+};
+
+/* 我的工时 */
+EVIEWS.ehours = {
+  top: () => topbarHTML(t('emp.hours'), t('emp.hoursSub'), weekNav()),
+  body() {
+    const s = me(), ws = state.week, H = t('c.hoursShort');
+    const days = rangeDays(ws, 7);
+    let sch = 0, act = 0, late = 0, miss = 0;
+    days.forEach(d => {
+      sch += schedMin(s.id, d);
+      const w = workedMin(s.id, d);
+      if (w != null) act += w; else if (schedMin(s.id, d) > 0 && d < TODAY) miss++;
+      const p = punchOf(s.id, d), sh = shiftsOf(d, s.id)[0];
+      if (p && sh && t2m(p.in) - t2m(sh.start) > DB.settings.lateGrace) late++;
+    });
+    const P = computePayroll(ws, addDays(ws, 6));
+    const r = P.rows.find(x => x.s.id === s.id);
+    return `
+    <div class="grid-cards g4" style="margin-bottom:14px">
+      ${statCard(t('time.sched'), hh(sch) + H, `${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))}`)}
+      ${statCard(t('time.actual'), hh(act) + H, `${t('time.diff')} ${act - sch >= 0 ? '+' : ''}${hh(act - sch)}${H}`)}
+      ${statCard(t('time.late'), String(late), t('time.grace', { n: DB.settings.lateGrace }))}
+      ${statCard(t('emp.weekPay'), r ? money0(r.gross) : money0(0),
+      r && r.ot ? t('pay.otSub', { h: hh(r.ot), m: DB.settings.otMult }) : t('emp.payNote'))}
+    </div>
+    <div class="card pad0" style="margin-bottom:14px">
+      <div style="padding:16px 18px 8px" class="card-h"><div><div class="card-t">${t('pay.byDay')}</div>
+        <div class="card-s">${miss ? t('pay.missWarn', { n: miss }) : t('time.complete')}</div></div></div>
+      ${punchRowsHTML(s.id, ws, false)}
+    </div>
+    ${r ? `<div class="card"><div class="card-h"><div class="card-t">${t('pay.breakdown')}</div></div>${slipBody(r, ws, addDays(ws, 6))}</div>` : ''}`;
+  }
+};
+
+/* 我的请假 */
+EVIEWS.eleave = {
+  top: () => topbarHTML(t('emp.leave'), t('leave.sub'),
+    `<button class="btn pri" data-act="empLeave">${t('emp.reqLeave')}</button>`),
+  body() {
+    const s = me();
+    const mine = DB.timeoff.filter(x => x.staffId === s.id)
+      .sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || (a.from > b.from ? -1 : 1));
+    return `<div class="card pad0" style="max-width:720px">
+      <div style="padding:16px 18px 8px" class="card-h"><div><div class="card-t">${t('emp.myReq')}</div>
+        <div class="card-s">${t('dash.nReq', { n: mine.length })}</div></div></div>
+      ${mine.length ? mine.map(x => {
+      const n = daysBetween(x.from, x.to) + 1;
+      const pill = x.status === 'pending' ? `<span class="pill o">${t('emp.waiting')}</span>`
+        : x.status === 'approved' ? `<span class="pill g">${t('leave.approved')}</span>`
+          : `<span class="pill n">${t('leave.rejected')}</span>`;
+      return `<div class="row tap" data-act="viewLeave" data-id="${x.id}">
+          <div class="row-m"><div class="row-t">${leaveName(x.type)} · ${t('leave.days', { n })}</div>
+            <div class="row-s">${fmtMD(x.from)}${x.from !== x.to ? ' – ' + fmtMD(x.to) : ''} · ${esc(x.reason || t('leave.noReason'))}</div></div>
+          <div class="row-r">${pill}
+            ${x.status === 'pending' ? `<button class="btn sm ico dgr" data-act="delLeave" data-id="${x.id}">✕</button>` : ''}</div></div>`;
+    }).join('') : `<div class="empty"><span class="e-ico">✈</span>${t('emp.noReq')}</div>`}
+    </div>`;
+  }
+};
+
+/* 我的资料 + 语言 / 外观 */
+EVIEWS.eme = {
+  top: () => topbarHTML(t('emp.me'), esc(me().n), ''),
+  body() {
+    const s = me(), theme = document.documentElement.dataset.theme;
+    const H = t('c.hoursShort');
+    return `<div class="grid-cards g2" style="align-items:start">
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="rowline" style="margin-bottom:12px">
+            <div class="avatar lg" style="background:${avaColor(s)}">${initials(s.n)}</div>
+            <div><div style="font-weight:680;font-size:16px">${esc(s.n)}</div>
+              <div class="row-s">${s.roles.map(roleName).join(' / ')}${s.note ? ' · ' + esc(s.note) : ''}</div></div></div>
+          <div class="kv"><span class="dim">${t('emp.myRate')}</span>
+            <b>${s.pay === 'monthly' ? money0(s.rate) + ' ' + t('c.perMonth') : money(s.rate) + ' ' + t('c.perHour')}</b></div>
+          <div class="kv"><span class="dim">${t('staff.maxH')}</span><b>${s.maxH}${H}</b></div>
+          <div class="kv"><span class="dim">${t('staff.hired')}</span><b>${s.hired}</b></div>
+          ${s.phone ? `<div class="kv"><span class="dim">${t('staff.phone')}</span><b>${esc(s.phone)}</b></div>` : ''}
+        </div>
+        <div class="sec-t">${t('emp.myAvail')}</div>
+        <div class="card">${availRowsHTML(s.avail, false)}
+          <div class="hint" style="margin-top:6px">${t('emp.availNote')}</div></div>
+      </div>
+      <div>
+        <div class="sec-t">${t('set.lang')}</div>
+        <div class="list" style="margin-bottom:16px">
+          <div class="row stack"><div class="row-m"><div class="row-t">${t('set.langLabel')}</div></div>
+            <div class="row-r"><div class="seg">${Object.keys(LANGS).map(l =>
+      `<button data-act="setLang" data-l="${l}" class="${LANG === l ? 'on' : ''}">${LANGS[l]}</button>`).join('')}</div></div></div>
+          <div class="row stack"><div class="row-m"><div class="row-t">${t('set.themeLabel')}</div></div>
+            <div class="row-r"><div class="seg">
+              ${[['auto', 'set.themeAuto'], ['light', 'set.themeLight'], ['dark', 'set.themeDark']].map(([v, k]) =>
+        `<button data-act="setTheme" data-v="${v}" class="${theme === v ? 'on' : ''}">${t(k)}</button>`).join('')}
+            </div></div></div>
+        </div>
+        <div class="list">
+          <div class="row tap" data-act="signOutEmp"><div class="row-m"><div class="row-t">${t('emp.switchUser')}</div>
+            <div class="row-s">${t('mode.pickSub')}</div></div><span class="chev">›</span></div>
+          <div class="row tap" data-act="toBoss"><div class="row-m"><div class="row-t">${t('mode.toBoss')}</div>
+            <div class="row-s">${t('mode.hint')}</div></div><span class="chev">›</span></div>
+        </div>
       </div>
     </div>`;
   }
@@ -1834,8 +2671,21 @@ function download(name, text, type = 'text/csv;charset=utf-8') {
 const csvCell = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
 const toCSV = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
 
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+
+function setLang(l) {
+  if (!LANGS[l]) return;
+  LANG = l; DB.settings.lang = l; lsSet('banbiao.lang', l);
+  save(); render(); toast(t('msg.lang'), 'info');
+}
+function setTheme(v) {
+  document.documentElement.dataset.theme = v; lsSet('banbiao.theme', v);
+  render(); toast(t('msg.theme', { v: t('set.theme' + v[0].toUpperCase() + v.slice(1)) }), 'info');
+}
+
 const ACT = {
   go: b => go(b.dataset.v),
+  ego: b => ego(b.dataset.v),
   wk(b) {
     const d = Number(b.dataset.d);
     state.week = d === 0 ? weekStartOf(TODAY) : addDays(state.week, d * 7);
@@ -1843,32 +2693,81 @@ const ACT = {
   },
   theme() {
     const cur = document.documentElement.dataset.theme;
-    const next = cur === 'auto' ? 'light' : cur === 'light' ? 'dark' : 'auto';
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem('banbiao.theme', next); } catch (e) { }
-    toast(`外观：${{ auto: '跟随系统', light: '浅色', dark: '深色' }[next]}`, 'info');
+    setTheme(cur === 'auto' ? 'light' : cur === 'light' ? 'dark' : 'auto');
   },
-  moreMenu() {
+  setTheme: b => setTheme(b.dataset.v),
+  setLang: b => setLang(b.dataset.l),
+  langMenu() {
     openSheet({
-      title: '更多', body: `<div class="list">
-        ${[['staff', '员工', '☺'], ['leave', '请假', '✈'], ['set', '设置', '⚙']].map(([v, n, i]) =>
-        `<div class="row tap" data-act="goClose" data-v="${v}"><span style="width:22px">${i}</span>
-           <div class="row-m"><div class="row-t">${n}</div></div><span class="chev">›</span></div>`).join('')}</div>`
+      title: t('c.language'), body: `<div class="list">${Object.keys(LANGS).map(l =>
+        `<div class="row tap" data-act="pickLang" data-l="${l}"><div class="row-m"><div class="row-t">${LANGS[l]}</div></div>
+           ${LANG === l ? '<span style="color:var(--blue);font-weight:700">✓</span>' : '<span class="chev">›</span>'}</div>`).join('')}</div>`
     });
   },
-  goClose: b => { closeSheet(); setTimeout(() => go(b.dataset.v), 60); },
+  pickLang: b => { const l = b.dataset.l; closeSheet(); setTimeout(() => setLang(l), 80); },
+
+  /* ---- 模式切换 ---- */
+  toEmp() {
+    state.mode = 'emp'; lsSet('banbiao.mode', 'emp');
+    if (state.me && !staffById(state.me)) state.me = null;
+    render(); scrollTop();
+  },
+  toBoss() {
+    if (state.mode === 'emp' && DB.settings.bossPin) return askPin();
+    if (sheetStack.length) closeSheet();
+    state.mode = 'boss'; lsSet('banbiao.mode', 'boss'); render(); scrollTop();
+  },
+  pickMe(b) {
+    state.me = b.dataset.id; state.eview = 'my'; lsSet('banbiao.me', state.me);
+    render(); toast(t('emp.hello', { n: me().n }), 'info');
+  },
+  signOutEmp() { state.me = null; lsSet('banbiao.me', ''); render(); },
+
+  /* ---- 员工打卡 ---- */
+  clockIn() {
+    const s = me(), sh = todayShiftOf(s.id); if (!sh) return;
+    const now = nowHM();
+    DB.punches.push({ id: uid(), shiftId: sh.id, staffId: s.id, date: TODAY, in: now, out: null, brk: sh.brk });
+    save(); render();
+    const late = t2m(now) - t2m(sh.start) > DB.settings.lateGrace;
+    toast(t('emp.clockInOK', { t: now }) + (late ? ' · ' + t('time.late') : ''), late ? 'warn' : 'ok');
+  },
+  clockOut() {
+    const s = me(), p = punchOf(s.id, TODAY); if (!p) return;
+    p.out = nowHM(); save(); render();
+    toast(t('emp.clockOutOK', { t: p.out, h: hh(workedMin(s.id, TODAY) || 0) }));
+  },
+  empLeave: () => openLeaveEditor(null, true),
+  viewLeave: b => openLeaveEditor(b.dataset.id, true),
+
+  /* ---- 管理端 ---- */
+  moreMenu() {
+    openSheet({
+      title: t('nav.more'), body: `<div class="list">
+        ${[['staff', 'nav.staff', '☺'], ['leave', 'nav.leave', '✈'], ['set', 'nav.set', '⚙']].map(([v, k, i]) =>
+        `<div class="row tap" data-act="goClose" data-v="${v}"><span style="width:22px">${i}</span>
+           <div class="row-m"><div class="row-t">${t(k)}</div></div><span class="chev">›</span></div>`).join('')}
+        <div class="row tap" data-act="goClose" data-v="__emp"><span style="width:22px">👤</span>
+          <div class="row-m"><div class="row-t">${t('mode.toEmp')}</div></div><span class="chev">›</span></div>
+        </div>`
+    });
+  },
+  goClose: b => {
+    const v = b.dataset.v; closeSheet();
+    setTimeout(() => { if (v === '__emp') ACT.toEmp(); else go(v); }, 60);
+  },
   closeSheet: () => closeSheet(),
   autoWeek() {
-    const before = DB.shifts.length;
     const { created, gaps } = autoSchedule(state.week);
     render();
-    if (!created.length) toast(gaps.length ? `没有可用的人，还缺 ${gaps.length} 个岗位` : '本周需求已经排满了', gaps.length ? 'warn' : 'info');
-    else toast(`已排 ${created.length} 个班次${gaps.length ? ` · 仍缺 ${gaps.length} 人次` : ''}`, gaps.length ? 'warn' : 'ok');
+    if (!created.length) toast(gaps.length ? t('msg.autoNoStaff', { g: gaps.length }) : t('msg.autoFull'), gaps.length ? 'warn' : 'info');
+    else toast(gaps.length ? t('msg.autoGap', { n: created.length, g: gaps.length }) : t('msg.autoDone', { n: created.length }),
+      gaps.length ? 'warn' : 'ok');
   },
   copyWeek() {
-    const src = addDays(state.week, -7), dst = state.week;
+    const src = addDays(state.week, -7);
     const copy = DB.shifts.filter(x => x.date >= src && x.date <= addDays(src, 6));
-    if (!copy.length) return toast('上周没有排班可复制', 'warn');
+    if (!copy.length) return toast(t('msg.noCopy'), 'warn');
     let n = 0;
     copy.forEach(x => {
       const date = addDays(x.date, 7);
@@ -1876,20 +2775,19 @@ const ACT = {
       if (overlapsExisting(x.staffId, date, x.start, x.end)) return;
       DB.shifts.push(Object.assign({}, x, { id: uid(), date })); n++;
     });
-    save(); render(); toast(`已复制 ${n} 个班次（跳过请假与冲突）`);
+    save(); render(); toast(t('msg.copied', { n }));
   },
   clearWeek() {
     const ws = state.week, we = addDays(ws, 6);
     const n = DB.shifts.filter(x => x.date >= ws && x.date <= we).length;
-    if (!n) return toast('本周没有排班', 'info');
-    confirmSheet('清空本周排班', `将删除 ${fmtMD(ws)} – ${fmtMD(we)} 的 <b>${n}</b> 个班次。打卡记录会保留。`, '清空', () => {
+    if (!n) return toast(t('msg.noWeek'), 'info');
+    confirmSheet(t('msg.clearTitle'), t('msg.clearMsg', { n, from: fmtMD(ws), to: fmtMD(we) }), t('sched.clear'), () => {
       DB.shifts = DB.shifts.filter(x => x.date < ws || x.date > we);
-      save(); render(); toast(`已清空 ${n} 个班次`, 'info');
+      save(); render(); toast(t('msg.cleared', { n }), 'info');
     });
   },
   newShift(b) {
-    const s = staffById(b.dataset.s);
-    const tpl = DB.templates[0];
+    const s = staffById(b.dataset.s), tpl = DB.templates[0];
     openShiftEditor({ id: uid(), staffId: b.dataset.s, date: b.dataset.d, start: tpl.start, end: tpl.end, brk: tpl.brk, role: s ? s.roles[0] : 'server', note: '' }, true);
   },
   editShift: b => openShiftEditor(DB.shifts.find(x => x.id === b.dataset.id)),
@@ -1900,16 +2798,16 @@ const ACT = {
   openLeave: b => openLeaveEditor(b.dataset.id),
   newLeave: () => openLeaveEditor(null),
   approveLeave(b) {
-    const t = DB.timeoff.find(x => x.id === b.dataset.id); if (!t) return;
-    t.status = 'approved';
-    const clash = DB.shifts.filter(x => x.staffId === t.staffId && x.date >= t.from && x.date <= t.to);
-    DB.shifts = DB.shifts.filter(x => !clash.includes(x));
+    const x = DB.timeoff.find(y => y.id === b.dataset.id); if (!x) return;
+    x.status = 'approved';
+    const clash = DB.shifts.filter(y => y.staffId === x.staffId && y.date >= x.from && y.date <= x.to);
+    DB.shifts = DB.shifts.filter(y => !clash.includes(y));
     save(); if (sheetStack.length) closeSheet(); render();
-    toast(clash.length ? `已批准 · 取消了 ${clash.length} 个班次，记得补人` : '请假已批准', clash.length ? 'warn' : 'ok');
+    toast(clash.length ? t('leave.okCancel', { n: clash.length }) : t('leave.okMsg'), clash.length ? 'warn' : 'ok');
   },
   rejectLeave(b) {
-    const t = DB.timeoff.find(x => x.id === b.dataset.id); if (!t) return;
-    t.status = 'rejected'; save(); if (sheetStack.length) closeSheet(); render(); toast('已拒绝该申请', 'info');
+    const x = DB.timeoff.find(y => y.id === b.dataset.id); if (!x) return;
+    x.status = 'rejected'; save(); if (sheetStack.length) closeSheet(); render(); toast(t('leave.rejMsg'), 'info');
   },
   delLeave(b) { DB.timeoff = DB.timeoff.filter(x => x.id !== b.dataset.id); save(); render(); },
   period(b) { DB.settings.period = b.dataset.p; state.payFrom = state.payTo = null; save(); render(); },
@@ -1924,34 +2822,36 @@ const ACT = {
         n++;
       });
     });
-    save(); render(); toast(n ? `已按排班补录 ${n} 条打卡` : '没有需要补录的缺卡', n ? 'ok' : 'info');
+    save(); render(); toast(n ? t('time.filled', { n }) : t('time.nothing'), n ? 'ok' : 'info');
   },
   exportSched() {
     const ws = state.week, days = rangeDays(ws, 7);
-    const rows = [['员工', '岗位', ...days.map(d => `${fmtMDs(d)} ${DOW_L[dowOf(d)]}`), '周工时', '预估工资']];
+    const rows = [[t('c.staff'), t('c.role'), ...days.map(d => `${fmtMDs(d)} ${DOW_M(dowOf(d))}`), t('time.sched'), t('pay.grossCol')]];
     DB.staff.filter(s => s.active).forEach(s => {
       const wm = weekMinutes(s.id, ws);
       rows.push([s.n, s.roles.map(roleName).join('/'),
-      ...days.map(d => shiftsOf(d, s.id).map(x => `${x.start}-${x.end} ${roleName(x.role)}`).join(' / ') || (leaveOn(s.id, d) ? '请假' : '')),
-      hh(wm) + 'h', money(wm / 60 * effRate(s))]);
+      ...days.map(d => shiftsOf(d, s.id).map(x => `${x.start}-${x.end} ${roleName(x.role)}`).join(' / ') || (leaveOn(s.id, d) ? t('c.onLeave') : '')),
+      hh(wm) + t('c.hoursShort'), money(wm / 60 * effRate(s))]);
     });
-    download(`排班表_${ws}.csv`, toCSV(rows));
-    toast('班表已导出');
+    download(`schedule_${ws}.csv`, toCSV(rows));
+    toast(t('msg.schedExported'));
   },
   exportPay() {
     const [from, to] = payPeriod(); const P = computePayroll(from, to);
-    const rows = [['薪资周期', `${from} 至 ${to}`], [],
-    ['员工', '岗位', '计薪方式', '费率', '正常工时', '加班工时', '基本工资', '加班费', '小费', '应发合计', '雇主税', '雇主总成本']];
-    P.rows.forEach(r => rows.push([r.s.n, r.s.roles.map(roleName).join('/'), r.salaried ? '月薪' : '时薪', r.s.rate,
+    const rows = [[t('nav.pay'), `${from} — ${to}`], [],
+    [t('c.staff'), t('c.role'), t('pay.method'), t('staff.rate', { c: DB.settings.cur }), t('pay.reg'), t('pay.ot'),
+    t('pay.base'), t('pay.otPay'), t('pay.tips'), t('pay.grossCol'), t('pay.taxCol'), t('pay.costCol')]];
+    P.rows.forEach(r => rows.push([r.s.n, r.s.roles.map(roleName).join('/'),
+    r.salaried ? t('staff.monthly') : t('staff.hourly'), r.s.rate,
       hh(r.reg), hh(r.ot), r.base.toFixed(2), r.otPay.toFixed(2), r.tips.toFixed(2), r.gross.toFixed(2),
       r.employer.toFixed(2), r.total.toFixed(2)]));
-    rows.push(['合计', '', '', '', hh(P.tot.reg), hh(P.tot.ot), P.tot.base.toFixed(2), P.tot.otPay.toFixed(2),
+    rows.push([t('c.total'), '', '', '', hh(P.tot.reg), hh(P.tot.ot), P.tot.base.toFixed(2), P.tot.otPay.toFixed(2),
       P.tot.tips.toFixed(2), P.tot.gross.toFixed(2), P.tot.employer.toFixed(2), P.tot.total.toFixed(2)]);
-    download(`薪资_${from}_${to}.csv`, toCSV(rows));
-    toast('薪资表已导出');
+    download(`payroll_${from}_${to}.csv`, toCSV(rows));
+    toast(t('pay.exported'));
   },
   printPage: () => window.print(),
-  exportData() { download(`班表备份_${TODAY}.json`, JSON.stringify(DB, null, 2), 'application/json'); toast('备份已导出'); },
+  exportData() { download(`banbiao_backup_${TODAY}.json`, JSON.stringify(DB, null, 2), 'application/json'); toast(t('set.backupOK')); },
   importData() {
     const i = document.createElement('input'); i.type = 'file'; i.accept = 'application/json';
     i.onchange = () => {
@@ -1962,19 +2862,47 @@ const ACT = {
           const d = JSON.parse(r.result);
           if (!d.staff || !d.settings) throw 0;
           DB = d; DB.settings = Object.assign(defaultSettings(), DB.settings); DB.tips = DB.tips || {};
-          save(); render(); toast('数据已导入');
-        } catch (e) { toast('文件格式不正确', 'err'); }
+          migrate(); LANG = DB.settings.lang || LANG;
+          save(); render(); toast(t('set.imported'));
+        } catch (e) { toast(t('set.importBad'), 'err'); }
       };
       r.readAsText(f);
     };
     i.click();
   },
   resetData() {
-    confirmSheet('重置数据', '将清空当前所有员工、排班、打卡与请假记录，并恢复成示例门店数据。此操作不可撤销。', '重置', () => {
-      localStorage.removeItem(LSKEY); seed(); state.week = weekStartOf(TODAY); render(); toast('已重置为示例数据', 'info');
+    confirmSheet(t('set.resetTitle'), t('set.resetMsg'), t('set.resetData'), () => {
+      try { localStorage.removeItem(LSKEY); } catch (e) { }
+      seed(); state.week = weekStartOf(TODAY); state.me = null; render(); toast(t('set.resetDone'), 'info');
     });
   },
 };
+
+/* 员工端返回管理端的密码闸口（同一台平板给全店用时才需要） */
+function askPin() {
+  openSheet({
+    title: t('pin.title'), sub: t('mode.toBoss'),
+    body: `<div class="field"><input class="inp" id="pinInput" type="password" inputmode="numeric" maxlength="6"
+      placeholder="${t('pin.ph')}" style="height:54px;font-size:22px;text-align:center;letter-spacing:.35em"></div>`,
+    footer: `<button class="btn" data-act="closeSheet">${t('c.cancel')}</button>
+             <button class="btn pri" data-act="pinOK">${t('pin.ok')}</button>`,
+    onMount(el) {
+      const input = $('#pinInput', el);
+      setTimeout(() => input.focus(), 250);
+      const submit = () => {
+        if (input.value !== String(DB.settings.bossPin)) {
+          input.value = ''; input.style.borderColor = 'var(--red)';
+          return toast(t('pin.wrong'), 'err');
+        }
+        closeSheet();
+        state.mode = 'boss'; lsSet('banbiao.mode', 'boss');
+        setTimeout(() => { render(); scrollTop(); }, 60);
+      };
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+      ACT.pinOK = submit;
+    }
+  });
+}
 
 /* ---------------- 事件委派 ---------------- */
 document.addEventListener('click', e => {
@@ -1990,12 +2918,11 @@ document.addEventListener('change', e => {
     const k = el.dataset.set;
     const v = el.type === 'number' ? Number(el.value) : (k === 'weekStart' ? Number(el.value) : el.value);
     DB.settings[k] = v; save();
-    if (['weekStart', 'cur', 'biz'].includes(k)) { state.week = weekStartOf(TODAY); render(); }
-    else render();
-    return;
+    if (k === 'weekStart') state.week = weekStartOf(TODAY);
+    render(); return;
   }
   if (el.dataset.tpl) {
-    const t = tplById(el.dataset.tpl); if (t) { t[el.dataset.k] = el.value; save(); render(); }
+    const x = tplById(el.dataset.tpl); if (x) { x[el.dataset.k] = el.value; save(); render(); }
     return;
   }
   if (el.dataset.dem) {
@@ -2014,15 +2941,26 @@ document.addEventListener('keydown', e => {
   if (sheetStack.length) return;
   if (e.key === 'ArrowLeft') { state.week = addDays(state.week, -7); render(); }
   if (e.key === 'ArrowRight') { state.week = addDays(state.week, 7); render(); }
-  if (e.key === 't') { state.week = weekStartOf(TODAY); render(); }
+  if (e.key === 't' || e.key === 'T') { state.week = weekStartOf(TODAY); render(); }
 });
 let rzT;
-addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { if (state.view === 'sched') render(); }, 220); });
+addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { if (state.mode === 'boss' && state.view === 'sched') render(); }, 220); });
 
 /* ---------------- 启动 ---------------- */
 (function init() {
-  try { const th = localStorage.getItem('banbiao.theme'); if (th) document.documentElement.dataset.theme = th; } catch (e) { }
+  let savedLang = null, savedMode = null, savedMe = null;
+  try {
+    const th = localStorage.getItem('banbiao.theme'); if (th) document.documentElement.dataset.theme = th;
+    savedLang = localStorage.getItem('banbiao.lang');
+    savedMode = localStorage.getItem('banbiao.mode');
+    savedMe = localStorage.getItem('banbiao.me');
+  } catch (e) { }
+  LANG = savedLang && LANGS[savedLang] ? savedLang : 'zh';
   load();
+  if (savedLang && LANGS[savedLang]) DB.settings.lang = savedLang;
+  else LANG = LANGS[DB.settings.lang] ? DB.settings.lang : 'zh';
+  if (savedMode === 'emp') state.mode = 'emp';
+  if (savedMe && staffById(savedMe)) state.me = savedMe;
   state.week = weekStartOf(TODAY);
   render();
 })();
