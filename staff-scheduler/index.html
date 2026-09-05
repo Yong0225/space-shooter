@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>班表 · 餐饮排班与薪资系统</title>
+<meta name="description" content="餐饮业排班、工时、薪资一体化自动系统">
+<style>
+/* ============ Tokens ============ */
+:root{
+  --blue:#007AFF; --green:#34C759; --orange:#FF9500; --red:#FF3B30;
+  --purple:#AF52DE; --teal:#30B0C7; --pink:#FF2D55; --indigo:#5856D6; --yellow:#FFCC00;
+  --bg:#F2F2F7; --bg-elev:#FFFFFF; --fill:#78788014; --fill-2:#7878801f; --fill-3:#7878802e;
+  --sep:#3c3c4324; --sep-solid:#E5E5EA;
+  --label:#000000; --label-2:#3c3c4399; --label-3:#3c3c434d; --label-4:#3c3c432e;
+  --chrome:rgba(250,250,252,.72); --sidebar:rgba(242,242,247,.68);
+  --shadow-1:0 1px 2px rgba(0,0,0,.04), 0 1px 1px rgba(0,0,0,.03);
+  --shadow-2:0 4px 16px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.04);
+  --shadow-3:0 24px 60px rgba(0,0,0,.22), 0 2px 8px rgba(0,0,0,.10);
+  --r-s:10px; --r-m:14px; --r-l:20px; --r-xl:28px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ :root[data-theme="auto"]{ color-scheme:dark;
+  --blue:#0A84FF; --green:#30D158; --orange:#FF9F0A; --red:#FF453A;
+  --purple:#BF5AF2; --teal:#40C8E0; --pink:#FF375F; --indigo:#5E5CE6; --yellow:#FFD60A;
+  --bg:#000000; --bg-elev:#1C1C1E; --fill:#7878805c; --fill-2:#78788052; --fill-3:#7878803d;
+  --sep:#54545899; --sep-solid:#2C2C2E;
+  --label:#FFFFFF; --label-2:#ebebf599; --label-3:#ebebf54d; --label-4:#ebebf52e;
+  --chrome:rgba(28,28,30,.72); --sidebar:rgba(20,20,22,.7);
+  --shadow-1:0 1px 2px rgba(0,0,0,.4); --shadow-2:0 4px 16px rgba(0,0,0,.5);
+  --shadow-3:0 24px 60px rgba(0,0,0,.7);
+}}
+:root[data-theme="dark"]{ color-scheme:dark;
+  --blue:#0A84FF; --green:#30D158; --orange:#FF9F0A; --red:#FF453A;
+  --purple:#BF5AF2; --teal:#40C8E0; --pink:#FF375F; --indigo:#5E5CE6; --yellow:#FFD60A;
+  --bg:#000000; --bg-elev:#1C1C1E; --fill:#7878805c; --fill-2:#78788052; --fill-3:#7878803d;
+  --sep:#54545899; --sep-solid:#2C2C2E;
+  --label:#FFFFFF; --label-2:#ebebf599; --label-3:#ebebf54d; --label-4:#ebebf52e;
+  --chrome:rgba(28,28,30,.72); --sidebar:rgba(20,20,22,.7);
+  --shadow-1:0 1px 2px rgba(0,0,0,.4); --shadow-2:0 4px 16px rgba(0,0,0,.5);
+  --shadow-3:0 24px 60px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--label);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Helvetica Neue",system-ui,"Microsoft YaHei",sans-serif;
+  font-size:15px; line-height:1.45;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overscroll-behavior:none;
+}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.022em;line-height:1.15}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:0;background:none;padding:0;cursor:pointer}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--label-4);border-radius:8px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--label-3);background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ============ Shell ============ */
+.app{display:grid;grid-template-columns:248px 1fr;height:100dvh;overflow:hidden}
+.sidebar{
+  background:var(--sidebar); -webkit-backdrop-filter:blur(30px) saturate(180%); backdrop-filter:blur(30px) saturate(180%);
+  border-right:1px solid var(--sep); padding:14px 12px; display:flex; flex-direction:column; gap:2px; overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:10px;padding:8px 10px 16px}
+.brand-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(160deg,var(--blue),var(--indigo));
+  display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;letter-spacing:-.02em;box-shadow:var(--shadow-1)}
+.brand-t{font-weight:700;font-size:15px;letter-spacing:-.02em}
+.brand-s{font-size:11.5px;color:var(--label-2)}
+.nav-sec{font-size:11px;font-weight:600;color:var(--label-3);letter-spacing:.04em;padding:14px 10px 6px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--r-s);width:100%;
+  color:var(--label);font-size:14px;font-weight:500;transition:background .12s ease,transform .1s ease;text-align:left}
+.nav-item:hover{background:var(--fill)}
+.nav-item:active{transform:scale(.98)}
+.nav-item.on{background:var(--blue);color:#fff;box-shadow:var(--shadow-1)}
+.nav-item.on .ni-badge{background:#ffffff36;color:#fff}
+.ni-ico{width:20px;display:grid;place-items:center;font-size:14px;opacity:.95}
+.ni-badge{margin-left:auto;background:var(--red);color:#fff;font-size:11px;font-weight:700;
+  min-width:19px;height:19px;border-radius:10px;display:grid;place-items:center;padding:0 5px}
+.side-foot{margin-top:auto;padding-top:12px;display:flex;gap:6px;align-items:center}
+
+.main{overflow-y:auto;overflow-x:hidden;position:relative}
+.topbar{position:sticky;top:0;z-index:40;background:var(--chrome);
+  -webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
+  padding:12px 28px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--sep)}
+.tb-title{font-size:21px;font-weight:700;letter-spacing:-.024em}
+.tb-sub{font-size:12.5px;color:var(--label-2);margin-top:1px}
+.tb-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.page{padding:22px 28px 96px;max-width:1360px}
+.tabbar{display:none}
+
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .page{padding:16px 16px 110px}
+  .topbar{padding:10px 16px}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:var(--chrome);-webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
+    border-top:1px solid var(--sep);padding:6px 4px calc(6px + var(--safe-b))}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;border-radius:10px;
+    font-size:10.5px;font-weight:600;color:var(--label-2);transition:color .12s,transform .1s}
+  .tab:active{transform:scale(.94)}
+  .tab.on{color:var(--blue)}
+  .tab-ico{font-size:17px;line-height:1}
+}
+
+/* ============ Primitives ============ */
+.card{background:var(--bg-elev);border-radius:var(--r-l);box-shadow:var(--shadow-1);padding:18px;position:relative}
+.card.pad0{padding:0;overflow:hidden}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.015em}
+.card-s{font-size:12.5px;color:var(--label-2)}
+.grid-cards{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+.split{grid-template-columns:1.55fr 1fr}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}}
+@media (max-width:900px){.split{grid-template-columns:1fr}}
+@media (max-width:640px){.g4,.g3,.g2{grid-template-columns:1fr}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;
+  background:var(--fill-2);color:var(--label);font-size:13.5px;font-weight:600;letter-spacing:-.01em;
+  transition:transform .1s cubic-bezier(.2,.8,.3,1),background .12s,opacity .12s;white-space:nowrap}
+.btn:hover{background:var(--fill-3)}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:var(--blue);color:#fff;box-shadow:0 1px 3px rgba(0,122,255,.35)}
+.btn.pri:hover{filter:brightness(1.06);background:var(--blue)}
+.btn.grn{background:var(--green);color:#fff}
+.btn.dgr{background:transparent;color:var(--red)}
+.btn.dgr:hover{background:#ff3b301f}
+.btn.gho{background:transparent;color:var(--blue)}
+.btn.gho:hover{background:#007aff14}
+.btn.sm{height:28px;padding:0 11px;font-size:12.5px}
+.btn.ico{width:34px;padding:0}
+.btn[disabled]{opacity:.4;pointer-events:none}
+
+.seg{display:inline-flex;background:var(--fill);border-radius:9px;padding:2px;gap:2px}
+.seg button{padding:5px 13px;border-radius:7px;font-size:13px;font-weight:600;color:var(--label);
+  transition:background .18s cubic-bezier(.2,.8,.3,1),transform .1s;letter-spacing:-.01em}
+.seg button:active{transform:scale(.97)}
+.seg button.on{background:var(--bg-elev);box-shadow:var(--shadow-1)}
+
+.pill{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:999px;
+  font-size:11.5px;font-weight:650;background:var(--fill-2);color:var(--label-2)}
+.pill.g{background:#34c7591f;color:var(--green)} .pill.o{background:#ff95001f;color:var(--orange)}
+.pill.r{background:#ff3b301f;color:var(--red)} .pill.b{background:#007aff1a;color:var(--blue)}
+.pill.p{background:#af52de1f;color:var(--purple)} .pill.n{background:var(--fill-2);color:var(--label-2)}
+
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:12.5px;
+  font-weight:700;flex:none;letter-spacing:-.02em;box-shadow:inset 0 -1px 2px rgba(0,0,0,.12)}
+.avatar.lg{width:44px;height:44px;font-size:16px}
+.avatar.sm{width:24px;height:24px;font-size:10.5px}
+
+.stat{display:flex;flex-direction:column;gap:3px}
+.stat-l{font-size:12.5px;color:var(--label-2);font-weight:550;display:flex;align-items:center;gap:6px}
+.stat-v{font-size:29px;font-weight:700;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat-d{font-size:12px;color:var(--label-2)}
+.up{color:var(--red)} .down{color:var(--green)}
+
+.list{background:var(--bg-elev);border-radius:var(--r-m);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:11px 15px;position:relative;transition:background .12s}
+.row+.row::before{content:'';position:absolute;left:15px;right:0;top:0;height:1px;background:var(--sep)}
+.row.tap{cursor:pointer} .row.tap:hover{background:var(--fill)} .row.tap:active{background:var(--fill-2)}
+.row-m{flex:1;min-width:0}
+.row-t{font-size:14.5px;font-weight:550;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-s{font-size:12.5px;color:var(--label-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-r{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--label-2);font-variant-numeric:tabular-nums}
+.chev{color:var(--label-3);font-size:15px}
+.empty{padding:38px 20px;text-align:center;color:var(--label-2);font-size:13.5px}
+.empty .e-ico{font-size:34px;opacity:.5;display:block;margin-bottom:8px}
+
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;font-weight:600;color:var(--label-2);letter-spacing:.01em;padding-left:2px}
+.inp{height:38px;border-radius:10px;background:var(--fill);border:1px solid transparent;padding:0 11px;font-size:14.5px;
+  width:100%;transition:border-color .15s,background .15s,box-shadow .15s;outline:none;color:var(--label)}
+.inp:focus{border-color:var(--blue);background:var(--bg-elev);box-shadow:0 0 0 3.5px #007aff26}
+select.inp{-webkit-appearance:none;appearance:none;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--label-2) 50%),linear-gradient(135deg,var(--label-2) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 17px,calc(100% - 10px) 17px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.switch{width:49px;height:30px;border-radius:15px;background:var(--fill-3);position:relative;
+  transition:background .22s cubic-bezier(.2,.8,.3,1);flex:none;cursor:pointer}
+.switch::after{content:'';position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;background:#fff;
+  box-shadow:0 2px 5px rgba(0,0,0,.2);transition:transform .28s cubic-bezier(.34,1.4,.5,1)}
+.switch.on{background:var(--green)}
+.switch.on::after{transform:translateX(19px)}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-size:11.5px;font-weight:650;color:var(--label-2);letter-spacing:.03em;
+  padding:9px 12px;border-bottom:1px solid var(--sep);white-space:nowrap;background:var(--bg-elev)}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--sep);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tbody tr:last-child td{border-bottom:0}
+.tbl tbody tr{transition:background .12s} .tbl tbody tr:hover{background:var(--fill)}
+.tbl .num{text-align:right}
+.tbl tfoot td{font-weight:700;background:var(--fill);border-top:1px solid var(--sep);border-bottom:0}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ============ Schedule grid ============ */
+.sched-wrap{background:var(--bg-elev);border-radius:var(--r-l);box-shadow:var(--shadow-1);overflow:hidden}
+.sched{overflow-x:auto;overflow-y:visible}
+.sgrid{display:grid;grid-template-columns:var(--namecol) repeat(7,minmax(122px,1fr));min-width:960px}
+.sh{position:sticky;top:0;z-index:12;background:var(--bg-elev);padding:9px 10px;border-bottom:1px solid var(--sep);
+  text-align:center;transition:background .2s}
+.sh.today{background:#007aff0f}
+.sh-d{font-size:11px;color:var(--label-2);font-weight:600;letter-spacing:.02em}
+.sh-n{font-size:17px;font-weight:700;letter-spacing:-.02em;margin-top:1px}
+.sh.today .sh-n{color:#fff;background:var(--blue);width:27px;height:27px;border-radius:50%;
+  display:grid;place-items:center;margin:1px auto 0;font-size:14.5px}
+.sh-c{font-size:11px;color:var(--label-2);margin-top:3px;font-variant-numeric:tabular-nums}
+.sh.corner{position:sticky;left:0;z-index:14;text-align:left;display:flex;align-items:flex-end;
+  font-size:11.5px;color:var(--label-2);font-weight:600}
+.scell{border-bottom:1px solid var(--sep);border-left:1px solid var(--sep);min-height:66px;padding:5px;
+  display:flex;flex-direction:column;gap:4px;position:relative;transition:background .15s}
+.scell.wknd{background:var(--fill)}
+.scell.drop{background:#007aff1f;box-shadow:inset 0 0 0 2px var(--blue)}
+.scell.off{background:repeating-linear-gradient(45deg,transparent,transparent 6px,var(--fill-2) 6px,var(--fill-2) 12px)}
+.snamecell{position:sticky;left:0;z-index:10;background:var(--bg-elev);border-bottom:1px solid var(--sep);
+  padding:9px 10px;display:flex;align-items:center;gap:9px;min-width:0}
+.snc-m{min-width:0}
+.snc-n{font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.snc-s{font-size:11px;color:var(--label-2);white-space:nowrap;display:flex;align-items:center;gap:4px}
+.snc-h{margin-left:auto;font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--label-2);flex:none}
+.snc-h.ot{color:var(--orange)}
+
+.chip{border-radius:8px;padding:5px 7px;font-size:11.5px;line-height:1.25;font-weight:600;cursor:grab;
+  position:relative;touch-action:none;user-select:none;-webkit-user-select:none;
+  transition:transform .12s cubic-bezier(.2,.8,.3,1),box-shadow .15s,opacity .15s;will-change:transform}
+.chip:active{transform:scale(.965)}
+.chip .ct{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.chip .cr{font-weight:550;opacity:.82;font-size:10.5px;display:flex;align-items:center;gap:3px}
+.chip.ghost{position:fixed;z-index:900;pointer-events:none;box-shadow:var(--shadow-3);cursor:grabbing;
+  transform-origin:center;opacity:.97;transition:none}
+.chip.src-hidden{opacity:.22;filter:saturate(.2)}
+.chip.conflict::after{content:'!';position:absolute;top:-5px;right:-4px;width:15px;height:15px;border-radius:50%;
+  background:var(--red);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.addcell{margin-top:auto;height:19px;border-radius:6px;border:1px dashed var(--label-4);color:var(--label-3);
+  font-size:13px;line-height:16px;text-align:center;opacity:0;transition:opacity .15s,background .15s}
+.scell:hover .addcell{opacity:1}
+.addcell:hover{background:var(--fill-2);color:var(--blue);border-color:var(--blue)}
+.offtag{font-size:10.5px;color:var(--label-2);font-weight:600;background:var(--fill-2);border-radius:6px;
+  padding:3px 6px;text-align:center}
+
+.costbar{display:grid;grid-template-columns:var(--namecol) repeat(7,minmax(122px,1fr));min-width:960px;
+  background:var(--fill);border-top:1px solid var(--sep)}
+.cb-l{position:sticky;left:0;z-index:10;background:var(--bg-elev);padding:8px 10px;font-size:11.5px;
+  font-weight:650;color:var(--label-2)}
+.cb-c{padding:7px 8px;text-align:center;border-left:1px solid var(--sep)}
+.cb-v{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.cb-t{height:3px;border-radius:2px;background:var(--label-4);margin-top:4px;overflow:hidden}
+.cb-t i{display:block;height:100%;background:var(--blue);border-radius:2px;transition:width .5s cubic-bezier(.2,.8,.3,1)}
+
+/* meter */
+.meter{height:7px;border-radius:4px;background:var(--fill-2);overflow:hidden;position:relative}
+.meter i{display:block;height:100%;border-radius:4px;transition:width .6s cubic-bezier(.2,.8,.3,1)}
+.bars{display:flex;align-items:flex-end;gap:7px;height:110px;padding-top:8px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+.bars .b i{width:100%;max-width:34px;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,var(--blue),#0a84ffcc);
+  transition:height .6s cubic-bezier(.2,.8,.3,1);min-height:3px}
+.bars .b.wk i{background:linear-gradient(180deg,var(--indigo),#5856d6cc)}
+.bars .b span{font-size:10.5px;color:var(--label-2);font-weight:600}
+.bars .b em{font-size:10px;color:var(--label-3);font-style:normal;font-variant-numeric:tabular-nums}
+
+/* ============ Sheet / modal ============ */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:200;opacity:0;
+  -webkit-backdrop-filter:blur(0px);backdrop-filter:blur(0px);transition:opacity .28s ease,backdrop-filter .28s ease}
+.scrim.on{opacity:1;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.sheet{position:fixed;z-index:210;background:var(--bg-elev);box-shadow:var(--shadow-3);
+  display:flex;flex-direction:column;will-change:transform;overflow:hidden}
+@media (min-width:721px){
+  .sheet{top:50%;left:50%;width:min(560px,92vw);max-height:86vh;border-radius:var(--r-xl);
+    transform:translate(-50%,-50%) scale(.94);opacity:0}
+  .sheet.on{opacity:1}
+}
+@media (max-width:720px){
+  .sheet{left:0;right:0;bottom:0;max-height:92dvh;border-radius:var(--r-xl) var(--r-xl) 0 0;transform:translateY(100%)}
+}
+.sheet-grab{padding:9px 0 3px;display:flex;justify-content:center;flex:none;cursor:grab;touch-action:none}
+.sheet-grab i{width:38px;height:5px;border-radius:3px;background:var(--label-4)}
+@media (min-width:721px){.sheet-grab{display:none}}
+.sheet-h{padding:12px 20px 12px;display:flex;align-items:center;gap:12px;flex:none;border-bottom:1px solid var(--sep)}
+.sheet-t{font-size:17px;font-weight:680;letter-spacing:-.02em}
+.sheet-s{font-size:12.5px;color:var(--label-2);margin-top:1px}
+.sheet-x{margin-left:auto;width:29px;height:29px;border-radius:50%;background:var(--fill-2);color:var(--label-2);
+  display:grid;place-items:center;font-size:15px;font-weight:600;transition:transform .1s,background .12s;flex:none}
+.sheet-x:hover{background:var(--fill-3)} .sheet-x:active{transform:scale(.9)}
+.sheet-b{padding:18px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.sheet-f{padding:12px 20px calc(16px + var(--safe-b));border-top:1px solid var(--sep);display:flex;gap:9px;flex:none;
+  background:var(--bg-elev)}
+.sheet-f .btn{flex:1;height:42px;border-radius:13px;font-size:15px}
+
+/* toast */
+.toasts{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:400;display:flex;flex-direction:column;
+  gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:92vw}
+.toast{background:var(--chrome);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid var(--sep);border-radius:999px;padding:9px 17px 9px 13px;box-shadow:var(--shadow-2);
+  font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;will-change:transform,opacity}
+.toast .ti{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;flex:none}
+
+/* misc */
+.kv{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13.5px;padding:7px 0}
+.kv+.kv{border-top:1px solid var(--sep)}
+.kv b{font-weight:650;font-variant-numeric:tabular-nums}
+.hint{font-size:12px;color:var(--label-2);line-height:1.45}
+.sec-t{font-size:12px;font-weight:650;color:var(--label-2);letter-spacing:.04em;text-transform:uppercase;
+  padding:0 4px 8px;margin-top:6px}
+.avail-grid{display:grid;grid-template-columns:52px 1fr 1fr;gap:8px;align-items:center}
+.avail-grid .d{font-size:13px;font-weight:600}
+.chips-row{display:flex;flex-wrap:wrap;gap:7px}
+.tglchip{padding:6px 11px;border-radius:999px;background:var(--fill);font-size:12.5px;font-weight:600;
+  transition:transform .1s,background .15s,color .15s}
+.tglchip:active{transform:scale(.95)}
+.tglchip.on{background:var(--blue);color:#fff}
+.mono{font-variant-numeric:tabular-nums}
+.dim{color:var(--label-2)}
+.tiny{font-size:11.5px}
+.nowrap{white-space:nowrap}
+.rowline{display:flex;align-items:center;gap:10px}
+.spacer{flex:1}
+.hr{height:1px;background:var(--sep);margin:4px 0}
+.fadein{animation:fadein .34s cubic-bezier(.2,.8,.3,1) both}
+@keyframes fadein{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.12s !important}
+  .fadein{animation:none}
+}
+@media (prefers-reduced-transparency:reduce){
+  .sidebar,.topbar,.toast{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--bg-elev)}
+  .scrim.on{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(0,0,0,.45)}
+}
+@media (prefers-contrast:more){
+  .card,.list,.sheet{border:1px solid var(--sep)}
+  .btn{outline:1px solid var(--sep)}
+}
+@media print{
+  .sidebar,.tabbar,.topbar .tb-right,.btn{display:none !important}
+  .app{display:block;height:auto}.main{overflow:visible}
+  body{background:#fff}
+  .card,.sched-wrap{box-shadow:none;border:1px solid #ddd}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">班</div>
+      <div>
+        <div class="brand-t" id="bizName">拾山 SHISHAN</div>
+        <div class="brand-s">排班 · 工时 · 薪资</div>
+      </div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="side-foot">
+      <button class="btn sm gho" data-act="theme">◐ 外观</button>
+      <div class="spacer"></div>
+      <span class="tiny dim" id="saveState">已保存</span>
+    </div>
+  </aside>
+  <main class="main" id="main">
+    <div class="topbar" id="topbar"></div>
+    <div class="page" id="page"></div>
+  </main>
+</div>
+<nav class="tabbar" id="tabbar"></nav>
+<div class="toasts" id="toasts"></div>
+<script>
+'use strict';
+/* =========================================================================
+   班表 — 餐饮排班 / 工时 / 薪资自动化
+   单文件应用，无依赖。数据存 localStorage。
+   ========================================================================= */
+
+/* ---------------- 基础工具 ---------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const pad2 = n => String(n).padStart(2, '0');
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+const iso = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const parseISO = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + n); return iso(d); };
+const dowOf = s => parseISO(s).getDay();
+const TODAY = iso(new Date());
+const DOW_S = ['日', '一', '二', '三', '四', '五', '六'];
+const DOW_L = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+const fmtMD = s => { const d = parseISO(s); return `${d.getMonth() + 1}月${d.getDate()}日`; };
+const fmtMDs = s => { const d = parseISO(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
+const daysBetween = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
+const rangeDays = (from, n) => Array.from({ length: n }, (_, i) => addDays(from, i));
+
+const t2m = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
+const m2t = m => `${pad2(Math.floor((m % 1440) / 60))}:${pad2(m % 60)}`;
+const h2 = m => (m / 60).toFixed(2).replace(/\.00$/, '');
+const hh = m => (m / 60).toFixed(1);
+
+function money(v) {
+  const s = Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (v < 0 ? '-' : '') + DB.settings.cur + s;
+}
+function money0(v) {
+  return DB.settings.cur + Math.round(v).toLocaleString('en-US');
+}
+
+/* ---------------- 岗位 ---------------- */
+const ROLES = {
+  mgr: { n: '店长', c: 'indigo', tip: false },
+  chef: { n: '厨师', c: 'orange', tip: false },
+  prep: { n: '帮厨', c: 'yellow', tip: false },
+  server: { n: '服务员', c: 'blue', tip: true },
+  bar: { n: '吧台', c: 'purple', tip: true },
+  cashier: { n: '收银', c: 'pink', tip: true },
+  dish: { n: '洗碗', c: 'teal', tip: false },
+};
+const roleName = r => (ROLES[r] || { n: r }).n;
+const roleColor = r => (ROLES[r] || { c: 'blue' }).c;
+const tint = (c, pct) => `color-mix(in srgb, var(--${c}) ${pct}%, var(--bg-elev))`;
+function chipStyle(r) {
+  const c = roleColor(r);
+  return `background:${tint(c, 14)};color:var(--${c});box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--${c}) 30%, transparent)`;
+}
+
+/* ---------------- 默认数据 ---------------- */
+function defaultSettings() {
+  return {
+    biz: '拾山 SHISHAN', cur: '$', weekStart: 1,
+    otWeeklyOn: true, otWeekly: 40, otMult: 1.5,
+    otDailyOn: false, otDaily: 8,
+    dtOn: false, dtDaily: 12, dtMult: 2,
+    breakUnpaid: true, payFrom: 'actual',
+    payerTaxPct: 7.65, targetLaborPct: 28, weeklyRevenue: 22000,
+    period: 'week', lateGrace: 5,
+  };
+}
+function defaultTemplates() {
+  return [
+    { id: 'tp1', n: '早班', start: '09:00', end: '15:00', brk: 0 },
+    { id: 'tp2', n: '午市', start: '10:30', end: '16:00', brk: 30 },
+    { id: 'tp3', n: '晚班', start: '16:00', end: '22:30', brk: 30 },
+    { id: 'tp4', n: '打烊', start: '17:00', end: '23:30', brk: 30 },
+    { id: 'tp5', n: '全天', start: '10:00', end: '21:00', brk: 60 },
+  ];
+}
+/* 每日用人需求：按星期几 → [{tpl, need:{岗位:人数}}] */
+function defaultDemand() {
+  const wd = () => [                                   // 周一至周四：午市轻，晚市重
+    { tpl: 'tp1', need: { mgr: 1, chef: 1, server: 1 } },
+    { tpl: 'tp3', need: { chef: 1, prep: 1, server: 2 } },
+  ];
+  const fri = () => [                                  // 周五：晚市延长到打烊
+    { tpl: 'tp1', need: { mgr: 1, chef: 1, server: 1 } },
+    { tpl: 'tp4', need: { chef: 1, prep: 1, server: 2, dish: 1 } },
+  ];
+  const sat = () => [                                  // 周六：午市晚开，全天满负荷
+    { tpl: 'tp2', need: { chef: 1, prep: 1, server: 2 } },
+    { tpl: 'tp4', need: { chef: 1, prep: 1, server: 2, bar: 1, dish: 1 } },
+  ];
+  const sun = () => [                                  // 周日：午市家庭客多
+    { tpl: 'tp2', need: { chef: 1, server: 2 } },
+    { tpl: 'tp4', need: { chef: 1, prep: 1, server: 2, dish: 1 } },
+  ];
+  return { 0: sun(), 1: wd(), 2: wd(), 3: wd(), 4: wd(), 5: fri(), 6: sat() };
+}
+const FULL_AVAIL = () => ({ 0: [480, 1440], 1: [480, 1440], 2: [480, 1440], 3: [480, 1440], 4: [480, 1440], 5: [480, 1440], 6: [480, 1440] });
+function defaultStaff() {
+  const A = FULL_AVAIL;
+  const mk = (n, roles, pay, rate, maxH, av, extra = {}) =>
+    Object.assign({ id: uid(), n, roles, pay, rate, maxH, avail: av, active: true, hired: '2024-06-01', phone: '' }, extra);
+  return [
+    mk('陈志明', ['mgr', 'cashier'], 'monthly', 4200, 45, A(), { hired: '2022-03-14', phone: '(919) 555-0142' }),
+    mk('林大厨', ['chef', 'prep'], 'hourly', 26, 44, A(), { hired: '2022-08-02', phone: '(919) 555-0188' }),
+    mk('王建国', ['chef'], 'hourly', 23, 44, A(), { hired: '2023-01-20' }),
+    mk('刘小芳', ['prep', 'dish'], 'hourly', 17, 36, { 0: [600, 1440], 1: [480, 1380], 2: [480, 1380], 3: [480, 1380], 4: [480, 1380], 5: [480, 1440], 6: [480, 1440] }),
+    mk('张婷婷', ['server', 'cashier'], 'hourly', 15.5, 30, { 0: [600, 1380], 1: null, 2: [900, 1400], 3: [900, 1400], 4: [900, 1400], 5: [900, 1440], 6: [600, 1440] }, { note: '学生 · 只可晚班' }),
+    mk('黄美玲', ['server', 'bar'], 'hourly', 16, 40, A()),
+    mk('李俊杰', ['server'], 'hourly', 15, 24, { 0: [600, 1440], 1: null, 2: null, 3: [960, 1440], 4: [960, 1440], 5: [960, 1440], 6: [600, 1440] }, { note: '兼职' }),
+    mk('周雅雯', ['server', 'cashier'], 'hourly', 15.5, 28, { 0: [600, 1380], 1: [540, 1200], 2: [540, 1200], 3: null, 4: [540, 1200], 5: [540, 1380], 6: [600, 1380] }),
+    mk('吴国强', ['dish', 'prep'], 'hourly', 15, 42, A()),
+    mk('郑文彬', ['bar', 'server'], 'hourly', 17, 38, { 0: [960, 1440], 1: [960, 1440], 2: [960, 1440], 3: [960, 1440], 4: [960, 1440], 5: [960, 1440], 6: [960, 1440] }, { note: '只做晚市' }),
+  ];
+}
+
+let DB = null;
+const LSKEY = 'banbiao.v1';
+
+/* ---------------- 存取 ---------------- */
+function save() {
+  try {
+    localStorage.setItem(LSKEY, JSON.stringify(DB));
+    flashSaved();
+  } catch (e) { console.warn('保存失败', e); }
+}
+let savedTimer;
+function flashSaved() {
+  const el = $('#saveState'); if (!el) return;
+  el.textContent = '保存中…'; clearTimeout(savedTimer);
+  savedTimer = setTimeout(() => { el.textContent = '已保存 ' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }); }, 260);
+}
+function load() {
+  let raw = null;
+  try { raw = localStorage.getItem(LSKEY); } catch (e) { }
+  if (raw) {
+    try {
+      DB = JSON.parse(raw);
+      DB.settings = Object.assign(defaultSettings(), DB.settings || {});
+      DB.tips = DB.tips || {};
+      return;
+    } catch (e) { console.warn('数据损坏，重建', e); }
+  }
+  seed();
+}
+
+/* ---------------- 种子数据 ---------------- */
+function seed() {
+  DB = {
+    settings: defaultSettings(),
+    templates: defaultTemplates(),
+    demand: defaultDemand(),
+    staff: defaultStaff(),
+    shifts: [], punches: [], timeoff: [], tips: {},
+  };
+  const ws = weekStartOf(TODAY);
+  // 请假样例
+  const s = DB.staff;
+  DB.timeoff = [
+    { id: uid(), staffId: s[6].id, from: addDays(ws, 9), to: addDays(ws, 10), type: '事假', reason: '家里有事，需要回一趟', status: 'pending', at: addDays(TODAY, -1) },
+    { id: uid(), staffId: s[4].id, from: addDays(ws, 3), to: addDays(ws, 3), type: '病假', reason: '发烧看医生', status: 'approved', at: addDays(TODAY, -3) },
+    { id: uid(), staffId: s[8].id, from: addDays(ws, 12), to: addDays(ws, 13), type: '年假', reason: '朋友婚礼', status: 'pending', at: TODAY },
+  ];
+  // 前一周 / 本周 / 下一周 自动排班
+  [addDays(ws, -7), ws, addDays(ws, 7)].forEach(w => autoSchedule(w, { silent: true }));
+  // 上周临时有人请假少排了几个班，让同比更真实
+  const pw = addDays(ws, -7);
+  const prev = DB.shifts.filter(x => x.date >= pw && x.date <= addDays(pw, 6));
+  for (let i = 0; i < 4 && prev.length; i++) {
+    const victim = prev.splice(Math.floor(Math.random() * prev.length), 1)[0];
+    DB.shifts = DB.shifts.filter(x => x.id !== victim.id);
+  }
+  // 已过去的日子生成打卡记录（带真实偏差）
+  DB.shifts.forEach(sh => {
+    if (sh.date >= TODAY) return;
+    const r = Math.random();
+    if (r < 0.03) return;                       // 缺卡
+    const dIn = r < 0.18 ? Math.round(Math.random() * 14) : Math.round((Math.random() - .6) * 8);
+    const dOut = Math.round((Math.random() - .25) * 22);
+    DB.punches.push({ id: uid(), shiftId: sh.id, staffId: sh.staffId, date: sh.date, in: m2t(t2m(sh.start) + dIn), out: m2t(t2m(sh.end) + dOut), brk: sh.brk });
+  });
+  // 小费池
+  DB.tips[periodKey(addDays(ws, -7), addDays(ws, -1))] = 3120;
+  DB.tips[periodKey(ws, addDays(ws, 6))] = 2950;
+  save();
+}
+
+/* ---------------- 查询助手 ---------------- */
+function weekStartOf(d) { const diff = (dowOf(d) - DB.settings.weekStart + 7) % 7; return addDays(d, -diff); }
+const staffById = id => DB.staff.find(s => s.id === id);
+const tplById = id => DB.templates.find(t => t.id === id);
+const primaryRole = s => s.roles[0];
+function initials(n) { return n.length <= 2 ? n : n.slice(-2); }
+function avaColor(s) { return `var(--${roleColor(primaryRole(s))})`; }
+
+function shiftMin(sh) {
+  let a = t2m(sh.start), b = t2m(sh.end); if (b <= a) b += 1440;
+  return b - a - (DB.settings.breakUnpaid ? (sh.brk || 0) : 0);
+}
+function spanMin(sh) { let a = t2m(sh.start), b = t2m(sh.end); if (b <= a) b += 1440; return b - a; }
+function shiftCost(sh) {
+  const s = staffById(sh.staffId); if (!s) return 0;
+  const rate = s.pay === 'monthly' ? monthlyToHourly(s) : s.rate;
+  return shiftMin(sh) / 60 * rate;
+}
+function monthlyToHourly(s) { return s.rate * 12 / 52 / Math.max(20, s.maxH); }
+
+const shiftsOf = (date, staffId) => DB.shifts.filter(x => x.date === date && (!staffId || x.staffId === staffId));
+function leaveOn(staffId, date) {
+  return DB.timeoff.find(t => t.staffId === staffId && t.status === 'approved' && date >= t.from && date <= t.to);
+}
+function pendingLeaveOn(staffId, date) {
+  return DB.timeoff.find(t => t.staffId === staffId && t.status === 'pending' && date >= t.from && date <= t.to);
+}
+function availOK(s, date, start, end) {
+  const a = s.avail[dowOf(date)];
+  if (!a) return false;
+  let e = t2m(end); if (e <= t2m(start)) e += 1440;
+  return t2m(start) >= a[0] && e <= a[1];
+}
+function overlapsExisting(staffId, date, start, end, skipId) {
+  let a = t2m(start), b = t2m(end); if (b <= a) b += 1440;
+  return DB.shifts.some(x => {
+    if (x.staffId !== staffId || x.date !== date || x.id === skipId) return false;
+    let c = t2m(x.start), d = t2m(x.end); if (d <= c) d += 1440;
+    return a < d && c < b;
+  });
+}
+function weekMinutes(staffId, wkStart, skipId) {
+  const end = addDays(wkStart, 6);
+  return DB.shifts.filter(x => x.staffId === staffId && x.date >= wkStart && x.date <= end && x.id !== skipId)
+    .reduce((n, x) => n + shiftMin(x), 0);
+}
+/* 单个班次的所有冲突原因 */
+function conflictsOf(sh) {
+  const s = staffById(sh.staffId); const out = [];
+  if (!s) return ['员工不存在'];
+  if (leaveOn(s.id, sh.date)) out.push('与已批准的请假冲突');
+  if (!availOK(s, sh.date, sh.start, sh.end)) out.push('超出该员工可上班时段');
+  if (overlapsExisting(s.id, sh.date, sh.start, sh.end, sh.id)) out.push('与同日其他班次重叠');
+  const wk = weekMinutes(s.id, weekStartOf(sh.date));
+  if (wk > s.maxH * 60) out.push(`本周 ${hh(wk)}h 超过上限 ${s.maxH}h`);
+  if (!s.roles.includes(sh.role)) out.push('岗位与员工技能不符');
+  return out;
+}
+
+/* ---------------- 自动排班引擎 ---------------- */
+function autoSchedule(wkStart, opts = {}) {
+  const created = [], gaps = [];
+  const days = rangeDays(wkStart, 7);
+  const load = {};                                   // staffId → 本周已排分钟
+  DB.staff.forEach(s => { load[s.id] = weekMinutes(s.id, wkStart); });
+
+  for (const date of days) {
+    const blocks = DB.demand[dowOf(date)] || [];
+    for (const blk of blocks) {
+      const tpl = tplById(blk.tpl); if (!tpl) continue;
+      const dur = shiftMin({ start: tpl.start, end: tpl.end, brk: tpl.brk });
+      for (const [role, count] of Object.entries(blk.need)) {
+        const already = DB.shifts.filter(x => x.date === date && x.role === role && x.start === tpl.start).length;
+        for (let i = already; i < count; i++) {
+          const cands = DB.staff.filter(s =>
+            s.active && s.roles.includes(role)
+            && !leaveOn(s.id, date)
+            && availOK(s, date, tpl.start, tpl.end)
+            && !overlapsExisting(s.id, date, tpl.start, tpl.end)
+            && (load[s.id] + dur) <= s.maxH * 60
+          );
+          if (!cands.length) { gaps.push({ date, role, tpl: tpl.n }); continue; }
+          cands.sort((a, b) => {
+            const fa = load[a.id] / (a.maxH * 60), fb = load[b.id] / (b.maxH * 60);
+            if (Math.abs(fa - fb) > 0.04) return fa - fb;                       // 先给工时最少的人
+            const ra = a.roles[0] === role ? 0 : 1, rb = b.roles[0] === role ? 0 : 1;
+            if (ra !== rb) return ra - rb;                                      // 主岗优先
+            return effRate(a) - effRate(b);                                     // 再看成本
+          });
+          const pick = cands[0];
+          const sh = { id: uid(), staffId: pick.id, date, start: tpl.start, end: tpl.end, brk: tpl.brk, role, tpl: tpl.id, note: '' };
+          DB.shifts.push(sh); created.push(sh); load[pick.id] += dur;
+        }
+      }
+    }
+  }
+  if (!opts.silent) save();
+  return { created, gaps };
+}
+function effRate(s) { return s.pay === 'monthly' ? monthlyToHourly(s) : s.rate; }
+/* 可参与小费分配：时薪制、非管理岗、且岗位本身接触客人 */
+function tipEligible(s) {
+  return s.pay === 'hourly' && !s.roles.includes('mgr') && s.roles.some(x => ROLES[x] && ROLES[x].tip);
+}
+
+/* ---------------- 工时 / 薪资引擎 ---------------- */
+function workedMin(staffId, date) {
+  const p = DB.punches.find(x => x.staffId === staffId && x.date === date);
+  if (p && p.in && p.out) {
+    let a = t2m(p.in), b = t2m(p.out); if (b <= a) b += 1440;
+    return b - a - (DB.settings.breakUnpaid ? (p.brk || 0) : 0);
+  }
+  return null;
+}
+function schedMin(staffId, date) {
+  return shiftsOf(date, staffId).reduce((n, x) => n + shiftMin(x), 0);
+}
+/* 一天实际计薪分钟（按设置的来源） */
+function payMin(staffId, date) {
+  const src = DB.settings.payFrom;
+  const w = workedMin(staffId, date);
+  const s = schedMin(staffId, date);
+  if (src === 'sched') return { min: s, from: 'sched' };
+  if (w != null) return { min: w, from: 'punch' };
+  if (date >= TODAY) return { min: s, from: 'sched' };
+  return { min: 0, from: 'missing', sched: s };
+}
+
+function periodKey(from, to) { return from + '~' + to; }
+
+/* 计算一个周期的薪资明细 */
+function computePayroll(from, to) {
+  const st = DB.settings;
+  const days = rangeDays(from, daysBetween(from, to) + 1);
+  const tipPool = Number(DB.tips[periodKey(from, to)] || 0);
+
+  const rows = DB.staff.filter(s => s.active || DB.shifts.some(x => x.staffId === s.id && x.date >= from && x.date <= to)).map(s => {
+    const weeks = {};
+    let totalMin = 0, missing = 0, dayList = [];
+    days.forEach(d => {
+      const pm = payMin(s.id, d);
+      if (pm.from === 'missing' && pm.sched > 0) missing++;
+      if (!pm.min) return;
+      const wk = weekStartOf(d);
+      weeks[wk] = weeks[wk] || { reg: 0, ot: 0, dt: 0 };
+      let m = pm.min; totalMin += m;
+      let dt = 0, ot = 0;
+      if (st.dtOn && m > st.dtDaily * 60) { dt = m - st.dtDaily * 60; m -= dt; }
+      if (st.otDailyOn && m > st.otDaily * 60) { ot = m - st.otDaily * 60; m -= ot; }
+      weeks[wk].reg += m; weeks[wk].ot += ot; weeks[wk].dt += dt;
+      dayList.push({ date: d, min: pm.min, from: pm.from });
+    });
+    let reg = 0, ot = 0, dt = 0;
+    Object.values(weeks).forEach(w => {
+      let r = w.reg, o = w.ot;
+      if (st.otWeeklyOn && r > st.otWeekly * 60) { o += r - st.otWeekly * 60; r = st.otWeekly * 60; }
+      reg += r; ot += o; dt += w.dt;
+    });
+    const salaried = s.pay === 'monthly';
+    const rate = effRate(s);
+    let base, otPay = 0, dtPay = 0;
+    if (salaried) {
+      base = s.rate * 12 / 365 * days.length;            // 月薪按天折算
+    } else {
+      base = reg / 60 * s.rate;
+      otPay = ot / 60 * s.rate * st.otMult;
+      dtPay = dt / 60 * s.rate * st.dtMult;
+    }
+    return { s, salaried, rate, reg, ot, dt, totalMin, base, otPay, dtPay, tips: 0, adj: 0, missing, dayList };
+  });
+
+  // 小费池按可分小费岗位的工时分配（管理岗与月薪制不参与，符合 FLSA）
+  const tipMin = rows.reduce((n, r) => n + (tipEligible(r.s) ? r.totalMin : 0), 0);
+  rows.forEach(r => {
+    const elig = tipEligible(r.s);
+    r.tips = tipMin > 0 && elig ? tipPool * (r.totalMin / tipMin) : 0;
+    r.gross = r.base + r.otPay + r.dtPay + r.tips;
+    r.employer = r.gross * (st.payerTaxPct / 100);
+    r.total = r.gross + r.employer;
+  });
+  rows.sort((a, b) => b.gross - a.gross);
+  const sum = k => rows.reduce((n, r) => n + r[k], 0);
+  return {
+    from, to, rows, tipPool,
+    tot: {
+      min: sum('totalMin'), reg: sum('reg'), ot: sum('ot'), dt: sum('dt'),
+      base: sum('base'), otPay: sum('otPay'), dtPay: sum('dtPay'), tips: sum('tips'),
+      gross: sum('gross'), employer: sum('employer'), total: sum('total'),
+      missing: sum('missing'),
+    }
+  };
+}
+
+/* 按排班预估的一周人力成本 */
+function weekCost(wkStart) {
+  const end = addDays(wkStart, 6);
+  const per = {};
+  DB.shifts.filter(x => x.date >= wkStart && x.date <= end).forEach(x => {
+    per[x.date] = (per[x.date] || 0) + shiftCost(x);
+  });
+  const total = Object.values(per).reduce((a, b) => a + b, 0);
+  const minutes = DB.shifts.filter(x => x.date >= wkStart && x.date <= end).reduce((n, x) => n + shiftMin(x), 0);
+  return { per, total, minutes, withTax: total * (1 + DB.settings.payerTaxPct / 100) };
+}
+function weekGaps(wkStart) {
+  const gaps = [];
+  rangeDays(wkStart, 7).forEach(date => {
+    (DB.demand[dowOf(date)] || []).forEach(blk => {
+      const tpl = tplById(blk.tpl); if (!tpl) return;
+      Object.entries(blk.need).forEach(([role, count]) => {
+        const have = DB.shifts.filter(x => x.date === date && x.role === role && x.start === tpl.start).length;
+        if (have < count) gaps.push({ date, role, tpl: tpl.n, miss: count - have });
+      });
+    });
+  });
+  return gaps;
+}
+
+/* =========================================================================
+   交互层：弹簧动画 / 面板 / 提示
+   ========================================================================= */
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* 临界阻尼弹簧：从当前值出发，随时可被打断，可继承手势速度 */
+function spring({ from, to, velocity = 0, damping = 1, response = 0.4, onUpdate, onDone }) {
+  let x = from, v = velocity, raf = 0, last = performance.now(), done = false;
+  const k = Math.pow((2 * Math.PI) / response, 2);
+  const c = (4 * Math.PI * damping) / response;
+  if (REDUCED) { onUpdate(to); onDone && onDone(); return { stop() { }, get value() { return to; }, get velocity() { return 0; } }; }
+  const tick = now => {
+    let dt = Math.min((now - last) / 1000, 1 / 30); last = now;
+    for (let i = 0; i < 2; i++) {                                  // 子步长，保证稳定
+      const h = dt / 2;
+      const a = -k * (x - to) - c * v;
+      v += a * h; x += v * h;
+    }
+    onUpdate(x);
+    if (Math.abs(x - to) < 0.25 && Math.abs(v) < 12) { x = to; onUpdate(x); done = true; onDone && onDone(); return; }
+    raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+  return { stop() { cancelAnimationFrame(raf); }, get value() { return x; }, get velocity() { return v; }, get done() { return done; } };
+}
+/* 苹果的动量投影：把速度换算成“会滑到哪里” */
+const project = (v, rate = 0.998) => (v / 1000) * rate / (1 - rate);
+
+/* ---------------- Sheet ---------------- */
+let sheetStack = [];
+function openSheet({ title, sub, body, footer, wide, onMount }) {
+  const scrim = document.createElement('div'); scrim.className = 'scrim';
+  const sheet = document.createElement('div'); sheet.className = 'sheet';
+  if (wide) sheet.style.width = 'min(760px,94vw)';
+  sheet.innerHTML =
+    `<div class="sheet-grab"><i></i></div>
+     <div class="sheet-h"><div><div class="sheet-t">${title}</div>${sub ? `<div class="sheet-s">${sub}</div>` : ''}</div>
+       <button class="sheet-x" data-act="closeSheet" aria-label="关闭">✕</button></div>
+     <div class="sheet-b">${body}</div>
+     ${footer ? `<div class="sheet-f">${footer}</div>` : ''}`;
+  document.body.appendChild(scrim); document.body.appendChild(sheet);
+  const mobile = innerWidth <= 720;
+  const inst = { scrim, sheet, mobile, spr: null };
+  sheetStack.push(inst);
+
+  requestAnimationFrame(() => {
+    scrim.classList.add('on');
+    if (mobile) {
+      const h = sheet.offsetHeight;
+      sheet.style.transform = `translateY(${h}px)`;
+      inst.spr = spring({ from: h, to: 0, damping: 0.86, response: 0.38, onUpdate: y => sheet.style.transform = `translateY(${y}px)` });
+      attachSheetDrag(inst);
+    } else {
+      sheet.style.transition = 'transform .38s cubic-bezier(.16,1,.3,1), opacity .2s ease';
+      sheet.classList.add('on');
+      sheet.style.transform = 'translate(-50%,-50%) scale(1)';
+    }
+  });
+  scrim.addEventListener('pointerdown', () => closeSheet());
+  document.addEventListener('keydown', escClose);
+  onMount && onMount(sheet);
+  return sheet;
+}
+function escClose(e) { if (e.key === 'Escape') closeSheet(); }
+function closeSheet() {
+  const inst = sheetStack.pop(); if (!inst) return;
+  document.removeEventListener('keydown', escClose);
+  const { scrim, sheet, mobile } = inst;
+  scrim.classList.remove('on');
+  const bye = () => { sheet.remove(); scrim.remove(); };
+  if (mobile) {
+    inst.spr && inst.spr.stop();
+    const cur = currentY(sheet);
+    spring({ from: cur, to: sheet.offsetHeight + 40, velocity: inst.lastV || 0, damping: 1, response: 0.3, onUpdate: y => sheet.style.transform = `translateY(${y}px)`, onDone: bye });
+  } else {
+    sheet.style.transform = 'translate(-50%,-50%) scale(.96)'; sheet.classList.remove('on');
+    setTimeout(bye, 220);
+  }
+}
+function currentY(el) {
+  const t = getComputedStyle(el).transform;
+  if (!t || t === 'none') return 0;
+  try { return new DOMMatrixReadOnly(t).m42 || 0; } catch (e) { return 0; }
+}
+/* 下拉关闭：1:1 跟手 + 越界橡皮筋 + 速度投影决定去留 */
+function attachSheetDrag(inst) {
+  const { sheet } = inst;
+  const handle = sheet.querySelector('.sheet-grab');
+  const bodyEl = sheet.querySelector('.sheet-b');
+  let sy = 0, sv = 0, lastT = 0, lastY = 0, dragging = false, startTop = 0;
+  const down = e => {
+    if (e.target.closest('input,select,textarea,button,.switch,.tglchip')) return;  // 别抢走输入框的点击
+    if (e.target.closest('.sheet-b') && bodyEl.scrollTop > 0) return;
+    inst.spr && inst.spr.stop();
+    dragging = true; sy = e.clientY; lastY = e.clientY; lastT = performance.now();
+    startTop = currentY(sheet);
+    try { sheet.setPointerCapture(e.pointerId); } catch (err) { }
+  };
+  const move = e => {
+    if (!dragging) return;
+    let d = e.clientY - sy + startTop;
+    if (d < 0) d = -rubber(-d, sheet.offsetHeight);     // 上边界橡皮筋
+    sheet.style.transform = `translateY(${d}px)`;
+    const now = performance.now(); const dt = Math.max(now - lastT, 1);
+    sv = (e.clientY - lastY) / dt * 1000; lastY = e.clientY; lastT = now;
+  };
+  const up = () => {
+    if (!dragging) return; dragging = false;
+    const y = currentY(sheet), h = sheet.offsetHeight;
+    const projected = y + project(sv);
+    inst.lastV = sv;
+    if (projected > h * 0.4 || sv > 900) { closeSheet(); }
+    else inst.spr = spring({ from: y, to: 0, velocity: sv, damping: 0.86, response: 0.35, onUpdate: v => sheet.style.transform = `translateY(${v}px)` });
+  };
+  [handle, bodyEl].forEach(el => el.addEventListener('pointerdown', down));
+  sheet.addEventListener('pointermove', move);
+  sheet.addEventListener('pointerup', up);
+  sheet.addEventListener('pointercancel', up);
+}
+const rubber = (over, dim, c = 0.55) => (over * dim * c) / (dim + c * Math.abs(over));
+
+/* ---------------- Toast ---------------- */
+function toast(msg, kind = 'ok') {
+  const map = { ok: ['var(--green)', '✓'], warn: ['var(--orange)', '!'], err: ['var(--red)', '✕'], info: ['var(--blue)', 'i'] };
+  const [col, ico] = map[kind] || map.ok;
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<span class="ti" style="background:${col}">${ico}</span><span>${msg}</span>`;
+  $('#toasts').appendChild(el);
+  el.style.opacity = '0';
+  spring({
+    from: -26, to: 0, damping: 0.8, response: 0.4,
+    onUpdate: y => { el.style.transform = `translateY(${y}px)`; el.style.opacity = String(clamp(1 + y / 26, 0, 1)); }
+  });
+  setTimeout(() => {
+    el.style.transition = 'opacity .25s ease, transform .25s ease';
+    el.style.opacity = '0'; el.style.transform = 'translateY(-14px)';
+    setTimeout(() => el.remove(), 260);
+  }, 2300);
+}
+function confirmSheet(title, msg, okLabel, onOK, danger = true) {
+  openSheet({
+    title, sub: '',
+    body: `<div class="hint" style="font-size:14px;line-height:1.55">${msg}</div>`,
+    footer: `<button class="btn" data-act="closeSheet">取消</button>
+             <button class="btn ${danger ? 'pri' : 'pri'}" style="${danger ? 'background:var(--red);box-shadow:none' : ''}" data-act="confirmYes">${okLabel}</button>`,
+  });
+  ACT.confirmYes = () => { closeSheet(); onOK(); };
+}
+
+/* =========================================================================
+   路由 / 导航
+   ========================================================================= */
+const state = {
+  view: 'dash',
+  week: null,
+  payFrom: null, payTo: null,
+  timeDay: null,
+  staffFilter: 'all',
+};
+
+const NAVS = [
+  { g: '运营', items: [['dash', '总览', '◎'], ['sched', '排班', '▦'], ['time', '工时', '◷'], ['pay', '薪资', '＄']] },
+  { g: '管理', items: [['staff', '员工', '☺'], ['leave', '请假', '✈'], ['set', '设置', '⚙']] },
+];
+function renderNav() {
+  const pend = DB.timeoff.filter(t => t.status === 'pending').length;
+  $('#nav').innerHTML = NAVS.map(g =>
+    `<div class="nav-sec">${g.g}</div>` + g.items.map(([id, n, i]) =>
+      `<button class="nav-item ${state.view === id ? 'on' : ''}" data-act="go" data-v="${id}">
+        <span class="ni-ico">${i}</span><span>${n}</span>
+        ${id === 'leave' && pend ? `<span class="ni-badge">${pend}</span>` : ''}
+      </button>`).join('')).join('');
+  const tabs = [['dash', '总览', '◎'], ['sched', '排班', '▦'], ['time', '工时', '◷'], ['pay', '薪资', '＄'], ['more', '更多', '⋯']];
+  $('#tabbar').innerHTML = tabs.map(([id, n, i]) =>
+    `<button class="tab ${state.view === id ? 'on' : ''}" data-act="${id === 'more' ? 'moreMenu' : 'go'}" data-v="${id}">
+      <span class="tab-ico">${i}</span><span>${n}</span>${id === 'more' && pend ? '<span style="position:absolute"></span>' : ''}
+    </button>`).join('');
+  $('#bizName').textContent = DB.settings.biz;
+}
+
+function go(v) { state.view = v; render(); $('#main').scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }); }
+
+function render() {
+  renderNav();
+  const v = VIEWS[state.view] || VIEWS.dash;
+  $('#topbar').innerHTML = v.top();
+  const page = $('#page');
+  page.innerHTML = v.body();
+  page.classList.remove('fadein'); void page.offsetWidth; page.classList.add('fadein');
+  v.after && v.after();
+}
+
+/* 顶栏骨架 */
+function topbarHTML(title, sub, right = '') {
+  return `<div><div class="tb-title">${title}</div><div class="tb-sub">${sub}</div></div><div class="tb-right">${right}</div>`;
+}
+function weekNav() {
+  const ws = state.week, we = addDays(ws, 6);
+  const isNow = ws === weekStartOf(TODAY);
+  return `<div class="seg"><button data-act="wk" data-d="-1">‹</button>
+    <button data-act="wk" data-d="0" class="${isNow ? 'on' : ''}">本周</button>
+    <button data-act="wk" data-d="1">›</button></div>
+    <span class="tiny dim nowrap">${fmtMD(ws)} – ${fmtMD(we)}</span>`;
+}
+
+/* =========================================================================
+   视图：总览
+   ========================================================================= */
+function statCard(label, value, sub, extra = '') {
+  return `<div class="card"><div class="stat">
+    <div class="stat-l">${label}</div><div class="stat-v">${value}</div><div class="stat-d">${sub}</div>${extra}
+  </div></div>`;
+}
+const VIEWS = {};
+
+VIEWS.dash = {
+  top: () => topbarHTML('总览', `${DB.settings.biz} · ${fmtMD(state.week)} 那一周`,
+    `${weekNav()}<button class="btn pri" data-act="autoWeek">✨ 一键智能排班</button>`),
+  body() {
+    const ws = state.week, we = addDays(ws, 6);
+    const c = weekCost(ws), prev = weekCost(addDays(ws, -7));
+    const delta = prev.total ? (c.total - prev.total) / prev.total * 100 : 0;
+    const pct = DB.settings.weeklyRevenue ? c.withTax / DB.settings.weeklyRevenue * 100 : 0;
+    const target = DB.settings.targetLaborPct;
+    const gaps = weekGaps(ws);
+    const pend = DB.timeoff.filter(t => t.status === 'pending');
+    const shiftCount = DB.shifts.filter(x => x.date >= ws && x.date <= we).length;
+
+    // 加班预警
+    const ot = DB.staff.map(s => ({ s, m: weekMinutes(s.id, ws) }))
+      .filter(x => x.m > 0 && x.s.pay === 'hourly' && x.m > DB.settings.otWeekly * 60 * 0.92)
+      .sort((a, b) => b.m - a.m);
+    // 今日班次
+    const today = DB.shifts.filter(x => x.date === TODAY).sort((a, b) => t2m(a.start) - t2m(b.start));
+    const maxCost = Math.max(...rangeDays(ws, 7).map(d => c.per[d] || 0), 1);
+
+    return `
+    <div class="grid-cards g4" style="margin-bottom:14px">
+      ${statCard('本周人力成本（含雇主税）', money0(c.withTax),
+      `${delta >= 0 ? '<span class="up">▲' : '<span class="down">▼'} ${Math.abs(delta).toFixed(1)}%</span> 对比上周 ${money0(prev.withTax)}`)}
+      ${statCard('人力成本占比', pct.toFixed(1) + '%',
+        `目标 ${target}% · 营业额预估 ${money0(DB.settings.weeklyRevenue)}`,
+        `<div class="meter" style="margin-top:9px"><i style="width:${clamp(pct / Math.max(target * 1.6, 1) * 100, 2, 100)}%;background:${pct > target ? 'var(--red)' : 'var(--green)'}"></i></div>`)}
+      ${statCard('本周排班工时', hh(c.minutes) + 'h', `${shiftCount} 个班次 · ${DB.staff.filter(s => s.active).length} 名在职员工`)}
+      ${statCard('待处理', String(pend.length + gaps.length),
+          `${pend.length} 条请假待批 · ${gaps.length} 个排班缺口`,
+          `<div style="display:flex;gap:6px;margin-top:9px">
+            ${pend.length ? `<button class="btn sm" data-act="go" data-v="leave">去审批</button>` : ''}
+            ${gaps.length ? `<button class="btn sm" data-act="go" data-v="sched">去补人</button>` : ''}
+            ${!pend.length && !gaps.length ? '<span class="pill g">全部就绪</span>' : ''}
+          </div>`)}
+    </div>
+
+    <div class="grid-cards split" style="margin-bottom:14px">
+      <div class="card">
+        <div class="card-h"><div><div class="card-t">每日人力成本</div>
+          <div class="card-s">按当前排班与时薪估算，含 ${DB.settings.payerTaxPct}% 雇主税</div></div>
+          <div class="spacer"></div><span class="pill b">周合计 ${money0(c.withTax)}</span></div>
+        <div class="bars">
+          ${rangeDays(ws, 7).map(d => {
+            const v = (c.per[d] || 0) * (1 + DB.settings.payerTaxPct / 100);
+            const wk = [0, 6].includes(dowOf(d));
+            return `<div class="b ${wk ? 'wk' : ''}"><em>${v ? money0(v).replace(DB.settings.cur, '') : '–'}</em>
+              <i style="height:${clamp(v / (maxCost * 1.18) * 100, 2, 100)}%"></i>
+              <span style="${d === TODAY ? 'color:var(--blue);font-weight:700' : ''}">${DOW_S[dowOf(d)]}</span></div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="card pad0">
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">今日班次</div>
+          <div class="card-s">${fmtMD(TODAY)} ${DOW_L[dowOf(TODAY)]} · ${today.length} 人</div></div></div>
+        <div style="max-height:262px;overflow:auto">
+        ${today.length ? today.map(sh => {
+      const s = staffById(sh.staffId); if (!s) return '';
+      const p = DB.punches.find(x => x.shiftId === sh.id);
+      return `<div class="row tap" data-act="editShift" data-id="${sh.id}">
+            <div class="avatar" style="background:${avaColor(s)}">${initials(s.n)}</div>
+            <div class="row-m"><div class="row-t">${esc(s.n)}</div>
+              <div class="row-s">${roleName(sh.role)} · ${hh(shiftMin(sh))}h</div></div>
+            <div class="row-r"><span class="mono">${sh.start}–${sh.end}</span>
+              ${p ? '<span class="pill g">已打卡</span>' : ''}</div></div>`;
+    }).join('') : '<div class="empty"><span class="e-ico">☕</span>今天没有排班</div>'}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-cards g3">
+      <div class="card pad0">
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">加班预警</div>
+          <div class="card-s">接近或超过每周 ${DB.settings.otWeekly}h</div></div></div>
+        ${ot.length ? ot.map(({ s, m }) => {
+      const over = m > DB.settings.otWeekly * 60;
+      return `<div class="row tap" data-act="openStaff" data-id="${s.id}">
+            <div class="avatar sm" style="background:${avaColor(s)}">${initials(s.n)}</div>
+            <div class="row-m"><div class="row-t">${esc(s.n)}</div>
+              <div class="row-s">${roleName(primaryRole(s))} · ${money(s.rate)}/h</div></div>
+            <div class="row-r"><span class="pill ${over ? 'r' : 'o'}">${hh(m)}h${over ? ` · 加班 ${hh(m - DB.settings.otWeekly * 60)}h` : ''}</span></div></div>`;
+    }).join('') : '<div class="empty"><span class="e-ico">✓</span>本周没有加班风险</div>'}
+      </div>
+      <div class="card pad0">
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">待批请假</div>
+          <div class="card-s">${pend.length} 条申请</div></div></div>
+        ${pend.length ? pend.slice(0, 5).map(t => {
+      const s = staffById(t.staffId); if (!s) return '';
+      return `<div class="row tap" data-act="openLeave" data-id="${t.id}">
+            <div class="avatar sm" style="background:${avaColor(s)}">${initials(s.n)}</div>
+            <div class="row-m"><div class="row-t">${esc(s.n)} · ${t.type}</div>
+              <div class="row-s">${fmtMDs(t.from)}${t.from !== t.to ? ' – ' + fmtMDs(t.to) : ''} · ${esc(t.reason)}</div></div>
+            <span class="chev">›</span></div>`;
+    }).join('') : '<div class="empty"><span class="e-ico">✓</span>没有待批申请</div>'}
+      </div>
+      <div class="card pad0">
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">排班缺口</div>
+          <div class="card-s">需求未排满的岗位</div></div></div>
+        ${gaps.length ? gaps.slice(0, 6).map(g =>
+      `<div class="row"><div class="row-m"><div class="row-t">${fmtMDs(g.date)} ${DOW_L[dowOf(g.date)]} · ${g.tpl}</div>
+              <div class="row-s">${roleName(g.role)}</div></div>
+            <div class="row-r"><span class="pill r">缺 ${g.miss} 人</span></div></div>`).join('')
+        : '<div class="empty"><span class="e-ico">✓</span>本周需求已全部排满</div>'}
+      </div>
+    </div>`;
+  }
+};
+
+/* =========================================================================
+   视图：排班
+   ========================================================================= */
+VIEWS.sched = {
+  top: () => topbarHTML('排班', '拖动班次即可换人换天 · 点击班次编辑',
+    `${weekNav()}
+     <button class="btn" data-act="copyWeek">⧉ 复制上周</button>
+     <button class="btn" data-act="clearWeek">清空</button>
+     <button class="btn pri" data-act="autoWeek">✨ 一键智能排班</button>`),
+  body() {
+    const ws = state.week;
+    const days = rangeDays(ws, 7);
+    const c = weekCost(ws), gaps = weekGaps(ws);
+    const nc = innerWidth <= 900 ? 118 : 158;
+    const staff = DB.staff.filter(s => s.active);
+    const maxDay = Math.max(...days.map(d => c.per[d] || 0), 1);
+
+    const head = `<div class="sh corner" style="--x:0">员工 / 日期</div>` + days.map(d => {
+      const cost = (c.per[d] || 0) * (1 + DB.settings.payerTaxPct / 100);
+      const n = DB.shifts.filter(x => x.date === d).length;
+      return `<div class="sh ${d === TODAY ? 'today' : ''}">
+        <div class="sh-d">${DOW_L[dowOf(d)]}</div><div class="sh-n">${parseISO(d).getDate()}</div>
+        <div class="sh-c">${n} 班 · ${money0(cost)}</div></div>`;
+    }).join('');
+
+    const rows = staff.map(s => {
+      const wm = weekMinutes(s.id, ws);
+      const over = wm > DB.settings.otWeekly * 60;
+      return `<div class="snamecell">
+          <div class="avatar sm" style="background:${avaColor(s)}">${initials(s.n)}</div>
+          <div class="snc-m"><div class="snc-n">${esc(s.n)}</div>
+            <div class="snc-s">${s.roles.map(roleName).join('/')}</div></div>
+          <div class="snc-h ${over ? 'ot' : ''}">${hh(wm)}h</div>
+        </div>` +
+        days.map(d => {
+          const lv = leaveOn(s.id, d), pl = pendingLeaveOn(s.id, d);
+          const avail = s.avail[dowOf(d)];
+          const list = shiftsOf(d, s.id).sort((a, b) => t2m(a.start) - t2m(b.start));
+          const cls = ['scell']; if ([0, 6].includes(dowOf(d))) cls.push('wknd');
+          if (!avail && !lv) cls.push('off');
+          return `<div class="${cls.join(' ')}" data-cell="${d}|${s.id}">
+            ${lv ? `<div class="offtag" style="color:var(--purple)">✈ ${lv.type}</div>` : ''}
+            ${!lv && pl ? `<div class="offtag" style="color:var(--orange)">待批 ${pl.type}</div>` : ''}
+            ${!lv && !avail ? `<div class="offtag">不可上班</div>` : ''}
+            ${list.map(sh => chipHTML(sh)).join('')}
+            <button class="addcell" data-act="newShift" data-d="${d}" data-s="${s.id}">＋</button>
+          </div>`;
+        }).join('');
+    }).join('');
+
+    const costRow = `<div class="cb-l">日成本估算</div>` + days.map(d => {
+      const v = (c.per[d] || 0) * (1 + DB.settings.payerTaxPct / 100);
+      return `<div class="cb-c"><div class="cb-v">${v ? money0(v) : '–'}</div>
+        <div class="cb-t"><i style="width:${clamp((c.per[d] || 0) / maxDay * 100, 0, 100)}%"></i></div></div>`;
+    }).join('');
+
+    return `
+    <div class="rowline" style="margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <span class="pill b">周工时 ${hh(c.minutes)}h</span>
+      <span class="pill ${c.withTax / Math.max(DB.settings.weeklyRevenue, 1) * 100 > DB.settings.targetLaborPct ? 'r' : 'g'}">
+        人力成本 ${money0(c.withTax)} · ${(c.withTax / Math.max(DB.settings.weeklyRevenue, 1) * 100).toFixed(1)}%</span>
+      ${gaps.length ? `<span class="pill r">缺口 ${gaps.reduce((n, g) => n + g.miss, 0)} 人次</span>` : '<span class="pill g">需求已排满</span>'}
+      <div class="spacer"></div>
+      <button class="btn sm" data-act="exportSched">导出 CSV</button>
+      <button class="btn sm" data-act="printPage">打印班表</button>
+    </div>
+    <div class="sched-wrap">
+      <div class="sched" id="schedScroll">
+        <div class="sgrid" style="--namecol:${nc}px">${head}${rows}</div>
+        <div class="costbar" style="--namecol:${nc}px">${costRow}</div>
+      </div>
+    </div>
+    <div class="hint" style="margin-top:12px">
+      提示：按住班次可拖到别的员工或别的一天；灰色斜纹格代表该员工当天不可排班；带 <b style="color:var(--red)">!</b> 的班次存在冲突。
+    </div>`;
+  },
+  after() { enableDrag(); }
+};
+
+function chipHTML(sh) {
+  const cf = conflictsOf(sh);
+  return `<div class="chip ${cf.length ? 'conflict' : ''}" style="${chipStyle(sh.role)}" data-shift="${sh.id}">
+    <div class="ct">${sh.start}–${sh.end}</div>
+    <div class="cr">${roleName(sh.role)} · ${hh(shiftMin(sh))}h</div>
+  </div>`;
+}
+
+/* ---------------- 班次拖放（1:1 跟手 + 速度接管 + 可打断） ---------------- */
+function enableDrag() {
+  const wrap = $('#schedScroll'); if (!wrap) return;
+  let chip = null, ghost = null, shId = null, offX = 0, offY = 0, sx = 0, sy = 0;
+  let moving = false, cell = null, vx = 0, vy = 0, lt = 0, lx = 0, ly = 0, sprX = null, sprY = null;
+
+  wrap.addEventListener('pointerdown', e => {
+    const c = e.target.closest('.chip'); if (!c || e.button === 1) return;
+    chip = c; shId = c.dataset.shift;
+    const r = c.getBoundingClientRect();
+    offX = e.clientX - r.left; offY = e.clientY - r.top;
+    sx = e.clientX; sy = e.clientY; lx = e.clientX; ly = e.clientY; lt = performance.now();
+    moving = false;
+    try { c.setPointerCapture(e.pointerId); } catch (err) { }
+  });
+
+  wrap.addEventListener('pointermove', e => {
+    if (!chip) return;
+    if (!moving) {
+      if (Math.hypot(e.clientX - sx, e.clientY - sy) < 7) return;      // 迟滞，避免误拖
+      moving = true;
+      const r = chip.getBoundingClientRect();
+      ghost = chip.cloneNode(true);
+      ghost.classList.add('ghost');
+      ghost.style.width = r.width + 'px'; ghost.style.left = '0'; ghost.style.top = '0';
+      document.body.appendChild(ghost);
+      chip.classList.add('src-hidden');
+      ghost.style.transform = `translate3d(${r.left}px,${r.top}px,0) scale(1)`;
+      spring({ from: 1, to: 1.05, damping: 0.7, response: 0.25, onUpdate: s => { if (ghost) ghost.dataset.scale = s; } });
+    }
+    const now = performance.now(), dt = Math.max(now - lt, 1);
+    vx = (e.clientX - lx) / dt * 1000; vy = (e.clientY - ly) / dt * 1000;
+    lx = e.clientX; ly = e.clientY; lt = now;
+    const x = e.clientX - offX, y = e.clientY - offY;
+    ghost.style.transform = `translate3d(${x}px,${y}px,0) scale(${ghost.dataset.scale || 1.04})`;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const nc = el && el.closest('.scell');
+    if (nc !== cell) { cell && cell.classList.remove('drop'); cell = nc; cell && cell.classList.add('drop'); }
+  });
+
+  const end = e => {
+    if (!chip) return;
+    const theChip = chip, theGhost = ghost, theId = shId, target = cell, wasMoving = moving;
+    chip = null; ghost = null; moving = false;
+    cell && cell.classList.remove('drop'); cell = null;
+
+    if (!wasMoving) { openShiftEditor(DB.shifts.find(s => s.id === theId)); return; }
+
+    const sh = DB.shifts.find(s => s.id === theId);
+    let destRect = theChip.getBoundingClientRect(), commit = null;
+    if (target && sh) {
+      const [date, staffId] = target.dataset.cell.split('|');
+      if (date !== sh.date || staffId !== sh.staffId) commit = { date, staffId };
+      const r = target.getBoundingClientRect();
+      destRect = { left: r.left + 5, top: r.top + 5 + (target.querySelectorAll('.chip').length ? 0 : 0) };
+    }
+    // 数据先落地，再让残影弹到位——动画只是修饰，不承担状态变更
+    if (commit) applyMove(sh, commit); else theChip.classList.remove('src-hidden');
+
+    let gx = 0, gy = 0, doneX = false, doneY = false, killed = false;
+    const m = getComputedStyle(theGhost).transform;
+    if (m && m !== 'none') { try { const dm = new DOMMatrixReadOnly(m); gx = dm.m41; gy = dm.m42; } catch (err) { } }
+    const upd = () => theGhost.style.transform = `translate3d(${gx}px,${gy}px,0) scale(1)`;
+    const kill = () => { if (killed) return; killed = true; theGhost.remove(); };
+    const fin = () => { if (doneX && doneY) kill(); };
+    const V = v => clamp(v, -2600, 2600);            // 手势速度上限，避免甩出屏幕
+    spring({ from: gx, to: destRect.left, velocity: V(vx), damping: 0.9, response: 0.34, onUpdate: v => { gx = v; upd(); }, onDone: () => { doneX = true; fin(); } });
+    spring({ from: gy, to: destRect.top, velocity: V(vy), damping: 0.9, response: 0.34, onUpdate: v => { gy = v; upd(); }, onDone: () => { doneY = true; fin(); } });
+    setTimeout(kill, 1200);                          // 后台标签页 rAF 被节流时的兜底
+  };
+  wrap.addEventListener('pointerup', end);
+  wrap.addEventListener('pointercancel', end);
+}
+function applyMove(sh, { date, staffId }) {
+  const s = staffById(staffId);
+  sh.date = date; sh.staffId = staffId;
+  if (!s.roles.includes(sh.role)) sh.role = s.roles[0];
+  save(); render();
+  const cf = conflictsOf(sh);
+  if (cf.length) toast(`${s.n} · ${cf[0]}`, 'warn');
+  else toast(`已调整为 ${s.n} · ${fmtMDs(date)}`, 'ok');
+}
+
+/* ---------------- 班次编辑面板 ---------------- */
+function openShiftEditor(sh, isNew) {
+  if (!sh) return;
+  const draft = Object.assign({}, sh);
+  const staffOpts = DB.staff.filter(s => s.active).map(s =>
+    `<option value="${s.id}" ${s.id === draft.staffId ? 'selected' : ''}>${esc(s.n)} · ${s.roles.map(roleName).join('/')}</option>`).join('');
+  const body = `
+    <div class="frow">
+      <div class="field"><label>员工</label><select class="inp" id="f_staff">${staffOpts}</select></div>
+      <div class="field"><label>日期</label><input class="inp" type="date" id="f_date" value="${draft.date}"></div>
+    </div>
+    <div class="field"><label>套用班次模板</label>
+      <div class="chips-row">${DB.templates.map(t =>
+      `<button class="tglchip" data-act="applyTpl" data-id="${t.id}">${t.n} ${t.start}–${t.end}</button>`).join('')}</div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>开始</label><input class="inp" type="time" id="f_start" value="${draft.start}"></div>
+      <div class="field"><label>结束</label><input class="inp" type="time" id="f_end" value="${draft.end}"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>岗位</label><select class="inp" id="f_role">${Object.keys(ROLES).map(r =>
+        `<option value="${r}" ${r === draft.role ? 'selected' : ''}>${ROLES[r].n}</option>`).join('')}</select></div>
+      <div class="field"><label>无薪休息（分钟）</label><input class="inp" type="number" min="0" step="15" id="f_brk" value="${draft.brk || 0}"></div>
+    </div>
+    <div class="field"><label>备注</label><input class="inp" id="f_note" value="${esc(draft.note || '')}" placeholder="例如：负责宴会厅"></div>
+    <div id="f_warn"></div>`;
+  openSheet({
+    title: isNew ? '新增班次' : '编辑班次',
+    sub: isNew ? '' : `${fmtMD(sh.date)} ${DOW_L[dowOf(sh.date)]}`,
+    body,
+    footer: `${isNew ? '' : '<button class="btn dgr" data-act="delShift">删除</button>'}
+             <button class="btn pri" data-act="saveShift">${isNew ? '添加班次' : '保存'}</button>`,
+    onMount(el) {
+      const sync = () => {
+        draft.staffId = $('#f_staff', el).value; draft.date = $('#f_date', el).value;
+        draft.start = $('#f_start', el).value; draft.end = $('#f_end', el).value;
+        draft.role = $('#f_role', el).value; draft.brk = Number($('#f_brk', el).value) || 0;
+        draft.note = $('#f_note', el).value;
+        const cf = conflictsOf(draft);
+        const s = staffById(draft.staffId);
+        const cost = s ? shiftMin(draft) / 60 * effRate(s) : 0;
+        $('#f_warn', el).innerHTML =
+          `<div class="kv"><span class="dim">计薪工时</span><b>${hh(shiftMin(draft))}h</b></div>
+           <div class="kv"><span class="dim">该班次人力成本</span><b>${money(cost)}</b></div>` +
+          (cf.length ? `<div style="margin-top:10px;background:#ff950014;border-radius:12px;padding:11px 13px">
+              <div style="font-size:12.5px;font-weight:700;color:var(--orange);margin-bottom:4px">⚠︎ ${cf.length} 项冲突</div>
+              ${cf.map(x => `<div class="hint" style="color:var(--orange)">· ${x}</div>`).join('')}</div>`
+            : `<div style="margin-top:10px" class="pill g">✓ 没有冲突</div>`);
+      };
+      $$('.inp', el).forEach(i => i.addEventListener('input', sync));
+      sync();
+      ACT.applyTpl = b => {
+        const t = tplById(b.dataset.id); if (!t) return;
+        $('#f_start', el).value = t.start; $('#f_end', el).value = t.end; $('#f_brk', el).value = t.brk;
+        $$('.tglchip', el).forEach(x => x.classList.toggle('on', x === b));
+        sync();
+      };
+      ACT.saveShift = () => {
+        sync();
+        if (!draft.staffId || !draft.date) return toast('请填写员工和日期', 'err');
+        if (isNew) DB.shifts.push(Object.assign({ id: uid() }, draft));
+        else Object.assign(sh, draft);
+        save(); closeSheet(); render(); toast(isNew ? '班次已添加' : '班次已更新');
+      };
+      ACT.delShift = () => {
+        DB.shifts = DB.shifts.filter(x => x.id !== sh.id);
+        DB.punches = DB.punches.filter(p => p.shiftId !== sh.id);
+        save(); closeSheet(); render(); toast('班次已删除', 'info');
+      };
+    }
+  });
+}
+
+/* =========================================================================
+   视图：工时
+   ========================================================================= */
+VIEWS.time = {
+  top: () => topbarHTML('工时', '打卡记录与排班对比 · 差异一眼看清',
+    `${weekNav()}<button class="btn" data-act="fillPunch">⤓ 按排班补录缺卡</button>`),
+  body() {
+    const ws = state.week, days = rangeDays(ws, 7);
+    const rows = DB.staff.map(s => {
+      let sch = 0, act = 0, late = 0, miss = 0, early = 0;
+      days.forEach(d => {
+        const sm = schedMin(s.id, d); sch += sm;
+        const w = workedMin(s.id, d);
+        if (w != null) act += w;
+        else if (sm > 0 && d < TODAY) miss++;
+        const p = DB.punches.find(x => x.staffId === s.id && x.date === d);
+        const sh = shiftsOf(d, s.id)[0];
+        if (p && sh) {
+          if (t2m(p.in) - t2m(sh.start) > DB.settings.lateGrace) late++;
+          if (t2m(sh.end) - t2m(p.out) > DB.settings.lateGrace) early++;
+        }
+      });
+      return { s, sch, act, late, miss, early };
+    }).filter(r => r.sch > 0 || r.act > 0);
+
+    const t = k => rows.reduce((n, r) => n + r[k], 0);
+    return `
+    <div class="grid-cards g4" style="margin-bottom:14px">
+      ${statCard('排班工时', hh(t('sch')) + 'h', `${days.filter(d => d <= TODAY).length}/7 天已过`)}
+      ${statCard('实际工时', hh(t('act')) + 'h', `差异 ${t('act') - t('sch') >= 0 ? '+' : ''}${hh(t('act') - t('sch'))}h`)}
+      ${statCard('迟到 / 早退', `${t('late')} / ${t('early')}`, `宽限 ${DB.settings.lateGrace} 分钟`)}
+      ${statCard('缺卡', String(t('miss')), t('miss') ? '会按 0 工时计薪，请补录' : '记录完整')}
+    </div>
+    <div class="card pad0"><div class="scrollx"><table class="tbl">
+      <thead><tr><th>员工</th><th>岗位</th><th class="num">排班</th><th class="num">实际</th><th class="num">差异</th>
+        <th class="num">迟到</th><th class="num">早退</th><th class="num">缺卡</th><th></th></tr></thead>
+      <tbody>${rows.map(r => {
+      const diff = r.act - r.sch;
+      return `<tr data-act="openTime" data-id="${r.s.id}" style="cursor:pointer">
+          <td><div class="rowline"><div class="avatar sm" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
+            <b>${esc(r.s.n)}</b></div></td>
+          <td class="dim">${r.s.roles.map(roleName).join(' / ')}</td>
+          <td class="num">${hh(r.sch)}h</td><td class="num">${hh(r.act)}h</td>
+          <td class="num" style="color:${Math.abs(diff) < 30 ? 'var(--label-2)' : diff > 0 ? 'var(--orange)' : 'var(--blue)'}">
+            ${diff >= 0 ? '+' : ''}${hh(diff)}h</td>
+          <td class="num">${r.late ? `<span class="pill o">${r.late}</span>` : '–'}</td>
+          <td class="num">${r.early ? `<span class="pill n">${r.early}</span>` : '–'}</td>
+          <td class="num">${r.miss ? `<span class="pill r">${r.miss}</span>` : '–'}</td>
+          <td class="num chev">›</td></tr>`;
+    }).join('')}</tbody>
+      <tfoot><tr><td>合计</td><td></td><td class="num">${hh(t('sch'))}h</td><td class="num">${hh(t('act'))}h</td>
+        <td class="num">${t('act') - t('sch') >= 0 ? '+' : ''}${hh(t('act') - t('sch'))}h</td>
+        <td class="num">${t('late')}</td><td class="num">${t('early')}</td><td class="num">${t('miss')}</td><td></td></tr></tfoot>
+    </table></div></div>`;
+  }
+};
+
+function openTimeSheet(staffId) {
+  const s = staffById(staffId); if (!s) return;
+  const ws = state.week, days = rangeDays(ws, 7);
+  const build = () => days.map(d => {
+    const sh = shiftsOf(d, s.id)[0];
+    const p = DB.punches.find(x => x.staffId === s.id && x.date === d);
+    const lv = leaveOn(s.id, d);
+    const late = p && sh && (t2m(p.in) - t2m(sh.start) > DB.settings.lateGrace);
+    return `<div class="row">
+      <div style="width:64px;flex:none">
+        <div class="row-t" style="font-size:13px">${fmtMDs(d)}</div>
+        <div class="row-s">${DOW_L[dowOf(d)]}</div></div>
+      <div class="row-m">
+        ${sh ? `<div class="row-s">排班 ${sh.start}–${sh.end} · ${roleName(sh.role)}</div>` :
+        lv ? `<div class="row-s" style="color:var(--purple)">请假 · ${lv.type}</div>` : '<div class="row-s">休息</div>'}
+        ${p ? `<div class="row-t" style="font-size:13px">实际 ${p.in}–${p.out} · ${hh(workedMin(s.id, d) || 0)}h ${late ? '<span class="pill o">迟到</span>' : ''}</div>`
+        : sh && d < TODAY ? '<div class="row-t" style="font-size:13px;color:var(--red)">缺卡</div>' : ''}
+      </div>
+      <div class="row-r" style="gap:5px">
+        <input class="inp" style="width:98px;height:32px" type="time" data-punch="${d}" data-k="in" value="${p ? p.in : (sh ? sh.start : '')}">
+        <input class="inp" style="width:98px;height:32px" type="time" data-punch="${d}" data-k="out" value="${p ? p.out : (sh ? sh.end : '')}">
+      </div></div>`;
+  }).join('');
+
+  openSheet({
+    title: s.n, sub: `${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))} 工时明细`, wide: true,
+    body: `<div class="list" id="tlist">${build()}</div>
+           <div class="hint">修改时间后点“保存打卡”，薪资会自动按新的实际工时重算。</div>`,
+    footer: `<button class="btn" data-act="closeSheet">取消</button><button class="btn pri" data-act="savePunch">保存打卡</button>`,
+    onMount(el) {
+      ACT.savePunch = () => {
+        days.forEach(d => {
+          const i = $(`[data-punch="${d}"][data-k="in"]`, el).value;
+          const o = $(`[data-punch="${d}"][data-k="out"]`, el).value;
+          const idx = DB.punches.findIndex(x => x.staffId === s.id && x.date === d);
+          const sh = shiftsOf(d, s.id)[0];
+          if (!i || !o) { if (idx > -1) DB.punches.splice(idx, 1); return; }
+          const rec = { id: idx > -1 ? DB.punches[idx].id : uid(), shiftId: sh ? sh.id : null, staffId: s.id, date: d, in: i, out: o, brk: sh ? sh.brk : 0 };
+          if (idx > -1) DB.punches[idx] = rec; else DB.punches.push(rec);
+        });
+        save(); closeSheet(); render(); toast('打卡记录已保存');
+      };
+    }
+  });
+}
+
+/* =========================================================================
+   视图：薪资
+   ========================================================================= */
+function payPeriod() {
+  const p = DB.settings.period, ws = weekStartOf(TODAY);
+  if (state.payFrom && state.payTo) return [state.payFrom, state.payTo];
+  if (p === 'last') return [addDays(ws, -7), addDays(ws, -1)];
+  if (p === 'biweek') return [addDays(ws, -7), addDays(ws, 6)];
+  if (p === 'month') { const d = parseISO(TODAY); return [iso(new Date(d.getFullYear(), d.getMonth(), 1)), iso(new Date(d.getFullYear(), d.getMonth() + 1, 0))]; }
+  return [ws, addDays(ws, 6)];
+}
+VIEWS.pay = {
+  top() {
+    const p = DB.settings.period;
+    const seg = [['week', '本周'], ['last', '上周'], ['biweek', '双周'], ['month', '本月']]
+      .map(([k, n]) => `<button data-act="period" data-p="${k}" class="${p === k && !state.payFrom ? 'on' : ''}">${n}</button>`).join('');
+    return topbarHTML('薪资', '正常工时 / 加班 / 小费 全自动核算',
+      `<div class="seg">${seg}</div>
+       <button class="btn" data-act="exportPay">导出 CSV</button>
+       <button class="btn pri" data-act="printPage">生成工资单</button>`);
+  },
+  body() {
+    const [from, to] = payPeriod();
+    const P = computePayroll(from, to);
+    const st = DB.settings;
+    return `
+    <div class="grid-cards g4" style="margin-bottom:14px">
+      ${statCard('应发工资总额', money0(P.tot.gross), `${P.rows.length} 名员工 · ${fmtMD(from)} – ${fmtMD(to)}`)}
+      ${statCard('加班费', money0(P.tot.otPay), `加班 ${hh(P.tot.ot)}h · ${st.otMult}× 倍率`)}
+      ${statCard('小费分配', money0(P.tot.tips),
+      `<span class="rowline" style="gap:6px">小费池
+        <input class="inp" style="height:26px;width:104px;font-size:13px" type="number" min="0" step="10"
+          value="${P.tipPool}" data-act="setTips" data-k="${periodKey(from, to)}"></span>`)}
+      ${statCard('雇主总成本', money0(P.tot.total), `含 ${st.payerTaxPct}% 雇主税 ${money0(P.tot.employer)}`)}
+    </div>
+    ${P.tot.missing ? `<div class="card" style="margin-bottom:14px;background:#ff950012">
+      <div class="rowline"><span class="pill o">⚠︎ ${P.tot.missing} 天缺卡</span>
+      <span class="hint">这些天按 0 工时计薪。建议先去「工时」补录，或把计薪来源改成「按排班」。</span>
+      <div class="spacer"></div><button class="btn sm" data-act="go" data-v="time">去处理</button></div></div>` : ''}
+    <div class="card pad0"><div class="scrollx"><table class="tbl">
+      <thead><tr><th>员工</th><th>计薪方式</th><th class="num">正常</th><th class="num">加班</th>
+        <th class="num">基本</th><th class="num">加班费</th><th class="num">小费</th><th class="num">应发</th>
+        <th class="num">雇主税</th><th class="num">合计成本</th><th></th></tr></thead>
+      <tbody>${P.rows.map(r => `<tr data-act="openSlip" data-id="${r.s.id}" style="cursor:pointer">
+        <td><div class="rowline"><div class="avatar sm" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
+          <div><b>${esc(r.s.n)}</b><div class="row-s">${r.s.roles.map(roleName).join(' / ')}</div></div></div></td>
+        <td class="dim">${r.salaried ? '月薪 ' + money0(r.s.rate) : money(r.s.rate) + '/h'}</td>
+        <td class="num">${hh(r.reg)}h</td>
+        <td class="num" style="${r.ot ? 'color:var(--orange);font-weight:650' : ''}">${r.ot ? hh(r.ot) + 'h' : '–'}</td>
+        <td class="num">${money(r.base)}</td>
+        <td class="num">${r.otPay ? money(r.otPay) : '–'}</td>
+        <td class="num">${r.tips ? money(r.tips) : '–'}</td>
+        <td class="num"><b>${money(r.gross)}</b></td>
+        <td class="num dim">${money(r.employer)}</td>
+        <td class="num">${money(r.total)}</td>
+        <td class="num chev">›</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td>合计</td><td></td><td class="num">${hh(P.tot.reg)}h</td><td class="num">${hh(P.tot.ot)}h</td>
+        <td class="num">${money(P.tot.base)}</td><td class="num">${money(P.tot.otPay)}</td>
+        <td class="num">${money(P.tot.tips)}</td><td class="num">${money(P.tot.gross)}</td>
+        <td class="num">${money(P.tot.employer)}</td><td class="num">${money(P.tot.total)}</td><td></td></tr></tfoot>
+    </table></div></div>
+    <div class="hint" style="margin-top:12px">
+      计薪来源：<b>${st.payFrom === 'actual' ? '实际打卡（缺卡按排班/0 处理）' : '按排班表'}</b> ·
+      加班规则：${st.otWeeklyOn ? `每周超过 ${st.otWeekly}h 按 ${st.otMult}×` : '未启用周加班'}${st.otDailyOn ? ` · 每日超过 ${st.otDaily}h 按 ${st.otMult}×` : ''} ·
+      可在<button class="btn sm gho" data-act="go" data-v="set">设置</button>中调整
+    </div>`;
+  }
+};
+
+function openSlip(staffId) {
+  const [from, to] = payPeriod();
+  const P = computePayroll(from, to);
+  const r = P.rows.find(x => x.s.id === staffId); if (!r) return;
+  const rows = r.dayList.map(d => `<div class="kv"><span>${fmtMDs(d.date)} ${DOW_L[dowOf(d.date)]}
+      <span class="tiny dim">${d.from === 'punch' ? '打卡' : d.from === 'sched' ? '排班' : '缺卡'}</span></span>
+    <b>${hh(d.min)}h</b></div>`).join('');
+  openSheet({
+    title: `${r.s.n} · 工资单`, sub: `${fmtMD(from)} – ${fmtMD(to)}`,
+    body: `
+      <div class="rowline"><div class="avatar lg" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
+        <div><div style="font-weight:700;font-size:16px">${esc(r.s.n)}</div>
+          <div class="row-s">${r.s.roles.map(roleName).join(' / ')} · ${r.salaried ? '月薪制' : money(r.s.rate) + '/小时'}</div></div>
+        <div class="spacer"></div><div style="text-align:right"><div class="tiny dim">应发</div>
+          <div style="font-size:24px;font-weight:700;letter-spacing:-.02em">${money(r.gross)}</div></div></div>
+      <div class="hr"></div>
+      <div class="sec-t">工时构成</div>
+      <div class="kv"><span>正常工时</span><b>${hh(r.reg)}h × ${money(r.s.rate)} = ${money(r.base)}</b></div>
+      ${r.ot ? `<div class="kv"><span style="color:var(--orange)">加班工时（${DB.settings.otMult}×）</span>
+        <b style="color:var(--orange)">${hh(r.ot)}h × ${money(r.s.rate * DB.settings.otMult)} = ${money(r.otPay)}</b></div>` : ''}
+      ${r.dt ? `<div class="kv"><span>双倍工时</span><b>${hh(r.dt)}h = ${money(r.dtPay)}</b></div>` : ''}
+      ${r.tips ? `<div class="kv"><span>小费分配（按工时）</span><b>${money(r.tips)}</b></div>` : ''}
+      <div class="kv"><span><b>应发合计</b></span><b style="font-size:16px">${money(r.gross)}</b></div>
+      <div class="kv"><span class="dim">雇主税费 ${DB.settings.payerTaxPct}%</span><span class="dim">${money(r.employer)}</span></div>
+      <div class="kv"><span class="dim">雇主总成本</span><span class="dim">${money(r.total)}</span></div>
+      <div class="sec-t">逐日工时</div>${rows || '<div class="hint">本周期没有工时记录</div>'}
+      ${r.missing ? `<div class="hint" style="color:var(--orange);margin-top:8px">⚠︎ 有 ${r.missing} 天排了班但没有打卡记录</div>` : ''}`,
+    footer: `<button class="btn" data-act="closeSheet">关闭</button><button class="btn pri" data-act="printPage">打印</button>`
+  });
+}
+
+/* =========================================================================
+   视图：员工
+   ========================================================================= */
+VIEWS.staff = {
+  top: () => topbarHTML('员工', `${DB.staff.filter(s => s.active).length} 名在职 · 时薪、可上班时段、技能岗位`,
+    `<button class="btn pri" data-act="addStaff">＋ 新增员工</button>`),
+  body() {
+    const ws = state.week;
+    return `<div class="grid-cards g3">${DB.staff.map(s => {
+      const wm = weekMinutes(s.id, ws);
+      const days = [0, 1, 2, 3, 4, 5, 6].filter(d => s.avail[d]).length;
+      return `<div class="card" data-act="openStaff" data-id="${s.id}" style="cursor:pointer">
+        <div class="rowline" style="margin-bottom:12px">
+          <div class="avatar lg" style="background:${avaColor(s)}">${initials(s.n)}</div>
+          <div style="min-width:0"><div style="font-weight:680;font-size:15.5px;letter-spacing:-.015em">${esc(s.n)}
+            ${s.active ? '' : '<span class="pill n">已离职</span>'}</div>
+            <div class="row-s">${s.roles.map(roleName).join(' / ')}${s.note ? ' · ' + esc(s.note) : ''}</div></div>
+          <div class="spacer"></div><span class="chev">›</span></div>
+        <div class="kv"><span class="dim">计薪</span><b>${s.pay === 'monthly' ? money0(s.rate) + ' / 月' : money(s.rate) + ' / 小时'}</b></div>
+        <div class="kv"><span class="dim">本周排班</span><b class="${wm > DB.settings.otWeekly * 60 ? 'up' : ''}">${hh(wm)}h / 上限 ${s.maxH}h</b></div>
+        <div class="meter" style="margin-top:8px"><i style="width:${clamp(wm / (s.maxH * 60) * 100, 0, 100)}%;
+          background:${wm > s.maxH * 60 ? 'var(--red)' : wm > DB.settings.otWeekly * 60 ? 'var(--orange)' : 'var(--green)'}"></i></div>
+        <div class="rowline tiny dim" style="margin-top:10px;gap:5px">
+          ${[0, 1, 2, 3, 4, 5, 6].map(d => `<span style="width:22px;height:22px;border-radius:6px;display:grid;place-items:center;
+            background:${s.avail[d] ? 'color-mix(in srgb,var(--green) 16%,var(--bg-elev))' : 'var(--fill)'};
+            color:${s.avail[d] ? 'var(--green)' : 'var(--label-3)'};font-weight:700">${DOW_S[d]}</span>`).join('')}
+          <span style="margin-left:4px">可排 ${days} 天</span></div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+};
+
+function openStaffEditor(id) {
+  const isNew = !id;
+  const s = isNew
+    ? { id: uid(), n: '', roles: ['server'], pay: 'hourly', rate: 15, maxH: 30, avail: FULL_AVAIL(), active: true, hired: TODAY, phone: '', note: '' }
+    : Object.assign({}, staffById(id));
+  const av = JSON.parse(JSON.stringify(s.avail));
+  const roleChips = Object.keys(ROLES).map(r =>
+    `<button class="tglchip ${s.roles.includes(r) ? 'on' : ''}" data-act="tglRole" data-r="${r}">${ROLES[r].n}</button>`).join('');
+  const availRows = [1, 2, 3, 4, 5, 6, 0].map(d => `
+    <div class="avail-grid" style="margin-bottom:8px" data-av="${d}">
+      <div class="rowline" style="gap:7px"><div class="switch ${av[d] ? 'on' : ''}" data-act="tglAvail" data-d="${d}"
+        style="width:40px;height:24px"></div><span class="d">${DOW_L[d].slice(1)}</span></div>
+      <input class="inp" type="time" data-k="s" value="${av[d] ? m2t(av[d][0]) : '09:00'}" ${av[d] ? '' : 'disabled'}>
+      <input class="inp" type="time" data-k="e" value="${av[d] ? m2t(Math.min(av[d][1], 1439)) : '22:00'}" ${av[d] ? '' : 'disabled'}>
+    </div>`).join('');
+
+  openSheet({
+    title: isNew ? '新增员工' : s.n, sub: isNew ? '' : `入职 ${s.hired}`,
+    body: `
+      <div class="frow">
+        <div class="field"><label>姓名</label><input class="inp" id="s_n" value="${esc(s.n)}" placeholder="张三"></div>
+        <div class="field"><label>电话</label><input class="inp" id="s_p" value="${esc(s.phone || '')}" placeholder="(919) 555-0100"></div>
+      </div>
+      <div class="field"><label>可担任岗位（第一个为主岗）</label><div class="chips-row" id="s_roles">${roleChips}</div></div>
+      <div class="frow">
+        <div class="field"><label>计薪方式</label><select class="inp" id="s_pay">
+          <option value="hourly" ${s.pay === 'hourly' ? 'selected' : ''}>时薪（可算加班）</option>
+          <option value="monthly" ${s.pay === 'monthly' ? 'selected' : ''}>月薪（不计加班）</option></select></div>
+        <div class="field"><label id="s_rl">时薪 (${DB.settings.cur})</label>
+          <input class="inp" type="number" step="0.5" min="0" id="s_rate" value="${s.rate}"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>每周工时上限</label><input class="inp" type="number" min="1" max="80" id="s_max" value="${s.maxH}"></div>
+        <div class="field"><label>入职日期</label><input class="inp" type="date" id="s_h" value="${s.hired}"></div>
+      </div>
+      <div class="field"><label>备注</label><input class="inp" id="s_note" value="${esc(s.note || '')}" placeholder="例如：学生 / 只做晚市"></div>
+      <div class="sec-t">可上班时段（自动排班会严格遵守）</div>
+      <div id="s_av">${availRows}</div>
+      <div class="row" style="border-radius:12px;background:var(--fill);margin-top:4px">
+        <div class="row-m"><div class="row-t">在职</div><div class="row-s">关闭后不再参与排班</div></div>
+        <div class="switch ${s.active ? 'on' : ''}" data-act="tglActive"></div></div>`,
+    footer: `${isNew ? '' : '<button class="btn dgr" data-act="delStaff">删除</button>'}
+             <button class="btn pri" data-act="saveStaff">${isNew ? '添加员工' : '保存'}</button>`,
+    onMount(el) {
+      const roles = s.roles.slice();
+      let active = s.active;
+      const payLbl = () => $('#s_rl', el).textContent = ($('#s_pay', el).value === 'monthly' ? '月薪' : '时薪') + ` (${DB.settings.cur})`;
+      $('#s_pay', el).addEventListener('change', payLbl);
+      ACT.tglRole = b => {
+        const r = b.dataset.r, i = roles.indexOf(r);
+        if (i > -1) { if (roles.length > 1) roles.splice(i, 1); } else roles.push(r);
+        $$('#s_roles .tglchip', el).forEach(x => x.classList.toggle('on', roles.includes(x.dataset.r)));
+      };
+      ACT.tglAvail = b => {
+        const d = b.dataset.d; const on = b.classList.toggle('on');
+        $$(`[data-av="${d}"] input`, el).forEach(i => i.disabled = !on);
+      };
+      ACT.tglActive = b => { active = b.classList.toggle('on'); };
+      ACT.saveStaff = () => {
+        const n = $('#s_n', el).value.trim();
+        if (!n) return toast('请填写姓名', 'err');
+        const avail = {};
+        [0, 1, 2, 3, 4, 5, 6].forEach(d => {
+          const box = $(`[data-av="${d}"]`, el);
+          const on = $('.switch', box).classList.contains('on');
+          avail[d] = on ? [t2m($('[data-k="s"]', box).value), t2m($('[data-k="e"]', box).value)] : null;
+        });
+        const rec = {
+          id: s.id, n, roles, pay: $('#s_pay', el).value, rate: Number($('#s_rate', el).value) || 0,
+          maxH: Number($('#s_max', el).value) || 40, hired: $('#s_h', el).value, phone: $('#s_p', el).value,
+          note: $('#s_note', el).value, avail, active,
+        };
+        if (isNew) DB.staff.push(rec);
+        else Object.assign(staffById(s.id), rec);
+        save(); closeSheet(); render(); toast(isNew ? `已添加 ${n}` : '员工资料已更新');
+      };
+      ACT.delStaff = () => confirmSheet('删除员工', `确定删除 <b>${esc(s.n)}</b>？该员工的排班与打卡记录也会一并删除，此操作不可撤销。`, '删除', () => {
+        DB.staff = DB.staff.filter(x => x.id !== s.id);
+        DB.shifts = DB.shifts.filter(x => x.staffId !== s.id);
+        DB.punches = DB.punches.filter(x => x.staffId !== s.id);
+        DB.timeoff = DB.timeoff.filter(x => x.staffId !== s.id);
+        save(); closeSheet(); render(); toast('员工已删除', 'info');
+      });
+    }
+  });
+}
+
+/* =========================================================================
+   视图：请假
+   ========================================================================= */
+VIEWS.leave = {
+  top: () => topbarHTML('请假', '批准后，自动排班会自动跳过这些日期',
+    `<button class="btn pri" data-act="newLeave">＋ 新建请假</button>`),
+  body() {
+    const pend = DB.timeoff.filter(t => t.status === 'pending').sort((a, b) => a.from < b.from ? -1 : 1);
+    const done = DB.timeoff.filter(t => t.status !== 'pending').sort((a, b) => a.from > b.from ? -1 : 1);
+    const card = (t, actions) => {
+      const s = staffById(t.staffId); if (!s) return '';
+      const n = daysBetween(t.from, t.to) + 1;
+      const clash = DB.shifts.filter(x => x.staffId === t.staffId && x.date >= t.from && x.date <= t.to);
+      return `<div class="row">
+        <div class="avatar" style="background:${avaColor(s)}">${initials(s.n)}</div>
+        <div class="row-m"><div class="row-t">${esc(s.n)} · ${t.type} · ${n} 天</div>
+          <div class="row-s">${fmtMD(t.from)}${t.from !== t.to ? ' – ' + fmtMD(t.to) : ''} · ${esc(t.reason || '无说明')}</div>
+          ${clash.length && t.status !== 'rejected' ? `<div class="tiny" style="color:var(--orange);margin-top:2px">
+            ⚠︎ 该期间已排 ${clash.length} 个班次，批准后需要补人</div>` : ''}</div>
+        <div class="row-r">${actions}</div></div>`;
+    };
+    return `
+    <div class="grid-cards g2">
+      <div class="card pad0">
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">待审批</div>
+          <div class="card-s">${pend.length} 条申请</div></div></div>
+        ${pend.length ? pend.map(t => card(t,
+      `<button class="btn sm dgr" data-act="rejectLeave" data-id="${t.id}">拒绝</button>
+           <button class="btn sm grn" data-act="approveLeave" data-id="${t.id}">批准</button>`)).join('')
+        : '<div class="empty"><span class="e-ico">✓</span>没有待审批的请假</div>'}
+      </div>
+      <div class="card pad0">
+        <div style="padding:18px 18px 10px" class="card-h"><div><div class="card-t">历史记录</div>
+          <div class="card-s">${done.length} 条</div></div></div>
+        <div style="max-height:520px;overflow:auto">
+        ${done.length ? done.map(t => card(t,
+          `<span class="pill ${t.status === 'approved' ? 'g' : 'n'}">${t.status === 'approved' ? '已批准' : '已拒绝'}</span>
+           <button class="btn sm ico dgr" data-act="delLeave" data-id="${t.id}">✕</button>`)).join('')
+          : '<div class="empty">暂无记录</div>'}
+        </div>
+      </div>
+    </div>`;
+  }
+};
+function openLeaveEditor(id) {
+  const isNew = !id;
+  const t = isNew ? { id: uid(), staffId: DB.staff[0].id, from: TODAY, to: TODAY, type: '事假', reason: '', status: 'pending', at: TODAY } : DB.timeoff.find(x => x.id === id);
+  openSheet({
+    title: isNew ? '新建请假' : '请假详情',
+    body: `
+      <div class="field"><label>员工</label><select class="inp" id="l_s">${DB.staff.map(s =>
+      `<option value="${s.id}" ${s.id === t.staffId ? 'selected' : ''}>${esc(s.n)}</option>`).join('')}</select></div>
+      <div class="frow">
+        <div class="field"><label>开始</label><input class="inp" type="date" id="l_f" value="${t.from}"></div>
+        <div class="field"><label>结束</label><input class="inp" type="date" id="l_t" value="${t.to}"></div>
+      </div>
+      <div class="field"><label>类型</label><select class="inp" id="l_ty">${['事假', '病假', '年假', '无薪假'].map(x =>
+        `<option ${x === t.type ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+      <div class="field"><label>说明</label><textarea class="inp" id="l_r">${esc(t.reason)}</textarea></div>`,
+    footer: isNew
+      ? `<button class="btn" data-act="closeSheet">取消</button><button class="btn pri" data-act="saveLeave">提交申请</button>`
+      : `<button class="btn dgr" data-act="rejectLeave" data-id="${t.id}">拒绝</button>
+         <button class="btn grn" data-act="approveLeave" data-id="${t.id}">批准</button>`,
+    onMount(el) {
+      ACT.saveLeave = () => {
+        t.staffId = $('#l_s', el).value; t.from = $('#l_f', el).value; t.to = $('#l_t', el).value;
+        t.type = $('#l_ty', el).value; t.reason = $('#l_r', el).value;
+        if (t.to < t.from) return toast('结束日期不能早于开始日期', 'err');
+        DB.timeoff.push(t); save(); closeSheet(); render(); toast('请假申请已提交');
+      };
+    }
+  });
+}
+
+/* =========================================================================
+   视图：设置
+   ========================================================================= */
+VIEWS.set = {
+  top: () => topbarHTML('设置', '加班规则、人力成本目标、班次模板与用人需求', ''),
+  body() {
+    const st = DB.settings;
+    const sw = (k, t, s) => `<div class="row"><div class="row-m"><div class="row-t">${t}</div><div class="row-s">${s}</div></div>
+      <div class="switch ${st[k] ? 'on' : ''}" data-act="tglSet" data-k="${k}"></div></div>`;
+    const num = (k, t, s, step = 1, suffix = '') => `<div class="row"><div class="row-m"><div class="row-t">${t}</div>
+      <div class="row-s">${s}</div></div><div class="row-r">
+      <input class="inp" style="width:96px;height:32px;text-align:right" type="number" step="${step}" data-set="${k}" value="${st[k]}">
+      <span class="dim tiny">${suffix}</span></div></div>`;
+    return `
+    <div class="grid-cards g2">
+      <div>
+        <div class="sec-t">门店</div>
+        <div class="list" style="margin-bottom:16px">
+          <div class="row"><div class="row-m"><div class="row-t">门店名称</div></div>
+            <div class="row-r"><input class="inp" style="width:180px;height:32px" data-set="biz" value="${esc(st.biz)}"></div></div>
+          <div class="row"><div class="row-m"><div class="row-t">货币符号</div></div>
+            <div class="row-r"><input class="inp" style="width:70px;height:32px;text-align:center" data-set="cur" value="${st.cur}"></div></div>
+          <div class="row"><div class="row-m"><div class="row-t">每周起始日</div></div>
+            <div class="row-r"><select class="inp" style="width:110px;height:32px" data-set="weekStart">
+              ${[1, 0, 6].map(d => `<option value="${d}" ${st.weekStart === d ? 'selected' : ''}>${DOW_L[d]}</option>`).join('')}</select></div></div>
+          ${num('weeklyRevenue', '每周营业额预估', '用于计算人力成本占比', 500, st.cur)}
+          ${num('targetLaborPct', '人力成本目标', '行业健康区间 25–32%', 0.5, '%')}
+        </div>
+
+        <div class="sec-t">加班与计薪规则</div>
+        <div class="list" style="margin-bottom:16px">
+          <div class="row"><div class="row-m"><div class="row-t">计薪来源</div>
+            <div class="row-s">按打卡更准确，按排班更省事</div></div>
+            <div class="row-r"><div class="seg"><button data-act="payFrom" data-v="actual" class="${st.payFrom === 'actual' ? 'on' : ''}">实际打卡</button>
+              <button data-act="payFrom" data-v="sched" class="${st.payFrom === 'sched' ? 'on' : ''}">按排班</button></div></div></div>
+          ${sw('otWeeklyOn', '每周加班（FLSA）', `超过 ${st.otWeekly} 小时按 ${st.otMult} 倍`)}
+          ${num('otWeekly', '每周加班门槛', '美国联邦标准为 40 小时', 1, '小时')}
+          ${sw('otDailyOn', '每日加班（加州式）', `单日超过 ${st.otDaily} 小时按 ${st.otMult} 倍`)}
+          ${num('otDaily', '每日加班门槛', '仅在启用每日加班时生效', 1, '小时')}
+          ${num('otMult', '加班倍率', '默认 1.5 倍', 0.25, '×')}
+          ${sw('breakUnpaid', '休息时间不计薪', '班次中的休息分钟从工时中扣除')}
+          ${num('payerTaxPct', '雇主税费比例', 'FICA 7.65% + 失业保险等', 0.05, '%')}
+          ${num('lateGrace', '迟到宽限', '超过这个分钟数才算迟到', 1, '分钟')}
+        </div>
+      </div>
+
+      <div>
+        <div class="sec-t">班次模板</div>
+        <div class="list" style="margin-bottom:16px">
+          ${DB.templates.map(t => `<div class="row">
+            <div class="row-m"><div class="row-t">${esc(t.n)}</div>
+              <div class="row-s">${t.start}–${t.end} · 休息 ${t.brk} 分钟 · 计薪 ${hh(shiftMin(t))}h</div></div>
+            <div class="row-r"><input class="inp" style="width:104px;height:32px" type="time" data-tpl="${t.id}" data-k="start" value="${t.start}">
+              <input class="inp" style="width:104px;height:32px" type="time" data-tpl="${t.id}" data-k="end" value="${t.end}"></div></div>`).join('')}
+        </div>
+
+        <div class="sec-t">每日用人需求（自动排班依据）</div>
+        <div class="card pad0" style="margin-bottom:16px"><div class="scrollx"><table class="tbl">
+          <thead><tr><th>星期</th><th>班段</th>${Object.keys(ROLES).map(r => `<th class="num">${ROLES[r].n}</th>`).join('')}</tr></thead>
+          <tbody>${[1, 2, 3, 4, 5, 6, 0].map(d => (DB.demand[d] || []).map((blk, bi) => {
+      const t = tplById(blk.tpl);
+      return `<tr><td>${DOW_L[d]}</td><td class="dim">${t ? t.n + ' ' + t.start : '?'}</td>
+              ${Object.keys(ROLES).map(r => `<td class="num"><input class="inp" style="width:52px;height:28px;text-align:center;padding:0"
+                type="number" min="0" max="9" data-dem="${d}|${bi}|${r}" value="${blk.need[r] || 0}"></td>`).join('')}</tr>`;
+    }).join('')).join('')}</tbody>
+        </table></div></div>
+
+        <div class="sec-t">数据</div>
+        <div class="list">
+          <div class="row tap" data-act="exportData"><div class="row-m"><div class="row-t">导出全部数据</div>
+            <div class="row-s">JSON 备份，可在另一台电脑导入</div></div><span class="chev">›</span></div>
+          <div class="row tap" data-act="importData"><div class="row-m"><div class="row-t">导入数据</div>
+            <div class="row-s">从 JSON 备份恢复</div></div><span class="chev">›</span></div>
+          <div class="row tap" data-act="resetData"><div class="row-m"><div class="row-t" style="color:var(--red)">重置为示例数据</div>
+            <div class="row-s">清空当前所有排班、打卡与员工</div></div><span class="chev">›</span></div>
+        </div>
+        <div class="hint" style="margin-top:12px">数据只保存在这台设备的浏览器里（localStorage），不会上传到任何服务器。</div>
+      </div>
+    </div>`;
+  }
+};
+
+/* =========================================================================
+   动作
+   ========================================================================= */
+function download(name, text, type = 'text/csv;charset=utf-8') {
+  const blob = new Blob([text], { type });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+const csvCell = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+const toCSV = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+
+const ACT = {
+  go: b => go(b.dataset.v),
+  wk(b) {
+    const d = Number(b.dataset.d);
+    state.week = d === 0 ? weekStartOf(TODAY) : addDays(state.week, d * 7);
+    render();
+  },
+  theme() {
+    const cur = document.documentElement.dataset.theme;
+    const next = cur === 'auto' ? 'light' : cur === 'light' ? 'dark' : 'auto';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('banbiao.theme', next); } catch (e) { }
+    toast(`外观：${{ auto: '跟随系统', light: '浅色', dark: '深色' }[next]}`, 'info');
+  },
+  moreMenu() {
+    openSheet({
+      title: '更多', body: `<div class="list">
+        ${[['staff', '员工', '☺'], ['leave', '请假', '✈'], ['set', '设置', '⚙']].map(([v, n, i]) =>
+        `<div class="row tap" data-act="goClose" data-v="${v}"><span style="width:22px">${i}</span>
+           <div class="row-m"><div class="row-t">${n}</div></div><span class="chev">›</span></div>`).join('')}</div>`
+    });
+  },
+  goClose: b => { closeSheet(); setTimeout(() => go(b.dataset.v), 60); },
+  closeSheet: () => closeSheet(),
+  autoWeek() {
+    const before = DB.shifts.length;
+    const { created, gaps } = autoSchedule(state.week);
+    render();
+    if (!created.length) toast(gaps.length ? `没有可用的人，还缺 ${gaps.length} 个岗位` : '本周需求已经排满了', gaps.length ? 'warn' : 'info');
+    else toast(`已排 ${created.length} 个班次${gaps.length ? ` · 仍缺 ${gaps.length} 人次` : ''}`, gaps.length ? 'warn' : 'ok');
+  },
+  copyWeek() {
+    const src = addDays(state.week, -7), dst = state.week;
+    const copy = DB.shifts.filter(x => x.date >= src && x.date <= addDays(src, 6));
+    if (!copy.length) return toast('上周没有排班可复制', 'warn');
+    let n = 0;
+    copy.forEach(x => {
+      const date = addDays(x.date, 7);
+      if (leaveOn(x.staffId, date)) return;
+      if (overlapsExisting(x.staffId, date, x.start, x.end)) return;
+      DB.shifts.push(Object.assign({}, x, { id: uid(), date })); n++;
+    });
+    save(); render(); toast(`已复制 ${n} 个班次（跳过请假与冲突）`);
+  },
+  clearWeek() {
+    const ws = state.week, we = addDays(ws, 6);
+    const n = DB.shifts.filter(x => x.date >= ws && x.date <= we).length;
+    if (!n) return toast('本周没有排班', 'info');
+    confirmSheet('清空本周排班', `将删除 ${fmtMD(ws)} – ${fmtMD(we)} 的 <b>${n}</b> 个班次。打卡记录会保留。`, '清空', () => {
+      DB.shifts = DB.shifts.filter(x => x.date < ws || x.date > we);
+      save(); render(); toast(`已清空 ${n} 个班次`, 'info');
+    });
+  },
+  newShift(b) {
+    const s = staffById(b.dataset.s);
+    const tpl = DB.templates[0];
+    openShiftEditor({ id: uid(), staffId: b.dataset.s, date: b.dataset.d, start: tpl.start, end: tpl.end, brk: tpl.brk, role: s ? s.roles[0] : 'server', note: '' }, true);
+  },
+  editShift: b => openShiftEditor(DB.shifts.find(x => x.id === b.dataset.id)),
+  openStaff: b => openStaffEditor(b.dataset.id),
+  addStaff: () => openStaffEditor(null),
+  openTime: b => openTimeSheet(b.dataset.id),
+  openSlip: b => openSlip(b.dataset.id),
+  openLeave: b => openLeaveEditor(b.dataset.id),
+  newLeave: () => openLeaveEditor(null),
+  approveLeave(b) {
+    const t = DB.timeoff.find(x => x.id === b.dataset.id); if (!t) return;
+    t.status = 'approved';
+    const clash = DB.shifts.filter(x => x.staffId === t.staffId && x.date >= t.from && x.date <= t.to);
+    DB.shifts = DB.shifts.filter(x => !clash.includes(x));
+    save(); if (sheetStack.length) closeSheet(); render();
+    toast(clash.length ? `已批准 · 取消了 ${clash.length} 个班次，记得补人` : '请假已批准', clash.length ? 'warn' : 'ok');
+  },
+  rejectLeave(b) {
+    const t = DB.timeoff.find(x => x.id === b.dataset.id); if (!t) return;
+    t.status = 'rejected'; save(); if (sheetStack.length) closeSheet(); render(); toast('已拒绝该申请', 'info');
+  },
+  delLeave(b) { DB.timeoff = DB.timeoff.filter(x => x.id !== b.dataset.id); save(); render(); },
+  period(b) { DB.settings.period = b.dataset.p; state.payFrom = state.payTo = null; save(); render(); },
+  payFrom(b) { DB.settings.payFrom = b.dataset.v; save(); render(); },
+  tglSet(b) { const k = b.dataset.k; DB.settings[k] = !DB.settings[k]; save(); render(); },
+  fillPunch() {
+    const ws = state.week; let n = 0;
+    rangeDays(ws, 7).filter(d => d < TODAY).forEach(d => {
+      shiftsOf(d).forEach(sh => {
+        if (DB.punches.some(p => p.staffId === sh.staffId && p.date === d)) return;
+        DB.punches.push({ id: uid(), shiftId: sh.id, staffId: sh.staffId, date: d, in: sh.start, out: sh.end, brk: sh.brk });
+        n++;
+      });
+    });
+    save(); render(); toast(n ? `已按排班补录 ${n} 条打卡` : '没有需要补录的缺卡', n ? 'ok' : 'info');
+  },
+  exportSched() {
+    const ws = state.week, days = rangeDays(ws, 7);
+    const rows = [['员工', '岗位', ...days.map(d => `${fmtMDs(d)} ${DOW_L[dowOf(d)]}`), '周工时', '预估工资']];
+    DB.staff.filter(s => s.active).forEach(s => {
+      const wm = weekMinutes(s.id, ws);
+      rows.push([s.n, s.roles.map(roleName).join('/'),
+      ...days.map(d => shiftsOf(d, s.id).map(x => `${x.start}-${x.end} ${roleName(x.role)}`).join(' / ') || (leaveOn(s.id, d) ? '请假' : '')),
+      hh(wm) + 'h', money(wm / 60 * effRate(s))]);
+    });
+    download(`排班表_${ws}.csv`, toCSV(rows));
+    toast('班表已导出');
+  },
+  exportPay() {
+    const [from, to] = payPeriod(); const P = computePayroll(from, to);
+    const rows = [['薪资周期', `${from} 至 ${to}`], [],
+    ['员工', '岗位', '计薪方式', '费率', '正常工时', '加班工时', '基本工资', '加班费', '小费', '应发合计', '雇主税', '雇主总成本']];
+    P.rows.forEach(r => rows.push([r.s.n, r.s.roles.map(roleName).join('/'), r.salaried ? '月薪' : '时薪', r.s.rate,
+      hh(r.reg), hh(r.ot), r.base.toFixed(2), r.otPay.toFixed(2), r.tips.toFixed(2), r.gross.toFixed(2),
+      r.employer.toFixed(2), r.total.toFixed(2)]));
+    rows.push(['合计', '', '', '', hh(P.tot.reg), hh(P.tot.ot), P.tot.base.toFixed(2), P.tot.otPay.toFixed(2),
+      P.tot.tips.toFixed(2), P.tot.gross.toFixed(2), P.tot.employer.toFixed(2), P.tot.total.toFixed(2)]);
+    download(`薪资_${from}_${to}.csv`, toCSV(rows));
+    toast('薪资表已导出');
+  },
+  printPage: () => window.print(),
+  exportData() { download(`班表备份_${TODAY}.json`, JSON.stringify(DB, null, 2), 'application/json'); toast('备份已导出'); },
+  importData() {
+    const i = document.createElement('input'); i.type = 'file'; i.accept = 'application/json';
+    i.onchange = () => {
+      const f = i.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const d = JSON.parse(r.result);
+          if (!d.staff || !d.settings) throw 0;
+          DB = d; DB.settings = Object.assign(defaultSettings(), DB.settings); DB.tips = DB.tips || {};
+          save(); render(); toast('数据已导入');
+        } catch (e) { toast('文件格式不正确', 'err'); }
+      };
+      r.readAsText(f);
+    };
+    i.click();
+  },
+  resetData() {
+    confirmSheet('重置数据', '将清空当前所有员工、排班、打卡与请假记录，并恢复成示例门店数据。此操作不可撤销。', '重置', () => {
+      localStorage.removeItem(LSKEY); seed(); state.week = weekStartOf(TODAY); render(); toast('已重置为示例数据', 'info');
+    });
+  },
+};
+
+/* ---------------- 事件委派 ---------------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  if (b.matches('input,select,textarea')) return;
+  const fn = ACT[b.dataset.act];
+  if (fn) { e.preventDefault(); fn(b, e); }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.set !== undefined) {
+    const k = el.dataset.set;
+    const v = el.type === 'number' ? Number(el.value) : (k === 'weekStart' ? Number(el.value) : el.value);
+    DB.settings[k] = v; save();
+    if (['weekStart', 'cur', 'biz'].includes(k)) { state.week = weekStartOf(TODAY); render(); }
+    else render();
+    return;
+  }
+  if (el.dataset.tpl) {
+    const t = tplById(el.dataset.tpl); if (t) { t[el.dataset.k] = el.value; save(); render(); }
+    return;
+  }
+  if (el.dataset.dem) {
+    const [d, bi, r] = el.dataset.dem.split('|');
+    const need = DB.demand[d][bi].need;
+    const v = Number(el.value) || 0;
+    if (v) need[r] = v; else delete need[r];
+    save(); return;
+  }
+  if (el.dataset.act === 'setTips') {
+    DB.tips[el.dataset.k] = Number(el.value) || 0; save(); render();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input,select,textarea')) return;
+  if (sheetStack.length) return;
+  if (e.key === 'ArrowLeft') { state.week = addDays(state.week, -7); render(); }
+  if (e.key === 'ArrowRight') { state.week = addDays(state.week, 7); render(); }
+  if (e.key === 't') { state.week = weekStartOf(TODAY); render(); }
+});
+let rzT;
+addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { if (state.view === 'sched') render(); }, 220); });
+
+/* ---------------- 启动 ---------------- */
+(function init() {
+  try { const th = localStorage.getItem('banbiao.theme'); if (th) document.documentElement.dataset.theme = th; } catch (e) { }
+  load();
+  state.week = weekStartOf(TODAY);
+  render();
+})();
+</script>
+</body>
+</html>
