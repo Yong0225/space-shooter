@@ -174,6 +174,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .row-m{flex:1;min-width:0}
 .row-t{font-size:14.5px;font-weight:550;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row-s{font-size:12.5px;color:var(--label-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.stack .row-s{white-space:normal;overflow:visible}
 .row-r{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--label-2);font-variant-numeric:tabular-nums}
 .chev{color:var(--label-3);font-size:15px}
 .empty{padding:38px 20px;text-align:center;color:var(--label-2);font-size:13.5px}
@@ -208,17 +209,18 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
 
 /* ============ Schedule grid ============ */
 .sched-wrap{background:var(--bg-elev);border-radius:var(--r-l);box-shadow:var(--shadow-1);overflow:hidden}
-.sched{overflow-x:auto;overflow-y:visible}
+.sched{overflow:auto;overscroll-behavior:contain;max-height:calc(100dvh - 272px);min-height:300px}
+@media (max-width:900px){.sched{max-height:calc(100dvh - 244px)}}
 .sgrid{display:grid;grid-template-columns:var(--namecol) repeat(7,minmax(122px,1fr));min-width:960px}
 .sh{position:sticky;top:0;z-index:12;background:var(--bg-elev);padding:9px 10px;border-bottom:1px solid var(--sep);
-  text-align:center;transition:background .2s}
-.sh.today{background:#007aff0f}
+  text-align:center;transition:background .2s;box-shadow:0 1px 0 var(--sep)}
+.sh.today{background:color-mix(in srgb,var(--blue) 9%,var(--bg-elev))}
 .sh-d{font-size:11px;color:var(--label-2);font-weight:600;letter-spacing:.02em}
 .sh-n{font-size:17px;font-weight:700;letter-spacing:-.02em;margin-top:1px}
 .sh.today .sh-n{color:#fff;background:var(--blue);width:27px;height:27px;border-radius:50%;
   display:grid;place-items:center;margin:1px auto 0;font-size:14.5px}
 .sh-c{font-size:11px;color:var(--label-2);margin-top:3px;font-variant-numeric:tabular-nums}
-.sh.corner{position:sticky;left:0;z-index:14;text-align:left;display:flex;align-items:flex-end;
+.sh.corner{position:sticky;left:0;z-index:16;text-align:left;display:flex;align-items:flex-end;
   font-size:11.5px;color:var(--label-2);font-weight:600}
 .scell{border-bottom:1px solid var(--sep);border-left:1px solid var(--sep);min-height:66px;padding:5px;
   display:flex;flex-direction:column;gap:4px;position:relative;transition:background .15s}
@@ -252,8 +254,8 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
   padding:3px 6px;text-align:center}
 
 .costbar{display:grid;grid-template-columns:var(--namecol) repeat(7,minmax(122px,1fr));min-width:960px;
-  background:var(--fill);border-top:1px solid var(--sep)}
-.cb-l{position:sticky;left:0;z-index:10;background:var(--bg-elev);padding:8px 10px;font-size:11.5px;
+  background:var(--bg-elev);border-top:1px solid var(--sep);position:sticky;bottom:0;z-index:13}
+.cb-l{position:sticky;left:0;z-index:14;background:var(--bg-elev);padding:8px 10px;font-size:11.5px;
   font-weight:650;color:var(--label-2)}
 .cb-c{padding:7px 8px;text-align:center;border-left:1px solid var(--sep)}
 .cb-v{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
@@ -351,6 +353,21 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
   .card,.sched-wrap{box-shadow:none;border:1px solid #ddd}
 }
 
+/* ============ 通知 / 头像 / 打卡 ============ */
+.bell{position:relative;font-size:15px}
+.bell.has::after{content:'';position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;
+  background:var(--red);box-shadow:0 0 0 2px var(--bg-elev)}
+.tab-ico{position:relative}
+.tdot{position:absolute;top:-2px;right:-7px;width:8px;height:8px;border-radius:50%;background:var(--red);
+  box-shadow:0 0 0 2px var(--chrome)}
+.reddot{width:9px;height:9px;border-radius:50%;background:var(--blue);flex:none}
+.navat{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:15px;flex:none}
+.row.unread{background:color-mix(in srgb,var(--blue) 5%,var(--bg-elev))}
+.photo-row{display:flex;align-items:center;gap:14px}
+.photo-prev{width:64px;height:64px;border-radius:50%;background-size:cover;background-position:center;flex:none;
+  display:grid;place-items:center;color:#fff;font-weight:700;font-size:22px;box-shadow:inset 0 -1px 3px rgba(0,0,0,.15)}
+.hol-row{display:grid;grid-template-columns:150px 1fr 34px;gap:8px;align-items:center;margin-bottom:8px}
+
 /* ============ 员工端 ============ */
 .hero{background:var(--bg-elev);border-radius:var(--r-xl);box-shadow:var(--shadow-1);padding:20px;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;pointer-events:none;
@@ -399,7 +416,7 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
    t('key', {vars}) — 缺失的键回退到中文
    ========================================================================= */
 const LANGS = { zh: '中文', en: 'English', ms: 'Bahasa Melayu' };
-let LANG = 'zh';
+let LANG = 'en';
 
 const DOWS = {
   zh: { s: ['日', '一', '二', '三', '四', '五', '六'], m: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
@@ -558,6 +575,44 @@ const I18N = {
     'role.bar': '吧台', 'role.cashier': '收银', 'role.dish': '洗碗',
     'tpl.morning': '早班', 'tpl.lunch': '午市', 'tpl.evening': '晚班', 'tpl.close': '打烊', 'tpl.allday': '全天',
     'lt.personal': '事假', 'lt.sick': '病假', 'lt.annual': '年假', 'lt.unpaid': '无薪假',
+    'set.region': '地区制度', 'set.regionSub': '决定加班规则、法定扣款与货币',
+    'region.US': '美国 · FLSA', 'region.MY': '马来西亚 · EA 1955',
+    'region.switchTitle': '切换地区制度',
+    'region.switchMsg': '将把加班规则、货币与法定扣款改成 <b>{r}</b> 的标准。已有的排班与打卡记录不受影响。',
+    'region.switched': '已切换到 {r}',
+    'pay.restDay': '休息日', 'pay.ph': '公共假期', 'pay.net': '实发', 'pay.deduct': '法定扣款',
+    'pay.employerCon': '雇主缴纳', 'pay.deductLine': '员工法定扣款',
+    'pay.otCapWarn': '⚠︎ {n} 本月加班 {h}h，超过法定上限 {c}h',
+    'pay.noWithhold': '美国的联邦与州预扣税因人而异，这里只算应发工资与雇主成本。',
+    'pay.myNote': '马来西亚：正常工时每天 {d}h、每周 {w}h，超出按 {m}×；休息日与公假另按 EA 1955 计算。',
+    'set.holidays': '公共假期', 'set.holidaysSub': '这些日子上班按公假规则计算工资',
+    'set.addHoliday': '＋ 添加', 'set.holidayName': '假期名称', 'set.noHolidays': '还没有添加公共假期',
+    'set.restDay': '每周休息日', 'set.restDaySub': '休息日上班按 EA 1955 另计工资',
+    'set.punch': '打卡方式', 'set.punchSub': '扫码需要员工在店里扫屏幕上的二维码；加定位会再校验一次距离',
+    'punch.free': '自由打卡', 'punch.code': '扫码打卡', 'punch.geo': '扫码 + 定位',
+    'set.storeLoc': '门店位置', 'set.storeLocSub': '用于定位校验', 'set.useHere': '记录当前位置',
+    'set.radius': '允许范围', 'set.locSaved': '门店位置已记录', 'set.locFail': '拿不到位置，请检查浏览器定位权限',
+    'set.locNone': '未设置',
+    'punch.codeTitle': '门店打卡码', 'punch.codeSub': '把这个屏幕放在店里，员工扫码或输入数字打卡',
+    'punch.showCode': '打卡码', 'punch.refresh': '{n} 秒后更新',
+    'punch.scanTitle': '扫码打卡', 'punch.scanSub': '对准店里屏幕上的打卡码',
+    'punch.manual': '手动输入 6 位数字', 'punch.camera': '用摄像头扫描',
+    'punch.noCam': '这台设备不支持扫码，请手动输入数字', 'punch.camDenied': '没有摄像头权限，请手动输入数字',
+    'punch.wrong': '打卡码不正确或已过期', 'punch.tooFar': '距离门店约 {d}，超出允许范围 {r}',
+    'punch.geoFail': '需要定位权限才能打卡', 'punch.geoChecking': '正在确认位置…',
+    'punch.method': '打卡方式', 'punch.via.qr': '扫码', 'punch.via.code': '输码', 'punch.via.manual': '补录',
+    'punch.confirm': '确认打卡',
+    'login.title': '输入你的密码', 'login.sub': '{n}，请输入 4 位数字密码',
+    'login.wrong': '密码不正确', 'login.remember': '记住这台设备',
+    'staff.pin': '员工密码', 'staff.pinSub': '员工进入员工端时要输入的 4 位数字',
+    'staff.newPin': '重新生成', 'staff.pinNew': '新密码：{p}',
+    'staff.photo': '头像', 'staff.upload': '上传照片', 'staff.remove': '移除',
+    'staff.photoBad': '这张图片读不了，换一张试试',
+    'notif.title': '通知', 'notif.none': '没有新通知', 'notif.markAll': '全部标为已读',
+    'notif.leaveReq': '{n} 申请{t}', 'notif.leaveOK': '你的{t}申请已批准', 'notif.leaveNo': '你的{t}申请被拒绝',
+    'notif.missing': '有 {n} 天的班没有打卡记录', 'notif.myMissing': '你有 {n} 天没有打卡',
+    'notif.gap': '本周还有 {n} 个岗位没排到人', 'notif.ot': '{n} 本周已排 {h}h，超过 {c}h',
+    'notif.tomorrow': '明天有班 {a}–{b}',
     'set.pin': '管理端密码', 'set.pinSub': '设置后，从员工端返回管理端需要输入；留空表示不上锁',
     'pin.title': '输入管理端密码', 'pin.wrong': '密码不正确', 'pin.ph': '4–6 位数字', 'pin.ok': '进入',
     'msg.copied': '已复制 {n} 个班次（跳过请假与冲突）', 'msg.noCopy': '上周没有排班可复制',
@@ -712,6 +767,44 @@ const I18N = {
     'role.bar': 'Bar', 'role.cashier': 'Cashier', 'role.dish': 'Dishwasher',
     'tpl.morning': 'Morning', 'tpl.lunch': 'Lunch', 'tpl.evening': 'Evening', 'tpl.close': 'Closing', 'tpl.allday': 'All day',
     'lt.personal': 'Personal', 'lt.sick': 'Sick', 'lt.annual': 'Annual', 'lt.unpaid': 'Unpaid',
+    'set.region': 'Region', 'set.regionSub': 'Sets overtime rules, statutory contributions and currency',
+    'region.US': 'United States · FLSA', 'region.MY': 'Malaysia · EA 1955',
+    'region.switchTitle': 'Switch region',
+    'region.switchMsg': 'Overtime rules, currency and statutory contributions will follow the <b>{r}</b> standard. Existing shifts and punches are untouched.',
+    'region.switched': 'Switched to {r}',
+    'pay.restDay': 'Rest day', 'pay.ph': 'Public holiday', 'pay.net': 'Net pay', 'pay.deduct': 'Deductions',
+    'pay.employerCon': 'Employer contributions', 'pay.deductLine': 'Statutory deductions',
+    'pay.otCapWarn': '⚠︎ {n} has {h}h overtime this month, over the {c}h legal cap',
+    'pay.noWithhold': 'US federal and state withholding varies per person, so this shows gross pay and employer cost only.',
+    'pay.myNote': 'Malaysia: normal hours are {d}h a day and {w}h a week; beyond that is paid at {m}×. Rest days and public holidays follow EA 1955.',
+    'set.holidays': 'Public holidays', 'set.holidaysSub': 'Work on these days is paid at holiday rates',
+    'set.addHoliday': '＋ Add', 'set.holidayName': 'Holiday name', 'set.noHolidays': 'No public holidays added yet',
+    'set.restDay': 'Weekly rest day', 'set.restDaySub': 'Work on a rest day is paid under EA 1955 rules',
+    'set.punch': 'Clock-in method', 'set.punchSub': 'Scanning requires the code shown on the store screen; adding location checks the distance too',
+    'punch.free': 'Open', 'punch.code': 'Scan a code', 'punch.geo': 'Scan + location',
+    'set.storeLoc': 'Store location', 'set.storeLocSub': 'Used for the distance check', 'set.useHere': 'Use current location',
+    'set.radius': 'Allowed radius', 'set.locSaved': 'Store location saved', 'set.locFail': 'Could not get a location — check browser permissions',
+    'set.locNone': 'Not set',
+    'punch.codeTitle': 'Store clock-in code', 'punch.codeSub': 'Leave this screen up in the store — staff scan it or type the number',
+    'punch.showCode': 'Clock-in code', 'punch.refresh': 'refreshes in {n}s',
+    'punch.scanTitle': 'Scan to clock in', 'punch.scanSub': 'Point at the code on the store screen',
+    'punch.manual': 'Type the 6-digit code', 'punch.camera': 'Use the camera',
+    'punch.noCam': 'This device cannot scan — type the code instead', 'punch.camDenied': 'No camera permission — type the code instead',
+    'punch.wrong': 'That code is wrong or has expired', 'punch.tooFar': 'You are about {d} from the store, outside the {r} radius',
+    'punch.geoFail': 'Location permission is needed to clock in', 'punch.geoChecking': 'Checking your location…',
+    'punch.method': 'Method', 'punch.via.qr': 'Scanned', 'punch.via.code': 'Code', 'punch.via.manual': 'Manual',
+    'punch.confirm': 'Confirm',
+    'login.title': 'Enter your passcode', 'login.sub': '{n}, type your 4-digit passcode',
+    'login.wrong': 'Wrong passcode', 'login.remember': 'Remember this device',
+    'staff.pin': 'Staff passcode', 'staff.pinSub': 'The 4 digits they type to open the employee view',
+    'staff.newPin': 'Generate new', 'staff.pinNew': 'New passcode: {p}',
+    'staff.photo': 'Photo', 'staff.upload': 'Upload photo', 'staff.remove': 'Remove',
+    'staff.photoBad': 'That image could not be read — try another one',
+    'notif.title': 'Notifications', 'notif.none': 'Nothing new', 'notif.markAll': 'Mark all read',
+    'notif.leaveReq': '{n} requested {t}', 'notif.leaveOK': 'Your {t} request was approved', 'notif.leaveNo': 'Your {t} request was rejected',
+    'notif.missing': '{n} scheduled days have no punch record', 'notif.myMissing': 'You have {n} days with no punch',
+    'notif.gap': '{n} slots this week still have nobody', 'notif.ot': '{n} is scheduled {h}h this week, over {c}h',
+    'notif.tomorrow': 'You work tomorrow, {a}–{b}',
     'set.pin': 'Manager passcode', 'set.pinSub': 'Required to leave the employee view. Leave empty for no lock.',
     'pin.title': 'Enter the manager passcode', 'pin.wrong': 'Wrong passcode', 'pin.ph': '4–6 digits', 'pin.ok': 'Enter',
     'msg.copied': 'Copied {n} shifts (skipping leave and conflicts)', 'msg.noCopy': 'Last week has no shifts to copy',
@@ -866,6 +959,44 @@ const I18N = {
     'role.bar': 'Bar', 'role.cashier': 'Juruwang', 'role.dish': 'Pencuci pinggan',
     'tpl.morning': 'Syif pagi', 'tpl.lunch': 'Tengah hari', 'tpl.evening': 'Syif petang', 'tpl.close': 'Syif tutup', 'tpl.allday': 'Sepanjang hari',
     'lt.personal': 'Cuti peribadi', 'lt.sick': 'Cuti sakit', 'lt.annual': 'Cuti tahunan', 'lt.unpaid': 'Cuti tanpa gaji',
+    'set.region': 'Wilayah', 'set.regionSub': 'Menentukan peraturan OT, caruman berkanun dan mata wang',
+    'region.US': 'Amerika Syarikat · FLSA', 'region.MY': 'Malaysia · Akta Kerja 1955',
+    'region.switchTitle': 'Tukar wilayah',
+    'region.switchMsg': 'Peraturan OT, mata wang dan caruman berkanun akan mengikut standard <b>{r}</b>. Jadual dan rekod daftar sedia ada tidak terjejas.',
+    'region.switched': 'Ditukar kepada {r}',
+    'pay.restDay': 'Hari rehat', 'pay.ph': 'Cuti umum', 'pay.net': 'Gaji bersih', 'pay.deduct': 'Potongan',
+    'pay.employerCon': 'Caruman majikan', 'pay.deductLine': 'Potongan berkanun',
+    'pay.otCapWarn': '⚠︎ {n} ada {h}j OT bulan ini, melebihi had undang-undang {c}j',
+    'pay.noWithhold': 'Potongan cukai persekutuan dan negeri AS berbeza bagi setiap orang, jadi di sini hanya gaji kasar dan kos majikan.',
+    'pay.myNote': 'Malaysia: waktu kerja biasa {d}j sehari dan {w}j seminggu; lebih daripada itu dibayar {m}×. Hari rehat dan cuti umum ikut Akta Kerja 1955.',
+    'set.holidays': 'Cuti umum', 'set.holidaysSub': 'Kerja pada hari ini dibayar mengikut kadar cuti umum',
+    'set.addHoliday': '＋ Tambah', 'set.holidayName': 'Nama cuti', 'set.noHolidays': 'Belum ada cuti umum ditambah',
+    'set.restDay': 'Hari rehat mingguan', 'set.restDaySub': 'Kerja pada hari rehat dibayar mengikut Akta Kerja 1955',
+    'set.punch': 'Cara daftar masuk', 'set.punchSub': 'Imbasan memerlukan kod pada skrin kedai; tambah lokasi untuk semak jarak juga',
+    'punch.free': 'Bebas', 'punch.code': 'Imbas kod', 'punch.geo': 'Imbas + lokasi',
+    'set.storeLoc': 'Lokasi kedai', 'set.storeLocSub': 'Digunakan untuk semakan jarak', 'set.useHere': 'Guna lokasi semasa',
+    'set.radius': 'Jarak dibenarkan', 'set.locSaved': 'Lokasi kedai disimpan', 'set.locFail': 'Tidak dapat lokasi — sila semak kebenaran pelayar',
+    'set.locNone': 'Belum ditetapkan',
+    'punch.codeTitle': 'Kod daftar masuk kedai', 'punch.codeSub': 'Biarkan skrin ini di kedai — pekerja imbas atau taip nombornya',
+    'punch.showCode': 'Kod daftar', 'punch.refresh': 'bertukar dalam {n}s',
+    'punch.scanTitle': 'Imbas untuk daftar masuk', 'punch.scanSub': 'Halakan ke kod pada skrin kedai',
+    'punch.manual': 'Taip kod 6 digit', 'punch.camera': 'Guna kamera',
+    'punch.noCam': 'Peranti ini tidak boleh mengimbas — sila taip kod', 'punch.camDenied': 'Tiada kebenaran kamera — sila taip kod',
+    'punch.wrong': 'Kod salah atau telah luput', 'punch.tooFar': 'Anda kira-kira {d} dari kedai, melebihi jarak {r}',
+    'punch.geoFail': 'Kebenaran lokasi diperlukan untuk daftar masuk', 'punch.geoChecking': 'Menyemak lokasi anda…',
+    'punch.method': 'Cara', 'punch.via.qr': 'Imbas', 'punch.via.code': 'Kod', 'punch.via.manual': 'Manual',
+    'punch.confirm': 'Sahkan',
+    'login.title': 'Masukkan kata laluan anda', 'login.sub': '{n}, taip kata laluan 4 digit anda',
+    'login.wrong': 'Kata laluan salah', 'login.remember': 'Ingat peranti ini',
+    'staff.pin': 'Kata laluan pekerja', 'staff.pinSub': '4 digit yang ditaip untuk masuk mod pekerja',
+    'staff.newPin': 'Jana baharu', 'staff.pinNew': 'Kata laluan baharu: {p}',
+    'staff.photo': 'Gambar', 'staff.upload': 'Muat naik gambar', 'staff.remove': 'Buang',
+    'staff.photoBad': 'Gambar itu tidak dapat dibaca — cuba yang lain',
+    'notif.title': 'Pemberitahuan', 'notif.none': 'Tiada yang baharu', 'notif.markAll': 'Tanda semua dibaca',
+    'notif.leaveReq': '{n} memohon {t}', 'notif.leaveOK': 'Permohonan {t} anda diluluskan', 'notif.leaveNo': 'Permohonan {t} anda ditolak',
+    'notif.missing': '{n} hari berjadual tiada rekod daftar', 'notif.myMissing': 'Anda ada {n} hari tanpa rekod daftar',
+    'notif.gap': '{n} slot minggu ini masih tiada orang', 'notif.ot': '{n} dijadualkan {h}j minggu ini, melebihi {c}j',
+    'notif.tomorrow': 'Anda bekerja esok, {a}–{b}',
     'set.pin': 'Kata laluan pengurus', 'set.pinSub': 'Diperlukan untuk keluar daripada mod pekerja. Kosongkan untuk tiada kunci.',
     'pin.title': 'Masukkan kata laluan pengurus', 'pin.wrong': 'Kata laluan salah', 'pin.ph': '4–6 digit', 'pin.ok': 'Masuk',
     'msg.copied': '{n} syif disalin (cuti dan konflik dilangkau)', 'msg.noCopy': 'Tiada syif minggu lalu untuk disalin',
@@ -952,10 +1083,47 @@ function chipStyle(r) {
   return `background:${tint(c, 14)};color:var(--${c});box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--${c}) 30%, transparent)`;
 }
 
+/* ---------------- 地区制度 ----------------
+   美国走 FLSA：每周 40 小时以上 1.5 倍，雇主负担 FICA。
+   马来西亚走 1955 年雇佣法令：每天 8 小时 / 每周 45 小时以上 1.5 倍，
+   休息日与公共假期另有算法，雇主还要缴 EPF / SOCSO / EIS。 */
+const REGIONS = {
+  US: {
+    cur: '$', weekStart: 1, otWeeklyOn: true, otWeekly: 40, otDailyOn: false, otDaily: 8, otMult: 1.5,
+    restDayOn: false, phOn: false, otMonthCap: 0, payerTaxPct: 7.65,
+    employer: g => [{ k: 'FICA', pct: 7.65, v: g * 0.0765 }],
+    employee: () => [],
+  },
+  MY: {
+    cur: 'RM', weekStart: 1, otWeeklyOn: true, otWeekly: 45, otDailyOn: true, otDaily: 8, otMult: 1.5,
+    restDayOn: true, phOn: true, restOtMult: 2, phOtMult: 3, otMonthCap: 104, payerTaxPct: 14.95,
+    // EPF 雇主 13%（月薪 ≤ RM5000）或 12%；SOCSO 1.75%；EIS 0.2%
+    employer: (w, monthly) => {
+      const epfPct = (monthly == null ? w : monthly) <= 5000 ? 13 : 12;
+      return [{ k: 'EPF', pct: epfPct, v: w * epfPct / 100 },
+      { k: 'SOCSO', pct: 1.75, v: w * 0.0175 },
+      { k: 'EIS', pct: 0.2, v: w * 0.002 }];
+    },
+    employee: w => [{ k: 'EPF', pct: 11, v: w * 0.11 },
+    { k: 'SOCSO', pct: 0.5, v: w * 0.005 },
+    { k: 'EIS', pct: 0.2, v: w * 0.002 }],
+  },
+};
+const REG = () => REGIONS[DB.settings.region] || REGIONS.US;
+function applyRegion(code) {
+  const r = REGIONS[code]; if (!r) return;
+  const st = DB.settings;
+  st.region = code;
+  ['cur', 'weekStart', 'otWeeklyOn', 'otWeekly', 'otDailyOn', 'otDaily', 'otMult', 'payerTaxPct'].forEach(k => st[k] = r[k]);
+}
+
 /* ---------------- 默认数据 ---------------- */
 function defaultSettings() {
   return {
-    biz: '拾山 SHISHAN', cur: '$', weekStart: 1, lang: 'zh', bossPin: '',
+    biz: '拾山 SHISHAN', cur: '$', weekStart: 1, lang: 'en', bossPin: '',
+    region: 'US', restDay: 0,
+    punchMode: 'free', storeSecret: Math.random().toString(36).slice(2, 10).toUpperCase(),
+    codeWindow: 60, geo: { lat: null, lng: null, radius: 150 },
     otWeeklyOn: true, otWeekly: 40, otMult: 1.5,
     otDailyOn: false, otDaily: 8,
     dtOn: false, dtDaily: 12, dtMult: 2,
@@ -993,11 +1161,26 @@ function defaultDemand() {
   ];
   return { 0: sun(), 1: wd(), 2: wd(), 3: wd(), 4: wd(), 5: fri(), 6: sat() };
 }
+const newPin = () => String(Math.floor(1000 + Math.random() * 9000));
 const FULL_AVAIL = () => ({ 0: [480, 1440], 1: [480, 1440], 2: [480, 1440], 3: [480, 1440], 4: [480, 1440], 5: [480, 1440], 6: [480, 1440] });
+function defaultHolidays(region) {
+  const y = new Date().getFullYear();
+  if (region === 'MY') return [
+    { d: `${y}-08-31`, n: 'Hari Merdeka' }, { d: `${y}-09-16`, n: 'Hari Malaysia' },
+    { d: `${y}-12-25`, n: 'Christmas Day' },
+  ];
+  return [
+    { d: `${y}-07-04`, n: 'Independence Day' }, { d: `${y}-11-26`, n: 'Thanksgiving' },
+    { d: `${y}-12-25`, n: 'Christmas Day' },
+  ];
+}
 function defaultStaff() {
   const A = FULL_AVAIL;
   const mk = (n, roles, pay, rate, maxH, av, extra = {}) =>
-    Object.assign({ id: uid(), n, roles, pay, rate, maxH, avail: av, active: true, hired: '2024-06-01', phone: '' }, extra);
+    Object.assign({
+      id: uid(), n, roles, pay, rate, maxH, avail: av, active: true, hired: '2024-06-01',
+      phone: '', pin: newPin(), photo: null, restDay: null,
+    }, extra);
   return [
     mk('陈志明', ['mgr', 'cashier'], 'monthly', 4200, 45, A(), { hired: '2022-03-14', phone: '(919) 555-0142' }),
     mk('林大厨', ['chef', 'prep'], 'hourly', 26, 44, A(), { hired: '2022-08-02', phone: '(919) 555-0188' }),
@@ -1049,6 +1232,15 @@ function migrate() {
   const TP = { '早班': 'tpl.morning', '午市': 'tpl.lunch', '晚班': 'tpl.evening', '打烊': 'tpl.close', '全天': 'tpl.allday' };
   (DB.timeoff || []).forEach(x => { if (LT[x.type]) x.type = LT[x.type]; });
   (DB.templates || []).forEach(x => { if (!x.k && TP[x.n]) x.k = TP[x.n]; });
+  (DB.staff || []).forEach(x => {
+    if (!x.pin) x.pin = newPin();
+    if (x.photo === undefined) x.photo = null;
+    if (x.restDay === undefined) x.restDay = null;
+  });
+  DB.holidays = DB.holidays || [];
+  DB.seenNotif = DB.seenNotif || {};
+  if (!DB.settings.geo) DB.settings.geo = { lat: null, lng: null, radius: 150 };
+  if (!DB.settings.storeSecret) DB.settings.storeSecret = Math.random().toString(36).slice(2, 10).toUpperCase();
 }
 
 /* ---------------- 种子数据 ---------------- */
@@ -1059,6 +1251,8 @@ function seed() {
     demand: defaultDemand(),
     staff: defaultStaff(),
     shifts: [], punches: [], timeoff: [], tips: {},
+    holidays: defaultHolidays('US'),
+    seenNotif: {},
   };
   const ws = weekStartOf(TODAY);
   // 请假样例
@@ -1224,6 +1418,38 @@ function payMin(staffId, date) {
 
 function periodKey(from, to) { return from + '~' + to; }
 
+/* 某人某天属于哪一类日子（只有马来西亚制度才区分） */
+function dayKind(s, date) {
+  const r = REG();
+  if (r.phOn && (DB.holidays || []).some(h => h.d === date)) return 'ph';
+  const rd = s.restDay == null ? DB.settings.restDay : s.restDay;
+  if (r.restDayOn && dowOf(date) === rd) return 'rest';
+  return 'normal';
+}
+const holidayOn = date => (DB.holidays || []).find(h => h.d === date);
+
+/* EA 1955：休息日上班的工资 */
+function restDayPay(s, min) {
+  const r = REG(), nd = DB.settings.otDaily || 8, h = min / 60, dayWage = nd * s.rate;
+  if (h <= nd / 2) return dayWage / 2;
+  if (h <= nd) return dayWage;
+  return dayWage + (h - nd) * s.rate * (r.restOtMult || 2);
+}
+/* EA 1955：公共假期上班的工资（两天工资起） */
+function holidayPay(s, min) {
+  const r = REG(), nd = DB.settings.otDaily || 8, h = min / 60, dayWage = nd * s.rate;
+  if (h <= nd) return dayWage * 2;
+  return dayWage * 2 + (h - nd) * s.rate * (r.phOtMult || 3);
+}
+/* 某人某个月已排/已打的加班小时（马来西亚每月上限 104 小时） */
+function monthOT(staffId, anyDate) {
+  const d = parseISO(anyDate), from = iso(new Date(d.getFullYear(), d.getMonth(), 1)),
+    to = iso(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+  const P = computePayroll(from, to);
+  const row = P.rows.find(x => x.s.id === staffId);
+  return row ? row.ot / 60 : 0;
+}
+
 /* 计算一个周期的薪资明细 */
 function computePayroll(from, to) {
   const st = DB.settings;
@@ -1232,19 +1458,23 @@ function computePayroll(from, to) {
 
   const rows = DB.staff.filter(s => s.active || DB.shifts.some(x => x.staffId === s.id && x.date >= from && x.date <= to)).map(s => {
     const weeks = {};
-    let totalMin = 0, missing = 0, dayList = [];
+    let totalMin = 0, missing = 0, dayList = [], restMin = 0, phMin = 0, restPay = 0, phPay = 0;
     days.forEach(d => {
       const pm = payMin(s.id, d);
       if (pm.from === 'missing' && pm.sched > 0) missing++;
       if (!pm.min) return;
+      const kind = dayKind(s, d);
+      totalMin += pm.min;
+      dayList.push({ date: d, min: pm.min, from: pm.from, kind });
+      if (kind === 'rest') { restMin += pm.min; if (s.pay === 'hourly') restPay += restDayPay(s, pm.min); return; }
+      if (kind === 'ph') { phMin += pm.min; if (s.pay === 'hourly') phPay += holidayPay(s, pm.min); return; }
       const wk = weekStartOf(d);
       weeks[wk] = weeks[wk] || { reg: 0, ot: 0, dt: 0 };
-      let m = pm.min; totalMin += m;
+      let m = pm.min;
       let dt = 0, ot = 0;
       if (st.dtOn && m > st.dtDaily * 60) { dt = m - st.dtDaily * 60; m -= dt; }
       if (st.otDailyOn && m > st.otDaily * 60) { ot = m - st.otDaily * 60; m -= ot; }
       weeks[wk].reg += m; weeks[wk].ot += ot; weeks[wk].dt += dt;
-      dayList.push({ date: d, min: pm.min, from: pm.from });
     });
     let reg = 0, ot = 0, dt = 0;
     Object.values(weeks).forEach(w => {
@@ -1257,21 +1487,31 @@ function computePayroll(from, to) {
     let base, otPay = 0, dtPay = 0;
     if (salaried) {
       base = s.rate * 12 / 365 * days.length;            // 月薪按天折算
+      restPay = 0; phPay = 0;                            // 月薪制的休息日/公假津贴另议
     } else {
       base = reg / 60 * s.rate;
       otPay = ot / 60 * s.rate * st.otMult;
       dtPay = dt / 60 * s.rate * st.dtMult;
     }
-    return { s, salaried, rate, reg, ot, dt, totalMin, base, otPay, dtPay, tips: 0, adj: 0, missing, dayList };
+    return {
+      s, salaried, rate, reg, ot, dt, totalMin, base, otPay, dtPay,
+      restMin, phMin, restPay, phPay, tips: 0, adj: 0, missing, dayList,
+    };
   });
 
   // 小费池按可分小费岗位的工时分配（管理岗与月薪制不参与，符合 FLSA）
   const tipMin = rows.reduce((n, r) => n + (tipEligible(r.s) ? r.totalMin : 0), 0);
+  const R = REG(), monthScale = 30 / Math.max(days.length, 1);
   rows.forEach(r => {
     const elig = tipEligible(r.s);
     r.tips = tipMin > 0 && elig ? tipPool * (r.totalMin / tipMin) : 0;
-    r.gross = r.base + r.otPay + r.dtPay + r.tips;
-    r.employer = r.gross * (st.payerTaxPct / 100);
+    r.wages = r.base + r.otPay + r.dtPay + r.restPay + r.phPay;   // 小费不算工资，不进法定缴纳
+    r.gross = r.wages + r.tips;
+    r.conts = R.employer(r.wages, r.wages * monthScale);
+    r.employer = r.conts.reduce((n, c) => n + c.v, 0);
+    r.deducts = R.employee(r.wages);
+    r.deduct = r.deducts.reduce((n, c) => n + c.v, 0);
+    r.net = r.gross - r.deduct;
     r.total = r.gross + r.employer;
   });
   rows.sort((a, b) => b.gross - a.gross);
@@ -1280,9 +1520,10 @@ function computePayroll(from, to) {
     from, to, rows, tipPool,
     tot: {
       min: sum('totalMin'), reg: sum('reg'), ot: sum('ot'), dt: sum('dt'),
+      restMin: sum('restMin'), phMin: sum('phMin'), restPay: sum('restPay'), phPay: sum('phPay'),
       base: sum('base'), otPay: sum('otPay'), dtPay: sum('dtPay'), tips: sum('tips'),
       gross: sum('gross'), employer: sum('employer'), total: sum('total'),
-      missing: sum('missing'),
+      deduct: sum('deduct'), net: sum('net'), missing: sum('missing'),
     }
   };
 }
@@ -1489,9 +1730,10 @@ function renderNav() {
     $('#nav').innerHTML = `<div class="nav-sec">${t('mode.emp')}</div>` + EMP_NAV.map(([id, k, i]) =>
       `<button class="nav-item ${state.eview === id ? 'on' : ''}" data-act="ego" data-v="${id}">
         <span class="ni-ico">${i}</span><span>${t(k)}</span></button>`).join('');
+    const un = unseenNotif();
     $('#tabbar').innerHTML = EMP_NAV.map(([id, k, i]) =>
       `<button class="tab ${state.eview === id ? 'on' : ''}" data-act="ego" data-v="${id}">
-        <span class="tab-ico">${i}</span><span>${t(k)}</span></button>`).join('');
+        <span class="tab-ico">${i}${id === 'eleave' && un ? '<i class="tdot"></i>' : ''}</span><span>${t(k)}</span></button>`).join('');
   } else {
     $('#nav').innerHTML = BOSS_NAV.map(g =>
       `<div class="nav-sec">${t(g.g)}</div>` + g.items.map(([id, k, i]) =>
@@ -1501,7 +1743,7 @@ function renderNav() {
     const tabs = [['dash', 'nav.dash', '◎'], ['sched', 'nav.sched', '▦'], ['time', 'nav.time', '◷'], ['pay', 'nav.pay', '＄'], ['more', 'nav.more', '⋯']];
     $('#tabbar').innerHTML = tabs.map(([id, k, i]) =>
       `<button class="tab ${state.view === id ? 'on' : ''}" data-act="${id === 'more' ? 'moreMenu' : 'go'}" data-v="${id}">
-        <span class="tab-ico">${i}</span><span>${t(k)}</span></button>`).join('');
+        <span class="tab-ico">${i}${id === 'more' && pend ? '<i class="tdot"></i>' : ''}</span><span>${t(k)}</span></button>`).join('');
   }
 
   $('#sideFoot').innerHTML =
@@ -1534,7 +1776,10 @@ function render() {
 }
 
 function topbarHTML(title, sub, right = '') {
-  return `<div><div class="tb-title">${title}</div><div class="tb-sub">${sub}</div></div><div class="tb-right">${right}</div>`;
+  const un = unseenNotif();
+  const bell = `<button class="btn ico gho bell ${un ? 'has' : ''}" data-act="notif" aria-label="${t('notif.title')}">🔔</button>`;
+  return `<div><div class="tb-title">${title}</div><div class="tb-sub">${sub}</div></div>
+    <div class="tb-right">${right}${bell}</div>`;
 }
 function weekNav() {
   const ws = state.week, we = addDays(ws, 6);
@@ -1612,7 +1857,7 @@ VIEWS.dash = {
       const s = staffById(sh.staffId); if (!s) return '';
       const p = DB.punches.find(x => x.shiftId === sh.id);
       return `<div class="row tap" data-act="editShift" data-id="${sh.id}">
-            <div class="avatar" style="background:${avaColor(s)}">${initials(s.n)}</div>
+            ${avatarHTML(s, '')}
             <div class="row-m"><div class="row-t">${esc(s.n)}</div>
               <div class="row-s">${roleName(sh.role)} · ${hh(shiftMin(sh))}${t('c.hoursShort')}</div></div>
             <div class="row-r"><span class="mono">${sh.start}–${sh.end}</span>
@@ -1629,7 +1874,7 @@ VIEWS.dash = {
         ${ot.length ? ot.map(({ s, m }) => {
       const over = m > DB.settings.otWeekly * 60;
       return `<div class="row tap" data-act="openStaff" data-id="${s.id}">
-            <div class="avatar sm" style="background:${avaColor(s)}">${initials(s.n)}</div>
+            ${avatarHTML(s, 'sm')}
             <div class="row-m"><div class="row-t">${esc(s.n)}</div>
               <div class="row-s">${roleName(primaryRole(s))} · ${money(s.rate)}${t('c.perHour')}</div></div>
             <div class="row-r"><span class="pill ${over ? 'r' : 'o'}">${hh(m)}${t('c.hoursShort')}${over ? ' · ' + t('dash.otTag', { h: hh(m - DB.settings.otWeekly * 60) }) : ''}</span></div></div>`;
@@ -1641,7 +1886,7 @@ VIEWS.dash = {
         ${pend.length ? pend.slice(0, 5).map(x => {
       const s = staffById(x.staffId); if (!s) return '';
       return `<div class="row tap" data-act="openLeave" data-id="${x.id}">
-            <div class="avatar sm" style="background:${avaColor(s)}">${initials(s.n)}</div>
+            ${avatarHTML(s, 'sm')}
             <div class="row-m"><div class="row-t">${esc(s.n)} · ${leaveName(x.type)}</div>
               <div class="row-s">${fmtMDs(x.from)}${x.from !== x.to ? ' – ' + fmtMDs(x.to) : ''} · ${esc(x.reason)}</div></div>
             <span class="chev">›</span></div>`;
@@ -1690,7 +1935,7 @@ VIEWS.sched = {
       const wm = weekMinutes(s.id, ws);
       const over = wm > DB.settings.otWeekly * 60;
       return `<div class="snamecell">
-          <div class="avatar sm" style="background:${avaColor(s)}">${initials(s.n)}</div>
+          ${avatarHTML(s, 'sm')}
           <div class="snc-m"><div class="snc-n">${esc(s.n)}</div>
             <div class="snc-s">${s.roles.map(roleName).join('/')}</div></div>
           <div class="snc-h ${over ? 'ot' : ''}">${hh(wm)}${t('c.hoursShort')}</div>
@@ -1929,7 +2174,8 @@ function weekTimeRows(ws) {
 
 VIEWS.time = {
   top: () => topbarHTML(t('nav.time'), t('time.sub'),
-    `${weekNav()}<button class="btn" data-act="fillPunch">${t('time.fill')}</button>`),
+    `${weekNav()}<button class="btn" data-act="fillPunch">${t('time.fill')}</button>
+     <button class="btn pri" data-act="punchCode">▩ ${t('punch.showCode')}</button>`),
   body() {
     const ws = state.week, days = rangeDays(ws, 7);
     const rows = weekTimeRows(ws);
@@ -1950,7 +2196,7 @@ VIEWS.time = {
       <tbody>${rows.map(r => {
       const diff = r.act - r.sch;
       return `<tr data-act="openTime" data-id="${r.s.id}" style="cursor:pointer">
-          <td><div class="rowline"><div class="avatar sm" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
+          <td><div class="rowline">${avatarHTML(r.s, 'sm')}
             <b>${esc(r.s.n)}</b></div></td>
           <td class="dim">${r.s.roles.map(roleName).join(' / ')}</td>
           <td class="num">${hh(r.sch)}${H}</td><td class="num">${hh(r.act)}${H}</td>
@@ -1985,7 +2231,8 @@ function punchRowsHTML(staffId, ws, editable) {
         : lv ? `<div class="row-s" style="color:var(--purple)">${t('c.onLeave')} · ${leaveName(lv.type)}</div>`
           : `<div class="row-s">${t('c.rest')}</div>`}
         ${p ? `<div class="row-t" style="font-size:13px">${t('time.actualAt', { a: p.in, b: p.out, h: hh(w || 0) })}
-              ${late ? `<span class="pill o">${t('time.late')}</span>` : ''}</div>`
+              ${late ? `<span class="pill o">${t('time.late')}</span>` : ''}
+              <span class="pill n">${t('punch.via.' + (p.via === 'qr' ? 'qr' : p.via === 'code' ? 'code' : 'manual'))}</span></div>`
         : sh && d < TODAY ? `<div class="row-t" style="font-size:13px;color:var(--red)">${t('time.missing')}</div>` : ''}
       </div>
       <div class="row-r" style="gap:5px">
@@ -2047,7 +2294,9 @@ VIEWS.pay = {
   body() {
     const [from, to] = payPeriod();
     const P = computePayroll(from, to);
-    const st = DB.settings, H = t('c.hoursShort');
+    const st = DB.settings, H = t('c.hoursShort'), R = REG();
+    const extraCols = R.restDayOn || R.phOn, hasDeduct = P.tot.deduct > 0;
+    const capWarn = R.otMonthCap ? P.rows.filter(r => monthOT(r.s.id, to) > R.otMonthCap) : [];
     const rules = [st.otWeeklyOn ? t('pay.ruleWeek', { h: st.otWeekly, m: st.otMult }) : t('pay.ruleOff'),
     st.otDailyOn ? t('pay.ruleDay', { h: st.otDaily, m: st.otMult }) : ''].filter(Boolean).join(' · ');
     return `
@@ -2058,7 +2307,8 @@ VIEWS.pay = {
       `<span class="rowline" style="gap:6px">${t('pay.tipPool')}
         <input class="inp" style="height:26px;width:104px;font-size:13px" type="number" min="0" step="10"
           value="${P.tipPool}" data-act="setTips" data-k="${periodKey(from, to)}"></span>`)}
-      ${statCard(t('pay.employer'), money0(P.tot.total), t('pay.employerSub', { p: st.payerTaxPct, v: money0(P.tot.employer) }))}
+      ${statCard(t('pay.employer'), money0(P.tot.total),
+      `${R.employer(100, 100).map(c => c.k + ' ' + c.pct + '%').join(' + ')} · ${money0(P.tot.employer)}`)}
     </div>
     ${P.tot.missing ? `<div class="card" style="margin-bottom:14px;background:#ff950012">
       <div class="rowline" style="flex-wrap:wrap;gap:8px"><span class="pill o">${t('pay.missWarn', { n: P.tot.missing })}</span>
@@ -2066,29 +2316,40 @@ VIEWS.pay = {
       <div class="spacer"></div><button class="btn sm" data-act="go" data-v="time">${t('pay.goFix')}</button></div></div>` : ''}
     <div class="card pad0"><div class="scrollx"><table class="tbl">
       <thead><tr><th>${t('c.staff')}</th><th>${t('pay.method')}</th><th class="num">${t('pay.reg')}</th><th class="num">${t('pay.ot')}</th>
+        ${extraCols ? `<th class="num">${t('pay.restDay')}</th><th class="num">${t('pay.ph')}</th>` : ''}
         <th class="num">${t('pay.base')}</th><th class="num">${t('pay.otPay')}</th><th class="num">${t('pay.tips')}</th>
-        <th class="num">${t('pay.grossCol')}</th><th class="num">${t('pay.taxCol')}</th><th class="num">${t('pay.costCol')}</th><th></th></tr></thead>
+        <th class="num">${t('pay.grossCol')}</th>
+        ${hasDeduct ? `<th class="num">${t('pay.deduct')}</th><th class="num">${t('pay.net')}</th>` : ''}
+        <th class="num">${t('pay.taxCol')}</th><th class="num">${t('pay.costCol')}</th><th></th></tr></thead>
       <tbody>${P.rows.map(r => `<tr data-act="openSlip" data-id="${r.s.id}" style="cursor:pointer">
-        <td><div class="rowline"><div class="avatar sm" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
+        <td><div class="rowline">${avatarHTML(r.s, 'sm')}
           <div><b>${esc(r.s.n)}</b><div class="row-s">${r.s.roles.map(roleName).join(' / ')}</div></div></div></td>
         <td class="dim">${r.salaried ? t('pay.monthly', { v: money0(r.s.rate) }) : money(r.s.rate) + t('c.perHour')}</td>
         <td class="num">${hh(r.reg)}${H}</td>
         <td class="num" style="${r.ot ? 'color:var(--orange);font-weight:650' : ''}">${r.ot ? hh(r.ot) + H : '–'}</td>
+        ${extraCols ? `<td class="num" style="${r.restPay ? 'color:var(--purple)' : ''}">${r.restPay ? money(r.restPay) : '–'}</td>
+        <td class="num" style="${r.phPay ? 'color:var(--pink)' : ''}">${r.phPay ? money(r.phPay) : '–'}</td>` : ''}
         <td class="num">${money(r.base)}</td>
         <td class="num">${r.otPay ? money(r.otPay) : '–'}</td>
         <td class="num">${r.tips ? money(r.tips) : '–'}</td>
         <td class="num"><b>${money(r.gross)}</b></td>
+        ${hasDeduct ? `<td class="num dim">−${money(r.deduct)}</td><td class="num"><b>${money(r.net)}</b></td>` : ''}
         <td class="num dim">${money(r.employer)}</td>
         <td class="num">${money(r.total)}</td>
         <td class="num chev">›</td></tr>`).join('')}</tbody>
       <tfoot><tr><td>${t('c.total')}</td><td></td><td class="num">${hh(P.tot.reg)}${H}</td><td class="num">${hh(P.tot.ot)}${H}</td>
+        ${extraCols ? `<td class="num">${money(P.tot.restPay)}</td><td class="num">${money(P.tot.phPay)}</td>` : ''}
         <td class="num">${money(P.tot.base)}</td><td class="num">${money(P.tot.otPay)}</td>
         <td class="num">${money(P.tot.tips)}</td><td class="num">${money(P.tot.gross)}</td>
+        ${hasDeduct ? `<td class="num">−${money(P.tot.deduct)}</td><td class="num">${money(P.tot.net)}</td>` : ''}
         <td class="num">${money(P.tot.employer)}</td><td class="num">${money(P.tot.total)}</td><td></td></tr></tfoot>
     </table></div></div>
     <div class="hint" style="margin-top:12px">
       ${t('pay.srcLine', { src: st.payFrom === 'actual' ? t('pay.srcActual') : t('pay.srcSched'), rules })}
       <button class="btn sm gho" data-act="go" data-v="set">${t('nav.set')}</button>${t('pay.srcLine2')}
+      <div style="margin-top:6px">${st.region === 'MY'
+        ? t('pay.myNote', { d: st.otDaily, w: st.otWeekly, m: st.otMult }) : t('pay.noWithhold')}</div>
+      ${capWarn.map(r => `<div style="color:var(--orange);margin-top:4px">${t('pay.otCapWarn', { n: esc(r.s.n), h: monthOT(r.s.id, to).toFixed(1), c: R.otMonthCap })}</div>`).join('')}
     </div>`;
   }
 };
@@ -2099,7 +2360,7 @@ function slipBody(r, from, to) {
   const days = r.dayList.map(d => `<div class="kv"><span>${fmtMDs(d.date)} ${DOW_M(dowOf(d.date))}
       <span class="tiny dim">${srcName[d.from]}</span></span><b>${hh(d.min)}${H}</b></div>`).join('');
   return `
-      <div class="rowline"><div class="avatar lg" style="background:${avaColor(r.s)}">${initials(r.s.n)}</div>
+      <div class="rowline">${avatarHTML(r.s, 'lg')}
         <div><div style="font-weight:700;font-size:16px">${esc(r.s.n)}</div>
           <div class="row-s">${r.s.roles.map(roleName).join(' / ')} · ${r.salaried ? t('staff.monthly') : money(r.s.rate) + t('c.perHour')}</div></div>
         <div class="spacer"></div><div style="text-align:right"><div class="tiny dim">${t('pay.grossCol')}</div>
@@ -2110,9 +2371,17 @@ function slipBody(r, from, to) {
       ${r.ot ? `<div class="kv"><span style="color:var(--orange)">${t('pay.otLine', { m: st.otMult })}</span>
         <b style="color:var(--orange)">${hh(r.ot)}${H} × ${money(r.s.rate * st.otMult)} = ${money(r.otPay)}</b></div>` : ''}
       ${r.dt ? `<div class="kv"><span>${t('pay.dtLine')}</span><b>${hh(r.dt)}${H} = ${money(r.dtPay)}</b></div>` : ''}
+      ${r.restPay ? `<div class="kv"><span style="color:var(--purple)">${t('pay.restDay')} · ${hh(r.restMin)}${H}</span>
+        <b style="color:var(--purple)">${money(r.restPay)}</b></div>` : ''}
+      ${r.phPay ? `<div class="kv"><span style="color:var(--pink)">${t('pay.ph')} · ${hh(r.phMin)}${H}</span>
+        <b style="color:var(--pink)">${money(r.phPay)}</b></div>` : ''}
       ${r.tips ? `<div class="kv"><span>${t('pay.tipLine')}</span><b>${money(r.tips)}</b></div>` : ''}
       <div class="kv"><span><b>${t('pay.grossLine')}</b></span><b style="font-size:16px">${money(r.gross)}</b></div>
-      <div class="kv"><span class="dim">${t('pay.taxLine', { p: st.payerTaxPct })}</span><span class="dim">${money(r.employer)}</span></div>
+      ${r.deducts.length ? `<div class="sec-t">${t('pay.deductLine')}</div>
+        ${r.deducts.map(c => `<div class="kv"><span>${c.k} ${c.pct}%</span><b>−${money(c.v)}</b></div>`).join('')}
+        <div class="kv"><span><b>${t('pay.net')}</b></span><b style="font-size:16px;color:var(--green)">${money(r.net)}</b></div>` : ''}
+      <div class="sec-t">${t('pay.employerCon')}</div>
+      ${r.conts.map(c => `<div class="kv"><span class="dim">${c.k} ${c.pct}%</span><span class="dim">${money(c.v)}</span></div>`).join('')}
       <div class="kv"><span class="dim">${t('pay.costLine')}</span><span class="dim">${money(r.total)}</span></div>
       <div class="sec-t">${t('pay.byDay')}</div>${days || `<div class="hint">${t('pay.noHours')}</div>`}
       ${r.missing ? `<div class="hint" style="color:var(--orange);margin-top:8px">${t('pay.slipMiss', { n: r.missing })}</div>` : ''}`;
@@ -2143,7 +2412,7 @@ VIEWS.staff = {
       const days = [0, 1, 2, 3, 4, 5, 6].filter(d => s.avail[d]).length;
       return `<div class="card" data-act="openStaff" data-id="${s.id}" style="cursor:pointer">
         <div class="rowline" style="margin-bottom:12px">
-          <div class="avatar lg" style="background:${avaColor(s)}">${initials(s.n)}</div>
+          ${avatarHTML(s, 'lg')}
           <div style="min-width:0"><div style="font-weight:680;font-size:15.5px;letter-spacing:-.015em">${esc(s.n)}
             ${s.active ? '' : `<span class="pill n">${t('staff.inactive')}</span>`}</div>
             <div class="row-s">${s.roles.map(roleName).join(' / ')}${s.note ? ' · ' + esc(s.note) : ''}</div></div>
@@ -2183,13 +2452,27 @@ function openStaffEditor(id) {
   const s = isNew
     ? { id: uid(), n: '', roles: ['server'], pay: 'hourly', rate: 15, maxH: 30, avail: FULL_AVAIL(), active: true, hired: TODAY, phone: '', note: '' }
     : Object.assign({}, staffById(id));
+  if (!s.pin) s.pin = newPin();
   const av = JSON.parse(JSON.stringify(s.avail));
+  let photo = s.photo || null;
   openSheet({
     title: isNew ? t('staff.new') : s.n, sub: isNew ? '' : t('staff.hiredOn', { d: s.hired }),
     body: `
+      <div class="photo-row">
+        <div class="photo-prev" id="s_prev" style="${photo ? `background-image:url('${photo}')` : `background:${avaColor(s)}`}">${photo ? '' : initials(s.n || '?')}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm" data-act="upPhoto">📷 ${t('staff.upload')}</button>
+          <button class="btn sm dgr" data-act="rmPhoto">${t('staff.remove')}</button>
+        </div>
+      </div>
       <div class="frow">
         <div class="field"><label>${t('staff.name')}</label><input class="inp" id="s_n" value="${esc(s.n)}"></div>
         <div class="field"><label>${t('staff.phone')}</label><input class="inp" id="s_p" value="${esc(s.phone || '')}"></div>
+      </div>
+      <div class="row" style="border-radius:12px;background:var(--fill)">
+        <div class="row-m"><div class="row-t">${t('staff.pin')}</div><div class="row-s">${t('staff.pinSub')}</div></div>
+        <div class="row-r"><b class="mono" id="s_pin" style="font-size:17px;letter-spacing:.12em">${s.pin}</b>
+          <button class="btn sm" data-act="newPinAct">${t('staff.newPin')}</button></div>
       </div>
       <div class="field"><label>${t('staff.roles')}</label><div class="chips-row" id="s_roles">
         ${Object.keys(ROLES).map(r => `<button class="tglchip ${s.roles.includes(r) ? 'on' : ''}" data-act="tglRole" data-r="${r}">${roleName(r)}</button>`).join('')}
@@ -2229,6 +2512,20 @@ function openStaffEditor(id) {
         $$(`[data-av="${d}"] input`, el).forEach(i => i.disabled = !on);
       };
       ACT.tglActive = b => { active = b.classList.toggle('on'); };
+      ACT.upPhoto = () => pickPhoto(d => {
+        photo = d;
+        const pv = $('#s_prev', el);
+        pv.style.backgroundImage = `url('${d}')`; pv.style.background = `url('${d}') center/cover`; pv.textContent = '';
+      });
+      ACT.rmPhoto = () => {
+        photo = null;
+        const pv = $('#s_prev', el);
+        pv.style.backgroundImage = ''; pv.style.background = avaColor(s); pv.textContent = initials($('#s_n', el).value || '?');
+      };
+      ACT.newPinAct = () => {
+        s.pin = newPin(); $('#s_pin', el).textContent = s.pin;
+        toast(t('staff.pinNew', { p: s.pin }), 'info');
+      };
       ACT.saveStaff = () => {
         const n = $('#s_n', el).value.trim();
         if (!n) return toast(t('staff.needName'), 'err');
@@ -2241,7 +2538,7 @@ function openStaffEditor(id) {
         const rec = {
           id: s.id, n, roles, pay: $('#s_pay', el).value, rate: Number($('#s_rate', el).value) || 0,
           maxH: Number($('#s_max', el).value) || 40, hired: $('#s_h', el).value, phone: $('#s_p', el).value,
-          note: $('#s_note', el).value, avail, active,
+          note: $('#s_note', el).value, avail, active, pin: s.pin, photo, restDay: s.restDay == null ? null : s.restDay,
         };
         if (isNew) DB.staff.push(rec); else Object.assign(staffById(s.id), rec);
         save(); closeSheet(); render(); toast(isNew ? t('staff.added', { n }) : t('staff.updated'));
@@ -2266,7 +2563,7 @@ function leaveCard(x, actions) {
   const n = daysBetween(x.from, x.to) + 1;
   const clash = DB.shifts.filter(y => y.staffId === x.staffId && y.date >= x.from && y.date <= x.to);
   return `<div class="row">
-    <div class="avatar" style="background:${avaColor(s)}">${initials(s.n)}</div>
+    ${avatarHTML(s, '')}
     <div class="row-m"><div class="row-t">${t('leave.head', { n: esc(s.n), t: leaveName(x.type), d: n })}</div>
       <div class="row-s">${fmtMD(x.from)}${x.from !== x.to ? ' – ' + fmtMD(x.to) : ''} · ${esc(x.reason || t('leave.noReason'))}</div>
       ${clash.length && x.status !== 'rejected' ? `<div class="tiny" style="color:var(--orange);margin-top:2px">${t('leave.clash', { n: clash.length })}</div>` : ''}</div>
@@ -2370,6 +2667,39 @@ VIEWS.set = {
             </div></div></div>
         </div>
 
+        <div class="sec-t">${t('set.region')}</div>
+        <div class="list" style="margin-bottom:16px">
+          <div class="row stack"><div class="row-m"><div class="row-t">${t('set.region')}</div>
+            <div class="row-s">${t('set.regionSub')}</div></div>
+            <div class="row-r"><div class="seg">${Object.keys(REGIONS).map(r =>
+      `<button data-act="setRegion" data-r="${r}" class="${st.region === r ? 'on' : ''}">${t('region.' + r)}</button>`).join('')}</div></div></div>
+          ${REG().restDayOn ? `<div class="row"><div class="row-m"><div class="row-t">${t('set.restDay')}</div>
+            <div class="row-s">${t('set.restDaySub')}</div></div>
+            <div class="row-r"><select class="inp" style="width:130px;height:32px" data-set="restDay">
+              ${[0, 1, 2, 3, 4, 5, 6].map(d => `<option value="${d}" ${st.restDay === d ? 'selected' : ''}>${DOW_L(d)}</option>`).join('')}
+            </select></div></div>` : ''}
+        </div>
+
+        <div class="sec-t">${t('set.punch')}</div>
+        <div class="list" style="margin-bottom:16px">
+          <div class="row stack"><div class="row-m"><div class="row-t">${t('set.punch')}</div>
+            <div class="row-s">${t('set.punchSub')}</div></div>
+            <div class="row-r"><div class="seg">
+              ${[['free', 'punch.free'], ['code', 'punch.code'], ['geo', 'punch.geo']].map(([v, k]) =>
+        `<button data-act="setPunch" data-v="${v}" class="${st.punchMode === v ? 'on' : ''}">${t(k)}</button>`).join('')}
+            </div></div></div>
+          ${st.punchMode !== 'free' ? `<div class="row"><div class="row-m"><div class="row-t">${t('punch.showCode')}</div>
+            <div class="row-s">${t('punch.codeSub')}</div></div>
+            <div class="row-r"><button class="btn sm pri" data-act="punchCode">▩ ${t('punch.showCode')}</button></div></div>` : ''}
+          ${st.punchMode === 'geo' ? `
+          <div class="row"><div class="row-m"><div class="row-t">${t('set.storeLoc')}</div>
+            <div class="row-s">${st.geo && st.geo.lat != null ? st.geo.lat.toFixed(5) + ', ' + st.geo.lng.toFixed(5) : t('set.locNone')}</div></div>
+            <div class="row-r"><button class="btn sm" data-act="useHere">📍 ${t('set.useHere')}</button></div></div>
+          <div class="row"><div class="row-m"><div class="row-t">${t('set.radius')}</div></div>
+            <div class="row-r"><input class="inp" style="width:96px;height:32px;text-align:right" type="number" step="25" min="25"
+              data-set="geoRadius" value="${(st.geo && st.geo.radius) || 150}"><span class="dim tiny">m</span></div></div>` : ''}
+        </div>
+
         <div class="sec-t">${t('set.store')}</div>
         <div class="list" style="margin-bottom:16px">
           <div class="row"><div class="row-m"><div class="row-t">${t('set.storeName')}</div></div>
@@ -2415,6 +2745,18 @@ VIEWS.set = {
               <input class="inp" style="width:104px;height:32px" type="time" data-tpl="${x.id}" data-k="end" value="${x.end}"></div></div>`).join('')}
         </div>
 
+        ${REG().phOn ? `<div class="sec-t">${t('set.holidays')}</div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="hint" style="margin-bottom:10px">${t('set.holidaysSub')}</div>
+          ${(DB.holidays || []).length ? DB.holidays.slice().sort((a, b) => a.d < b.d ? -1 : 1).map(h => `
+            <div class="hol-row">
+              <input class="inp" type="date" data-hol="${h.d}" data-k="d" value="${h.d}">
+              <input class="inp" data-hol="${h.d}" data-k="n" value="${esc(h.n || '')}" placeholder="${t('set.holidayName')}">
+              <button class="btn ico dgr" data-act="delHoliday" data-d="${h.d}">✕</button>
+            </div>`).join('') : `<div class="hint">${t('set.noHolidays')}</div>`}
+          <button class="btn sm" data-act="addHoliday" style="margin-top:6px">${t('set.addHoliday')}</button>
+        </div>` : ''}
+
         <div class="sec-t">${t('set.demand')}</div>
         <div class="card pad0" style="margin-bottom:16px"><div class="scrollx"><table class="tbl">
           <thead><tr><th>${t('set.dayCol')}</th><th>${t('set.blockCol')}</th>
@@ -2458,9 +2800,10 @@ EVIEWS.pick = {
   body() {
     return `<div class="pickgrid">${DB.staff.filter(s => s.active).map(s => `
       <button class="pickcard" data-act="pickMe" data-id="${s.id}">
-        <div class="avatar lg" style="background:${avaColor(s)}">${initials(s.n)}</div>
+        ${avatarHTML(s, 'lg')}
         <div style="font-weight:650;font-size:15px">${esc(s.n)}</div>
         <div class="row-s">${s.roles.map(roleName).join(' / ')}</div>
+        <div class="tiny dim">🔒 ${t('login.title')}</div>
       </button>`).join('')}</div>
       <div class="hint" style="margin-top:16px;max-width:520px">${t('mode.hint')}</div>`;
   }
@@ -2522,7 +2865,7 @@ EVIEWS.my = {
     return `
     <div class="hero" style="margin-bottom:14px">
       <div class="rowline" style="margin-bottom:12px">
-        <div class="avatar lg" style="background:${avaColor(s)}">${initials(s.n)}</div>
+        ${avatarHTML(s, 'lg')}
         <div><div class="hero-h">${t('emp.hello', { n: esc(s.n) })}</div>
           <div class="row-s">${fmtDW(TODAY)}</div></div>
         <div class="spacer"></div>
@@ -2622,9 +2965,11 @@ EVIEWS.eme = {
       <div>
         <div class="card" style="margin-bottom:16px">
           <div class="rowline" style="margin-bottom:12px">
-            <div class="avatar lg" style="background:${avaColor(s)}">${initials(s.n)}</div>
-            <div><div style="font-weight:680;font-size:16px">${esc(s.n)}</div>
-              <div class="row-s">${s.roles.map(roleName).join(' / ')}${s.note ? ' · ' + esc(s.note) : ''}</div></div></div>
+            ${avatarHTML(s, 'lg')}
+            <div style="min-width:0"><div style="font-weight:680;font-size:16px">${esc(s.n)}</div>
+              <div class="row-s">${s.roles.map(roleName).join(' / ')}${s.note ? ' · ' + esc(s.note) : ''}</div></div>
+            <div class="spacer"></div>
+            <button class="btn sm" data-act="upPhotoMe">📷 ${t('staff.upload')}</button></div>
           <div class="kv"><span class="dim">${t('emp.myRate')}</span>
             <b>${s.pay === 'monthly' ? money0(s.rate) + ' ' + t('c.perMonth') : money(s.rate) + ' ' + t('c.perHour')}</b></div>
           <div class="kv"><span class="dim">${t('staff.maxH')}</span><b>${s.maxH}${H}</b></div>
@@ -2657,6 +3002,449 @@ EVIEWS.eme = {
     </div>`;
   }
 };
+
+
+/* =========================================================================
+   打卡：门店轮换码 + 二维码 + 扫码 / 定位校验
+   （二维码编码器：字节模式，纠错等级 M，版本 1–3，自动选掩码）
+   ========================================================================= */
+const QR = (() => {
+  const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+  (() => { let x = 1; for (let i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; } for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255]; })();
+  const mul = (a, b) => (a && b) ? EXP[LOG[a] + LOG[b]] : 0;
+
+  function genPoly(n) {
+    let g = [1];
+    for (let i = 0; i < n; i++) {
+      const next = new Array(g.length + 1).fill(0);
+      for (let j = 0; j < g.length; j++) { next[j] ^= g[j]; next[j + 1] ^= mul(g[j], EXP[i]); }
+      g = next;
+    }
+    return g;
+  }
+  function rsEncode(data, ecLen) {
+    const g = genPoly(ecLen), res = data.concat(new Array(ecLen).fill(0));
+    for (let i = 0; i < data.length; i++) {
+      const f = res[i]; if (!f) continue;
+      for (let j = 0; j < g.length; j++) res[i + j] ^= mul(g[j], f);
+    }
+    return res.slice(data.length);
+  }
+  /* 版本表（纠错等级 M，单块）：[版本, 数据码字, 纠错码字] */
+  const VER = [[1, 16, 10], [2, 28, 16], [3, 44, 26]];
+  const FORMAT_M = [0x5412, 0x5125, 0x5E7C, 0x5B4B, 0x45F9, 0x40CE, 0x4F97, 0x4AA0];
+  const ALIGN = { 1: null, 2: 18, 3: 22 };
+
+  function encode(text) {
+    const bytes = Array.from(new TextEncoder().encode(text));
+    const v = VER.find(x => bytes.length <= x[1] - 2);
+    if (!v) throw new Error('QR payload too long');
+    const [ver, dataCW, ecCW] = v, size = 17 + 4 * ver;
+
+    /* --- 位流 --- */
+    const bits = [];
+    const push = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+    push(4, 4); push(bytes.length, 8);
+    bytes.forEach(b => push(b, 8));
+    for (let i = 0; i < 4 && bits.length < dataCW * 8; i++) bits.push(0);
+    while (bits.length % 8) bits.push(0);
+    const data = [];
+    for (let i = 0; i < bits.length; i += 8) data.push(parseInt(bits.slice(i, i + 8).join(''), 2));
+    const PAD = [0xEC, 0x11];
+    while (data.length < dataCW) data.push(PAD[(data.length - bytes.length - 2) % 2 === 0 ? 0 : 1]);
+    while (data.length > dataCW) data.pop();
+    const all = data.concat(rsEncode(data, ecCW));
+
+    /* --- 骨架 --- */
+    const m = Array.from({ length: size }, () => new Array(size).fill(null));
+    const fixed = Array.from({ length: size }, () => new Array(size).fill(false));
+    const set = (r, c, v) => { m[r][c] = v; fixed[r][c] = true; };
+    const finder = (r0, c0) => {
+      for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) {
+        const rr = r0 + r, cc = c0 + c;
+        if (rr < 0 || cc < 0 || rr >= size || cc >= size) continue;
+        const on = (r >= 0 && r <= 6 && (c === 0 || c === 6)) || (c >= 0 && c <= 6 && (r === 0 || r === 6))
+          || (r >= 2 && r <= 4 && c >= 2 && c <= 4);
+        set(rr, cc, on ? 1 : 0);
+      }
+    };
+    finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
+    for (let i = 8; i < size - 8; i++) { set(6, i, i % 2 === 0 ? 1 : 0); set(i, 6, i % 2 === 0 ? 1 : 0); }
+    const a = ALIGN[ver];
+    if (a) for (let r = -2; r <= 2; r++) for (let c = -2; c <= 2; c++)
+      set(a + r, a + c, (Math.max(Math.abs(r), Math.abs(c)) !== 1) ? 1 : 0);
+    set(size - 8, 8, 1);                                  // 固定的暗模块
+    for (let i = 0; i < 9; i++) {                         // 预留格式信息区
+      if (i !== 6) { if (m[8][i] === null) set(8, i, 0); if (m[i][8] === null) set(i, 8, 0); }
+    }
+    for (let i = 0; i < 8; i++) {
+      if (m[8][size - 1 - i] === null) set(8, size - 1 - i, 0);
+      if (m[size - 1 - i][8] === null) set(size - 1 - i, 8, 0);
+    }
+
+    /* --- 数据按 Z 字形填入 --- */
+    let bi = 0, dir = -1, row = size - 1;
+    const dbits = [];
+    all.forEach(b => { for (let i = 7; i >= 0; i--) dbits.push((b >> i) & 1); });
+    for (let col = size - 1; col > 0; col -= 2) {
+      if (col === 6) col--;
+      while (true) {
+        for (let k = 0; k < 2; k++) {
+          const c = col - k;
+          if (!fixed[row][c]) { m[row][c] = bi < dbits.length ? dbits[bi++] : 0; }
+        }
+        row += dir;
+        if (row < 0 || row >= size) { row -= dir; dir = -dir; break; }
+      }
+    }
+
+    /* --- 掩码：8 种全试，挑罚分最低的 --- */
+    const maskFn = [
+      (r, c) => (r + c) % 2 === 0, (r, c) => r % 2 === 0, (r, c) => c % 3 === 0,
+      (r, c) => (r + c) % 3 === 0, (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+      (r, c) => (r * c) % 2 + (r * c) % 3 === 0, (r, c) => ((r * c) % 2 + (r * c) % 3) % 2 === 0,
+      (r, c) => ((r + c) % 2 + (r * c) % 3) % 2 === 0,
+    ];
+    const apply = k => {
+      const out = m.map(r => r.slice());
+      for (let r = 0; r < size; r++) for (let c = 0; c < size; c++)
+        if (!fixed[r][c] && maskFn[k](r, c)) out[r][c] ^= 1;
+      const f = FORMAT_M[k], bit = i => (f >> i) & 1;
+      for (let i = 0; i <= 5; i++) out[i][8] = bit(i);          // 第一份：列 8 自上而下
+      out[7][8] = bit(6); out[8][8] = bit(7); out[8][7] = bit(8);
+      for (let i = 9; i <= 14; i++) out[8][14 - i] = bit(i);
+      for (let i = 0; i <= 7; i++) out[8][size - 1 - i] = bit(i);   // 第二份：行 8 自右向左
+      for (let i = 8; i <= 14; i++) out[size - 15 + i][8] = bit(i);
+      out[size - 8][8] = 1;
+      return out;
+    };
+    const penalty = g => {
+      let p = 0;
+      const line = arr => {
+        let run = 1;
+        for (let i = 1; i < arr.length; i++) {
+          if (arr[i] === arr[i - 1]) run++;
+          else { if (run >= 5) p += 3 + (run - 5); run = 1; }
+        }
+        if (run >= 5) p += 3 + (run - 5);
+      };
+      for (let r = 0; r < size; r++) line(g[r]);
+      for (let c = 0; c < size; c++) line(g.map(r => r[c]));
+      for (let r = 0; r < size - 1; r++) for (let c = 0; c < size - 1; c++)
+        if (g[r][c] === g[r][c + 1] && g[r][c] === g[r + 1][c] && g[r][c] === g[r + 1][c + 1]) p += 3;
+      /* 罚分规则 3：数据区里出现类似定位图案的 1:1:3:1:1 序列（两个方向都要查） */
+      const P1 = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0], P2 = [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1];
+      const scan = arr => {
+        let hits = 0;
+        for (let i = 0; i + 11 <= arr.length; i++)
+          if (P1.every((v, j) => arr[i + j] === v) || P2.every((v, j) => arr[i + j] === v)) hits++;
+        return hits;
+      };
+      for (let r = 0; r < size; r++) p += 40 * scan(g[r]);
+      for (let c = 0; c < size; c++) p += 40 * scan(g.map(x => x[c]));
+      let dark = 0; g.forEach(r => r.forEach(v => dark += v));
+      p += Math.floor(Math.abs(dark * 100 / (size * size) - 50) / 5) * 10;
+      return p;
+    };
+    let best = null, bestP = Infinity;
+    for (let k = 0; k < 8; k++) { const g = apply(k), pp = penalty(g); if (pp < bestP) { bestP = pp; best = g; } }
+    return best;
+  }
+
+  /* 画到 canvas 上，外围留 4 个模块的静区 */
+  function draw(canvas, text, px) {
+    const g = encode(text), n = g.length, q = 4, total = n + q * 2;
+    const scale = Math.max(2, Math.floor(px / total));
+    canvas.width = canvas.height = total * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#000';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++)
+      if (g[r][c]) ctx.fillRect((c + q) * scale, (r + q) * scale, scale, scale);
+    return canvas;
+  }
+  return { encode, draw };
+})();
+
+/* ---------------- 轮换打卡码 ---------------- */
+const punchWindow = () => Math.max(20, DB.settings.codeWindow || 60);
+const punchStep = (t = Date.now()) => Math.floor(t / 1000 / punchWindow());
+function punchCodeFor(step) {
+  const str = (DB.settings.storeSecret || 'BB') + '|' + step;
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return String(Math.abs(h) % 1000000).padStart(6, '0');
+}
+const currentPunchCode = () => punchCodeFor(punchStep());
+const punchSecondsLeft = () => punchWindow() - Math.floor(Date.now() / 1000) % punchWindow();
+function validPunchCode(code) {
+  const c = String(code || '').replace(/\D/g, ''), st = punchStep();
+  return c.length === 6 && [st, st - 1].some(x => punchCodeFor(x) === c);
+}
+const QR_PREFIX = 'BB1:';
+
+/* ---------------- 定位 ---------------- */
+function distanceM(a, b) {
+  const R = 6371000, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+const fmtDist = m => m >= 1000 ? (m / 1000).toFixed(1) + ' km' : Math.round(m) + ' m';
+function getPosition() {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej(new Error('no geo'));
+    navigator.geolocation.getCurrentPosition(
+      p => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }),
+      e => rej(e), { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+  });
+}
+
+/* ---------------- 管理端：门店打卡码 ---------------- */
+let codeTimer = null;
+function openPunchCode() {
+  openSheet({
+    title: t('punch.codeTitle'), sub: t('punch.codeSub'),
+    body: `<div style="text-align:center">
+        <canvas id="qrCanvas" style="width:min(268px,64vw);height:auto;border-radius:14px;box-shadow:var(--shadow-1);image-rendering:pixelated"></canvas>
+        <div id="qrCode" style="font-size:40px;font-weight:700;letter-spacing:.14em;font-variant-numeric:tabular-nums;margin-top:14px"></div>
+        <div class="hint" id="qrLeft" style="margin-top:2px"></div>
+      </div>`,
+    footer: `<button class="btn pri" data-act="closeSheet">${t('c.close')}</button>`,
+    onMount(el) {
+      const cv = $('#qrCanvas', el);
+      const tick = () => {
+        if (!document.body.contains(cv)) { clearInterval(codeTimer); codeTimer = null; return; }
+        const code = currentPunchCode();
+        if (cv.dataset.code !== code) { QR.draw(cv, QR_PREFIX + code, 268); cv.dataset.code = code; }
+        $('#qrCode', el).textContent = code.slice(0, 3) + ' ' + code.slice(3);
+        $('#qrLeft', el).textContent = t('punch.refresh', { n: punchSecondsLeft() });
+      };
+      tick(); clearInterval(codeTimer); codeTimer = setInterval(tick, 1000);
+    }
+  });
+}
+
+/* ---------------- 员工端：扫码打卡 ---------------- */
+let scanStream = null, scanRAF = null;
+function stopScan() {
+  if (scanRAF) { clearInterval(scanRAF); scanRAF = null; }
+  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+}
+/* onOK(via) 在校验通过后调用 */
+function openScanner(onOK) {
+  const mode = DB.settings.punchMode;
+  const needGeo = mode === 'geo';
+  openSheet({
+    title: t('punch.scanTitle'), sub: t('punch.scanSub'),
+    body: `
+      <div id="scanBox" style="position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:1/1;display:none">
+        <video id="scanVid" playsinline muted style="width:100%;height:100%;object-fit:cover"></video>
+        <div style="position:absolute;inset:14%;border:3px solid rgba(255,255,255,.9);border-radius:14px;box-shadow:0 0 0 100vmax rgba(0,0,0,.35)"></div>
+      </div>
+      <div id="scanMsg" class="hint" style="text-align:center"></div>
+      <div class="field"><label>${t('punch.manual')}</label>
+        <input class="inp" id="scanCode" inputmode="numeric" maxlength="7" placeholder="000000"
+          style="height:56px;font-size:26px;text-align:center;letter-spacing:.3em;font-variant-numeric:tabular-nums"></div>
+      ${needGeo ? `<div class="hint" id="geoMsg">📍 ${t('set.storeLoc')}: ${DB.settings.geo && DB.settings.geo.lat != null ? fmtDist(0) === '0 m' ? '' : '' : t('set.locNone')}</div>` : ''}`,
+    footer: `<button class="btn" data-act="closeSheet">${t('c.cancel')}</button>
+             <button class="btn pri" data-act="scanConfirm">${t('punch.confirm')}</button>`,
+    onMount(el) {
+      const msg = $('#scanMsg', el), input = $('#scanCode', el);
+      const finish = async via => {
+        if (needGeo) {
+          const g = DB.settings.geo;
+          if (g && g.lat != null) {
+            msg.textContent = t('punch.geoChecking');
+            try {
+              const pos = await getPosition();
+              const d = distanceM(pos, g);
+              if (d > (g.radius || 150) + (pos.acc || 0)) {
+                msg.innerHTML = `<span style="color:var(--red)">${t('punch.tooFar', { d: fmtDist(d), r: fmtDist(g.radius || 150) })}</span>`;
+                return toast(t('punch.tooFar', { d: fmtDist(d), r: fmtDist(g.radius || 150) }), 'err');
+              }
+            } catch (e) { return toast(t('punch.geoFail'), 'err'); }
+          }
+        }
+        stopScan(); closeSheet(); setTimeout(() => onOK(via), 80);
+      };
+      ACT.scanConfirm = () => {
+        if (!validPunchCode(input.value)) { input.value = ''; return toast(t('punch.wrong'), 'err'); }
+        finish('code');
+      };
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') ACT.scanConfirm(); });
+
+      /* 摄像头 + 条码识别（支持的设备上才有） */
+      (async () => {
+        if (!('BarcodeDetector' in window) || !navigator.mediaDevices) { msg.textContent = t('punch.noCam'); input.focus(); return; }
+        try {
+          const formats = await window.BarcodeDetector.getSupportedFormats();
+          if (!formats.includes('qr_code')) { msg.textContent = t('punch.noCam'); return; }
+          scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          const vid = $('#scanVid', el);
+          vid.srcObject = scanStream; await vid.play();
+          $('#scanBox', el).style.display = 'block';
+          msg.textContent = t('punch.scanSub');
+          const det = new window.BarcodeDetector({ formats: ['qr_code'] });
+          scanRAF = setInterval(async () => {
+            if (!document.body.contains(vid)) return stopScan();
+            try {
+              const codes = await det.detect(vid);
+              for (const c of codes) {
+                const raw = String(c.rawValue || '');
+                const val = raw.startsWith(QR_PREFIX) ? raw.slice(QR_PREFIX.length) : raw;
+                if (validPunchCode(val)) { clearInterval(scanRAF); scanRAF = null; finish('qr'); return; }
+              }
+            } catch (e) { }
+          }, 350);
+        } catch (e) { msg.textContent = t('punch.camDenied'); input.focus(); }
+      })();
+    }
+  });
+}
+
+/* 打卡入口：按门店策略决定是否需要扫码 */
+function punchGate(onOK) {
+  if (DB.settings.punchMode === 'free') return onOK('free');
+  openScanner(onOK);
+}
+
+/* =========================================================================
+   头像 / 员工登录 / 通知
+   ========================================================================= */
+function avatarHTML(s, cls = '') {
+  if (!s) return '';
+  return s.photo
+    ? `<div class="avatar ${cls}" style="background-image:url('${s.photo}');background-size:cover;background-position:center"></div>`
+    : `<div class="avatar ${cls}" style="background:${avaColor(s)}">${initials(s.n)}</div>`;
+}
+/* 选图 → 居中裁成方形 → 压到 160px 的 JPEG，直接存进 localStorage */
+function pickPhoto(cb) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const S = 160, cv = document.createElement('canvas');
+        cv.width = cv.height = S;
+        const ctx = cv.getContext('2d'), m = Math.min(img.width, img.height);
+        ctx.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, S, S);
+        cb(cv.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = () => toast(t('staff.photoBad'), 'err');
+      img.src = r.result;
+    };
+    r.onerror = () => toast(t('staff.photoBad'), 'err');
+    r.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+/* ---------------- 员工登录 ---------------- */
+function pinToken(s) {
+  const str = s.id + ':' + s.pin;
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = (h * 33 ^ str.charCodeAt(i)) >>> 0;
+  return s.id + '.' + h.toString(36);
+}
+function openPinLogin(staffId) {
+  const s = staffById(staffId); if (!s) return;
+  openSheet({
+    title: t('login.title'), sub: t('login.sub', { n: s.n }),
+    body: `<div style="display:flex;justify-content:center;margin-bottom:4px">${avatarHTML(s, 'lg')}</div>
+      <div class="field"><input class="inp" id="pinIn" type="password" inputmode="numeric" maxlength="4"
+        placeholder="••••" style="height:56px;font-size:26px;text-align:center;letter-spacing:.5em"></div>
+      <div class="row" style="border-radius:12px;background:var(--fill)">
+        <div class="row-m"><div class="row-t">${t('login.remember')}</div></div>
+        <div class="switch on" data-act="tglRemember"></div></div>`,
+    footer: `<button class="btn" data-act="closeSheet">${t('c.cancel')}</button>
+             <button class="btn pri" data-act="pinLogin">${t('pin.ok')}</button>`,
+    onMount(el) {
+      const input = $('#pinIn', el);
+      let remember = true;
+      setTimeout(() => input.focus(), 250);
+      ACT.tglRemember = b => { remember = b.classList.toggle('on'); };
+      const submit = () => {
+        if (input.value !== String(s.pin)) {
+          input.value = ''; input.style.borderColor = 'var(--red)';
+          return toast(t('login.wrong'), 'err');
+        }
+        closeSheet();
+        state.me = s.id; state.eview = 'my';
+        lsSet('banbiao.me', s.id);
+        lsSet('banbiao.meTok', remember ? pinToken(s) : '');
+        setTimeout(() => { render(); toast(t('emp.hello', { n: s.n }), 'info'); }, 80);
+      };
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+      input.addEventListener('input', () => { if (input.value.length === 4) submit(); });
+      ACT.pinLogin = submit;
+    }
+  });
+}
+
+/* ---------------- 通知 ---------------- */
+function notifications() {
+  const out = [], ws = weekStartOf(TODAY), st = DB.settings;
+  if (state.mode === 'boss') {
+    DB.timeoff.filter(x => x.status === 'pending').forEach(x => {
+      const s = staffById(x.staffId); if (!s) return;
+      out.push({
+        id: 'lv' + x.id, ico: '✈', col: 'orange', act: 'leave',
+        title: t('notif.leaveReq', { n: s.n, t: leaveName(x.type) }),
+        sub: `${fmtMD(x.from)}${x.from !== x.to ? ' – ' + fmtMD(x.to) : ''} · ${esc(x.reason || '')}`,
+      });
+    });
+    let miss = 0;
+    rangeDays(addDays(TODAY, -7), 7).forEach(d => shiftsOf(d).forEach(sh => {
+      if (!DB.punches.some(p => p.staffId === sh.staffId && p.date === d)) miss++;
+    }));
+    if (miss) out.push({ id: 'miss' + TODAY, ico: '◷', col: 'red', act: 'time', title: t('notif.missing', { n: miss }), sub: t('time.missHint') });
+    const gaps = weekGaps(ws).reduce((n, g) => n + g.miss, 0);
+    if (gaps) out.push({ id: 'gap' + ws, ico: '▦', col: 'blue', act: 'sched', title: t('notif.gap', { n: gaps }), sub: `${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))}` });
+    DB.staff.forEach(s => {
+      const m = weekMinutes(s.id, ws);
+      if (s.pay === 'hourly' && m > st.otWeekly * 60)
+        out.push({ id: 'ot' + ws + s.id, ico: '⚠︎', col: 'orange', act: 'sched', title: t('notif.ot', { n: s.n, h: hh(m), c: st.otWeekly }), sub: roleName(primaryRole(s)) });
+    });
+  } else if (me()) {
+    const s = me();
+    DB.timeoff.filter(x => x.staffId === s.id && x.status !== 'pending').forEach(x => {
+      out.push({
+        id: 'lv' + x.id + x.status, ico: '✈', col: x.status === 'approved' ? 'green' : 'red', act: 'eleave',
+        title: x.status === 'approved' ? t('notif.leaveOK', { t: leaveName(x.type) }) : t('notif.leaveNo', { t: leaveName(x.type) }),
+        sub: `${fmtMD(x.from)}${x.from !== x.to ? ' – ' + fmtMD(x.to) : ''}`,
+      });
+    });
+    const tmr = addDays(TODAY, 1), sh = shiftsOf(tmr, s.id)[0];
+    if (sh) out.push({ id: 'tm' + tmr, ico: '▦', col: 'blue', act: 'my', title: t('notif.tomorrow', { a: sh.start, b: sh.end }), sub: `${fmtDW(tmr)} · ${roleName(sh.role)}` });
+    let miss = 0;
+    rangeDays(addDays(TODAY, -7), 7).forEach(d => {
+      if (schedMin(s.id, d) > 0 && !DB.punches.some(p => p.staffId === s.id && p.date === d)) miss++;
+    });
+    if (miss) out.push({ id: 'mymiss' + TODAY, ico: '◷', col: 'orange', act: 'ehours', title: t('notif.myMissing', { n: miss }), sub: t('time.missHint') });
+  }
+  return out;
+}
+const unseenNotif = () => notifications().filter(n => !DB.seenNotif[n.id]).length;
+
+function openNotif() {
+  const list = notifications();
+  openSheet({
+    title: t('notif.title'), sub: list.length ? t('dash.nReq', { n: list.length }) : '',
+    body: list.length ? `<div class="list">${list.map(n => `
+      <div class="row tap ${DB.seenNotif[n.id] ? '' : 'unread'}" data-act="gotoNotif" data-id="${esc(n.id)}" data-v="${n.act}">
+        <div class="navat" style="background:color-mix(in srgb,var(--${n.col}) 16%,var(--bg-elev));color:var(--${n.col})">${n.ico}</div>
+        <div class="row-m"><div class="row-t">${n.title}</div><div class="row-s">${n.sub || ''}</div></div>
+        ${DB.seenNotif[n.id] ? '<span class="chev">›</span>' : '<span class="reddot"></span>'}
+      </div>`).join('')}</div>`
+      : `<div class="empty"><span class="e-ico">🔔</span>${t('notif.none')}</div>`,
+    footer: list.length ? `<button class="btn" data-act="closeSheet">${t('c.close')}</button>
+             <button class="btn pri" data-act="markAllNotif">${t('notif.markAll')}</button>` : '',
+  });
+}
 
 /* =========================================================================
    动作
@@ -2717,25 +3505,63 @@ const ACT = {
     if (sheetStack.length) closeSheet();
     state.mode = 'boss'; lsSet('banbiao.mode', 'boss'); render(); scrollTop();
   },
-  pickMe(b) {
-    state.me = b.dataset.id; state.eview = 'my'; lsSet('banbiao.me', state.me);
-    render(); toast(t('emp.hello', { n: me().n }), 'info');
+  pickMe: b => openPinLogin(b.dataset.id),
+  signOutEmp() { state.me = null; lsSet('banbiao.me', ''); lsSet('banbiao.meTok', ''); render(); },
+  notif: () => openNotif(),
+  markAllNotif() {
+    notifications().forEach(n => DB.seenNotif[n.id] = 1);
+    save(); closeSheet(); setTimeout(render, 80);
   },
-  signOutEmp() { state.me = null; lsSet('banbiao.me', ''); render(); },
+  gotoNotif(b) {
+    DB.seenNotif[b.dataset.id] = 1; save(); closeSheet();
+    const v = b.dataset.v;
+    setTimeout(() => { if (state.mode === 'emp') ego(v); else go(v); }, 80);
+  },
+  punchCode: () => openPunchCode(),
+  upPhotoMe: () => pickPhoto(d => { const s = me(); if (!s) return; s.photo = d; save(); render(); }),
+  setRegion(b) {
+    const r = b.dataset.r; if (r === DB.settings.region) return;
+    confirmSheet(t('region.switchTitle'), t('region.switchMsg', { r: t('region.' + r) }), t('c.confirm'), () => {
+      applyRegion(r);
+      DB.holidays = defaultHolidays(r);
+      save(); state.week = weekStartOf(TODAY); render();
+      toast(t('region.switched', { r: t('region.' + r) }));
+    }, false);
+  },
+  setPunch(b) { DB.settings.punchMode = b.dataset.v; save(); render(); },
+  async useHere() {
+    toast(t('punch.geoChecking'), 'info');
+    try {
+      const p = await getPosition();
+      DB.settings.geo = Object.assign({ radius: 150 }, DB.settings.geo, { lat: p.lat, lng: p.lng });
+      save(); render(); toast(t('set.locSaved'));
+    } catch (e) { toast(t('set.locFail'), 'err'); }
+  },
+  addHoliday() {
+    DB.holidays = DB.holidays || [];
+    let d = TODAY;
+    while (DB.holidays.some(h => h.d === d)) d = addDays(d, 1);
+    DB.holidays.push({ d, n: '' }); save(); render();
+  },
+  delHoliday(b) { DB.holidays = (DB.holidays || []).filter(h => h.d !== b.dataset.d); save(); render(); },
 
   /* ---- 员工打卡 ---- */
   clockIn() {
     const s = me(), sh = todayShiftOf(s.id); if (!sh) return;
-    const now = nowHM();
-    DB.punches.push({ id: uid(), shiftId: sh.id, staffId: s.id, date: TODAY, in: now, out: null, brk: sh.brk });
-    save(); render();
-    const late = t2m(now) - t2m(sh.start) > DB.settings.lateGrace;
-    toast(t('emp.clockInOK', { t: now }) + (late ? ' · ' + t('time.late') : ''), late ? 'warn' : 'ok');
+    punchGate(via => {
+      const now = nowHM();
+      DB.punches.push({ id: uid(), shiftId: sh.id, staffId: s.id, date: TODAY, in: now, out: null, brk: sh.brk, via });
+      save(); render();
+      const late = t2m(now) - t2m(sh.start) > DB.settings.lateGrace;
+      toast(t('emp.clockInOK', { t: now }) + (late ? ' · ' + t('time.late') : ''), late ? 'warn' : 'ok');
+    });
   },
   clockOut() {
     const s = me(), p = punchOf(s.id, TODAY); if (!p) return;
-    p.out = nowHM(); save(); render();
-    toast(t('emp.clockOutOK', { t: p.out, h: hh(workedMin(s.id, TODAY) || 0) }));
+    punchGate(via => {
+      p.out = nowHM(); p.outVia = via; save(); render();
+      toast(t('emp.clockOutOK', { t: p.out, h: hh(workedMin(s.id, TODAY) || 0) }));
+    });
   },
   empLeave: () => openLeaveEditor(null, true),
   viewLeave: b => openLeaveEditor(b.dataset.id, true),
@@ -2914,9 +3740,18 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const el = e.target;
+  if (el.dataset.hol) {
+    const h = (DB.holidays || []).find(x => x.d === el.dataset.hol);
+    if (h) { h[el.dataset.k] = el.value; save(); render(); }
+    return;
+  }
+  if (el.dataset.set === 'geoRadius') {
+    DB.settings.geo = Object.assign({ lat: null, lng: null }, DB.settings.geo, { radius: Number(el.value) || 150 });
+    save(); render(); return;
+  }
   if (el.dataset.set !== undefined) {
     const k = el.dataset.set;
-    const v = el.type === 'number' ? Number(el.value) : (k === 'weekStart' ? Number(el.value) : el.value);
+    const v = el.type === 'number' ? Number(el.value) : (['weekStart', 'restDay'].includes(k) ? Number(el.value) : el.value);
     DB.settings[k] = v; save();
     if (k === 'weekStart') state.week = weekStartOf(TODAY);
     render(); return;
@@ -2955,12 +3790,15 @@ addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { i
     savedMode = localStorage.getItem('banbiao.mode');
     savedMe = localStorage.getItem('banbiao.me');
   } catch (e) { }
-  LANG = savedLang && LANGS[savedLang] ? savedLang : 'zh';
+  LANG = savedLang && LANGS[savedLang] ? savedLang : 'en';
   load();
   if (savedLang && LANGS[savedLang]) DB.settings.lang = savedLang;
-  else LANG = LANGS[DB.settings.lang] ? DB.settings.lang : 'zh';
+  else LANG = LANGS[DB.settings.lang] ? DB.settings.lang : 'en';
   if (savedMode === 'emp') state.mode = 'emp';
-  if (savedMe && staffById(savedMe)) state.me = savedMe;
+  let savedTok = null;
+  try { savedTok = localStorage.getItem('banbiao.meTok'); } catch (e) { }
+  const who = savedMe && staffById(savedMe);
+  if (who && savedTok && savedTok === pinToken(who)) state.me = savedMe;   // 只有记住过这台设备才免密
   state.week = weekStartOf(TODAY);
   render();
 })();
