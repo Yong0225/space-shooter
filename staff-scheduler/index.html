@@ -354,12 +354,13 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
 }
 
 /* ============ 通知 / 头像 / 打卡 ============ */
-.bell{position:relative;font-size:15px}
-.bell.has::after{content:'';position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;
-  background:var(--red);box-shadow:0 0 0 2px var(--bg-elev)}
+.bell{position:relative;font-size:15px;overflow:visible}
+.badge{position:absolute;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--red);
+  color:#fff;font-size:10.5px;font-weight:700;line-height:1;font-style:normal;display:grid;place-items:center;
+  font-variant-numeric:tabular-nums;letter-spacing:0}
+.bell .badge{top:-3px;right:-4px;box-shadow:0 0 0 2px var(--bg-elev)}
 .tab-ico{position:relative}
-.tdot{position:absolute;top:-2px;right:-7px;width:8px;height:8px;border-radius:50%;background:var(--red);
-  box-shadow:0 0 0 2px var(--chrome)}
+.tab-ico .badge{top:-5px;right:-13px;box-shadow:0 0 0 2px var(--chrome)}
 .reddot{width:9px;height:9px;border-radius:50%;background:var(--blue);flex:none}
 .navat{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:15px;flex:none}
 .row.unread{background:color-mix(in srgb,var(--blue) 5%,var(--bg-elev))}
@@ -1200,6 +1201,7 @@ const LSKEY = 'banbiao.v1';
 
 /* ---------------- 存取 ---------------- */
 function save() {
+  _notifCache = null;
   try {
     localStorage.setItem(LSKEY, JSON.stringify(DB));
     flashSaved();
@@ -1723,27 +1725,26 @@ const BOSS_NAV = [
 const EMP_NAV = [['my', 'emp.my', '▦'], ['ehours', 'emp.hours', '◷'], ['eleave', 'emp.leave', '✈'], ['eme', 'emp.me', '☺']];
 
 function renderNav() {
-  const pend = DB.timeoff.filter(x => x.status === 'pending').length;
   const emp = state.mode === 'emp';
+  const by = notifByView();
+  const moreCount = MORE_VIEWS.reduce((n, v) => n + (by[v] || 0), 0);
 
   if (emp) {
     $('#nav').innerHTML = `<div class="nav-sec">${t('mode.emp')}</div>` + EMP_NAV.map(([id, k, i]) =>
       `<button class="nav-item ${state.eview === id ? 'on' : ''}" data-act="ego" data-v="${id}">
-        <span class="ni-ico">${i}</span><span>${t(k)}</span></button>`).join('');
-    const un = unseenNotif();
+        <span class="ni-ico">${i}</span><span>${t(k)}</span>${badgeSpan(by[id] || 0)}</button>`).join('');
     $('#tabbar').innerHTML = EMP_NAV.map(([id, k, i]) =>
       `<button class="tab ${state.eview === id ? 'on' : ''}" data-act="ego" data-v="${id}">
-        <span class="tab-ico">${i}${id === 'eleave' && un ? '<i class="tdot"></i>' : ''}</span><span>${t(k)}</span></button>`).join('');
+        <span class="tab-ico">${i}${badgeHTML(by[id] || 0)}</span><span>${t(k)}</span></button>`).join('');
   } else {
     $('#nav').innerHTML = BOSS_NAV.map(g =>
       `<div class="nav-sec">${t(g.g)}</div>` + g.items.map(([id, k, i]) =>
         `<button class="nav-item ${state.view === id ? 'on' : ''}" data-act="go" data-v="${id}">
-          <span class="ni-ico">${i}</span><span>${t(k)}</span>
-          ${id === 'leave' && pend ? `<span class="ni-badge">${pend}</span>` : ''}</button>`).join('')).join('');
+          <span class="ni-ico">${i}</span><span>${t(k)}</span>${badgeSpan(by[id] || 0)}</button>`).join('')).join('');
     const tabs = [['dash', 'nav.dash', '◎'], ['sched', 'nav.sched', '▦'], ['time', 'nav.time', '◷'], ['pay', 'nav.pay', '＄'], ['more', 'nav.more', '⋯']];
     $('#tabbar').innerHTML = tabs.map(([id, k, i]) =>
       `<button class="tab ${state.view === id ? 'on' : ''}" data-act="${id === 'more' ? 'moreMenu' : 'go'}" data-v="${id}">
-        <span class="tab-ico">${i}${id === 'more' && pend ? '<i class="tdot"></i>' : ''}</span><span>${t(k)}</span></button>`).join('');
+        <span class="tab-ico">${i}${badgeHTML(id === 'more' ? moreCount : (by[id] || 0))}</span><span>${t(k)}</span></button>`).join('');
   }
 
   $('#sideFoot').innerHTML =
@@ -1764,6 +1765,7 @@ function ego(v) { state.eview = v; render(); scrollTop(); }
 function scrollTop() { $('#main').scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }); }
 
 function render() {
+  dropNotifCache();
   renderNav();
   const v = state.mode === 'emp'
     ? (state.me && staffById(state.me) ? EVIEWS[state.eview] : EVIEWS.pick)
@@ -1777,7 +1779,7 @@ function render() {
 
 function topbarHTML(title, sub, right = '') {
   const un = unseenNotif();
-  const bell = `<button class="btn ico gho bell ${un ? 'has' : ''}" data-act="notif" aria-label="${t('notif.title')}">🔔</button>`;
+  const bell = `<button class="btn ico gho bell" data-act="notif" aria-label="${t('notif.title')}">🔔${badgeHTML(un)}</button>`;
   return `<div><div class="tb-title">${title}</div><div class="tb-sub">${sub}</div></div>
     <div class="tb-right">${right}${bell}</div>`;
 }
@@ -3392,7 +3394,7 @@ function notifications() {
     DB.timeoff.filter(x => x.status === 'pending').forEach(x => {
       const s = staffById(x.staffId); if (!s) return;
       out.push({
-        id: 'lv' + x.id, ico: '✈', col: 'orange', act: 'leave',
+        id: 'lv' + x.id, ico: '✈', col: 'orange', act: 'leave', todo: true,
         title: t('notif.leaveReq', { n: s.n, t: leaveName(x.type) }),
         sub: `${fmtMD(x.from)}${x.from !== x.to ? ' – ' + fmtMD(x.to) : ''} · ${esc(x.reason || '')}`,
       });
@@ -3401,13 +3403,13 @@ function notifications() {
     rangeDays(addDays(TODAY, -7), 7).forEach(d => shiftsOf(d).forEach(sh => {
       if (!DB.punches.some(p => p.staffId === sh.staffId && p.date === d)) miss++;
     }));
-    if (miss) out.push({ id: 'miss' + TODAY, ico: '◷', col: 'red', act: 'time', title: t('notif.missing', { n: miss }), sub: t('time.missHint') });
+    if (miss) out.push({ id: 'miss' + TODAY, ico: '◷', col: 'red', act: 'time', todo: true, title: t('notif.missing', { n: miss }), sub: t('time.missHint'), n: miss });
     const gaps = weekGaps(ws).reduce((n, g) => n + g.miss, 0);
-    if (gaps) out.push({ id: 'gap' + ws, ico: '▦', col: 'blue', act: 'sched', title: t('notif.gap', { n: gaps }), sub: `${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))}` });
+    if (gaps) out.push({ id: 'gap' + ws, ico: '▦', col: 'blue', act: 'sched', todo: true, title: t('notif.gap', { n: gaps }), sub: `${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))}`, n: gaps });
     DB.staff.forEach(s => {
       const m = weekMinutes(s.id, ws);
       if (s.pay === 'hourly' && m > st.otWeekly * 60)
-        out.push({ id: 'ot' + ws + s.id, ico: '⚠︎', col: 'orange', act: 'sched', title: t('notif.ot', { n: s.n, h: hh(m), c: st.otWeekly }), sub: roleName(primaryRole(s)) });
+        out.push({ id: 'ot' + ws + s.id, ico: '⚠︎', col: 'orange', act: 'sched', todo: true, title: t('notif.ot', { n: s.n, h: hh(m), c: st.otWeekly }), sub: roleName(primaryRole(s)) });
     });
   } else if (me()) {
     const s = me();
@@ -3424,11 +3426,26 @@ function notifications() {
     rangeDays(addDays(TODAY, -7), 7).forEach(d => {
       if (schedMin(s.id, d) > 0 && !DB.punches.some(p => p.staffId === s.id && p.date === d)) miss++;
     });
-    if (miss) out.push({ id: 'mymiss' + TODAY, ico: '◷', col: 'orange', act: 'ehours', title: t('notif.myMissing', { n: miss }), sub: t('time.missHint') });
+    if (miss) out.push({ id: 'mymiss' + TODAY, ico: '◷', col: 'orange', act: 'ehours', todo: true, title: t('notif.myMissing', { n: miss }), sub: t('time.missHint'), n: miss });
   }
   return out;
 }
-const unseenNotif = () => notifications().filter(n => !DB.seenNotif[n.id]).length;
+/* 一次 render 里只算一遍 */
+let _notifCache = null;
+const notifList = () => (_notifCache || (_notifCache = notifications()));
+const dropNotifCache = () => { _notifCache = null; };
+const unseenNotif = () => notifList().filter(n => !DB.seenNotif[n.id]).length;
+/* 每个页面各有多少件事要看：待办一直算，知会类看过就不算 */
+function notifByView() {
+  const m = {};
+  notifList().forEach(x => {
+    if (x.todo || !DB.seenNotif[x.id]) m[x.act] = (m[x.act] || 0) + (x.n && x.todo ? x.n : 1);
+  });
+  return m;
+}
+const MORE_VIEWS = ['staff', 'leave', 'set'];
+const badgeHTML = n => n > 0 ? `<i class="badge">${n > 99 ? '99+' : n}</i>` : '';
+const badgeSpan = n => n > 0 ? `<span class="ni-badge">${n > 99 ? '99+' : n}</span>` : '';
 
 function openNotif() {
   const list = notifications();
@@ -3568,11 +3585,15 @@ const ACT = {
 
   /* ---- 管理端 ---- */
   moreMenu() {
+    const by = notifByView();
+    const sub = { staff: '', leave: t('leave.pending'), set: '' };
     openSheet({
       title: t('nav.more'), body: `<div class="list">
         ${[['staff', 'nav.staff', '☺'], ['leave', 'nav.leave', '✈'], ['set', 'nav.set', '⚙']].map(([v, k, i]) =>
         `<div class="row tap" data-act="goClose" data-v="${v}"><span style="width:22px">${i}</span>
-           <div class="row-m"><div class="row-t">${t(k)}</div></div><span class="chev">›</span></div>`).join('')}
+           <div class="row-m"><div class="row-t">${t(k)}</div>
+             ${by[v] ? `<div class="row-s" style="color:var(--red)">${sub[v]}</div>` : ''}</div>
+           ${badgeSpan(by[v] || 0)}<span class="chev">›</span></div>`).join('')}
         <div class="row tap" data-act="goClose" data-v="__emp"><span style="width:22px">👤</span>
           <div class="row-m"><div class="row-t">${t('mode.toEmp')}</div></div><span class="chev">›</span></div>
         </div>`
