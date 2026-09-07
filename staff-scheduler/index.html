@@ -1760,8 +1760,8 @@ function renderNav() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
 }
 
-function go(v) { state.view = v; state.mode = 'boss'; render(); scrollTop(); }
-function ego(v) { state.eview = v; render(); scrollTop(); }
+function go(v) { state.view = v; state.mode = 'boss'; dropNotifCache(); markViewSeen(v); render(); scrollTop(); }
+function ego(v) { state.eview = v; dropNotifCache(); markViewSeen(v); render(); scrollTop(); }
 function scrollTop() { $('#main').scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }); }
 
 function render() {
@@ -3394,7 +3394,7 @@ function notifications() {
     DB.timeoff.filter(x => x.status === 'pending').forEach(x => {
       const s = staffById(x.staffId); if (!s) return;
       out.push({
-        id: 'lv' + x.id, ico: '✈', col: 'orange', act: 'leave', todo: true,
+        id: 'lv' + x.id, ico: '✈', col: 'orange', act: 'leave',
         title: t('notif.leaveReq', { n: s.n, t: leaveName(x.type) }),
         sub: `${fmtMD(x.from)}${x.from !== x.to ? ' – ' + fmtMD(x.to) : ''} · ${esc(x.reason || '')}`,
       });
@@ -3403,17 +3403,17 @@ function notifications() {
     rangeDays(addDays(TODAY, -7), 7).forEach(d => shiftsOf(d).forEach(sh => {
       if (!DB.punches.some(p => p.staffId === sh.staffId && p.date === d)) miss++;
     }));
-    if (miss) out.push({ id: 'miss' + TODAY, ico: '◷', col: 'red', act: 'time', todo: true, title: t('notif.missing', { n: miss }), sub: t('time.missHint'), n: miss });
+    if (miss) out.push({ id: 'miss' + TODAY + ':' + miss, ico: '◷', col: 'red', act: 'time', title: t('notif.missing', { n: miss }), sub: t('time.missHint'), n: miss });
     const gaps = weekGaps(ws).reduce((n, g) => n + g.miss, 0);
-    if (gaps) out.push({ id: 'gap' + ws, ico: '▦', col: 'blue', act: 'sched', todo: true, title: t('notif.gap', { n: gaps }), sub: `${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))}`, n: gaps });
+    if (gaps) out.push({ id: 'gap' + ws + ':' + gaps, ico: '▦', col: 'blue', act: 'sched', title: t('notif.gap', { n: gaps }), sub: `${fmtMD(ws)} – ${fmtMD(addDays(ws, 6))}`, n: gaps });
     DB.staff.forEach(s => {
       const m = weekMinutes(s.id, ws);
       if (s.pay === 'hourly' && m > st.otWeekly * 60)
-        out.push({ id: 'ot' + ws + s.id, ico: '⚠︎', col: 'orange', act: 'sched', todo: true, title: t('notif.ot', { n: s.n, h: hh(m), c: st.otWeekly }), sub: roleName(primaryRole(s)) });
+        out.push({ id: 'ot' + ws + s.id, ico: '⚠︎', col: 'orange', act: 'sched', title: t('notif.ot', { n: s.n, h: hh(m), c: st.otWeekly }), sub: roleName(primaryRole(s)) });
     });
   } else if (me()) {
     const s = me();
-    DB.timeoff.filter(x => x.staffId === s.id && x.status !== 'pending').forEach(x => {
+    DB.timeoff.filter(x => x.staffId === s.id && x.status !== 'pending' && x.to >= addDays(TODAY, -30)).forEach(x => {
       out.push({
         id: 'lv' + x.id + x.status, ico: '✈', col: x.status === 'approved' ? 'green' : 'red', act: 'eleave',
         title: x.status === 'approved' ? t('notif.leaveOK', { t: leaveName(x.type) }) : t('notif.leaveNo', { t: leaveName(x.type) }),
@@ -3426,7 +3426,7 @@ function notifications() {
     rangeDays(addDays(TODAY, -7), 7).forEach(d => {
       if (schedMin(s.id, d) > 0 && !DB.punches.some(p => p.staffId === s.id && p.date === d)) miss++;
     });
-    if (miss) out.push({ id: 'mymiss' + TODAY, ico: '◷', col: 'orange', act: 'ehours', todo: true, title: t('notif.myMissing', { n: miss }), sub: t('time.missHint'), n: miss });
+    if (miss) out.push({ id: 'mymiss' + TODAY + ':' + miss, ico: '◷', col: 'orange', act: 'ehours', title: t('notif.myMissing', { n: miss }), sub: t('time.missHint'), n: miss });
   }
   return out;
 }
@@ -3435,13 +3435,31 @@ let _notifCache = null;
 const notifList = () => (_notifCache || (_notifCache = notifications()));
 const dropNotifCache = () => { _notifCache = null; };
 const unseenNotif = () => notifList().filter(n => !DB.seenNotif[n.id]).length;
-/* 每个页面各有多少件事要看：待办一直算，知会类看过就不算 */
+/* 每个页面还有多少条没看过的；进过那个页面就清零 */
 function notifByView() {
   const m = {};
   notifList().forEach(x => {
-    if (x.todo || !DB.seenNotif[x.id]) m[x.act] = (m[x.act] || 0) + (x.n && x.todo ? x.n : 1);
+    if (!DB.seenNotif[x.id]) m[x.act] = (m[x.act] || 0) + (x.n || 1);
   });
   return m;
+}
+/* 打开某个页面 = 那个页面的通知都算看过了 */
+function markViewSeen(view) {
+  let hit = false;
+  notifList().forEach(x => { if (x.act === view && !DB.seenNotif[x.id]) { DB.seenNotif[x.id] = Date.now(); hit = true; } });
+  if (!hit) return;
+  pruneSeen();
+  save();
+}
+/* 只留最近看过的一批，免得这张表无限长（不能按「当前还在不在」来清，
+   否则切到另一个端时，这一端的记录会被误删，角标就全冒出来了） */
+function pruneSeen() {
+  const keys = Object.keys(DB.seenNotif);
+  if (keys.length <= 300) return;
+  keys.sort((a, b) => (DB.seenNotif[b] || 0) - (DB.seenNotif[a] || 0));
+  const kept = {};
+  keys.slice(0, 200).forEach(k => kept[k] = DB.seenNotif[k]);
+  DB.seenNotif = kept;
 }
 const MORE_VIEWS = ['staff', 'leave', 'set'];
 const badgeHTML = n => n > 0 ? `<i class="badge">${n > 99 ? '99+' : n}</i>` : '';
@@ -3526,11 +3544,11 @@ const ACT = {
   signOutEmp() { state.me = null; lsSet('banbiao.me', ''); lsSet('banbiao.meTok', ''); render(); },
   notif: () => openNotif(),
   markAllNotif() {
-    notifications().forEach(n => DB.seenNotif[n.id] = 1);
-    save(); closeSheet(); setTimeout(render, 80);
+    notifList().forEach(n => DB.seenNotif[n.id] = Date.now());
+    pruneSeen(); save(); closeSheet(); setTimeout(render, 80);
   },
   gotoNotif(b) {
-    DB.seenNotif[b.dataset.id] = 1; save(); closeSheet();
+    DB.seenNotif[b.dataset.id] = Date.now(); pruneSeen(); save(); closeSheet();
     const v = b.dataset.v;
     setTimeout(() => { if (state.mode === 'emp') ego(v); else go(v); }, 80);
   },
@@ -3821,6 +3839,8 @@ addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { i
   const who = savedMe && staffById(savedMe);
   if (who && savedTok && savedTok === pinToken(who)) state.me = savedMe;   // 只有记住过这台设备才免密
   state.week = weekStartOf(TODAY);
+  render();
+  markViewSeen(state.mode === 'emp' ? state.eview : state.view);
   render();
 })();
 </script>
