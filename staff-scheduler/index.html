@@ -1656,7 +1656,7 @@ function attachSheetDrag(inst) {
   const bodyEl = sheet.querySelector('.sheet-b');
   let sy = 0, sv = 0, lastT = 0, lastY = 0, dragging = false, startTop = 0;
   const down = e => {
-    if (e.target.closest('input,select,textarea,button,.switch,.tglchip')) return;  // 别抢走输入框的点击
+    if (e.target.closest('input,select,textarea,button,a,label,[data-act],.switch,.tglchip,.row.tap')) return;  // 可点的东西一律让行
     if (e.target.closest('.sheet-b') && bodyEl.scrollTop > 0) return;
     inst.spr && inst.spr.stop();
     dragging = true; sy = e.clientY; lastY = e.clientY; lastT = performance.now();
@@ -1671,8 +1671,9 @@ function attachSheetDrag(inst) {
     const now = performance.now(); const dt = Math.max(now - lastT, 1);
     sv = (e.clientY - lastY) / dt * 1000; lastY = e.clientY; lastT = now;
   };
-  const up = () => {
+  const up = e => {
     if (!dragging) return; dragging = false;
+    if (e && e.pointerId != null) { try { sheet.releasePointerCapture(e.pointerId); } catch (err) { } }
     const y = currentY(sheet), h = sheet.offsetHeight;
     const projected = y + project(sv);
     inst.lastV = sv;
