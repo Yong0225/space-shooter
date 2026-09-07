@@ -108,7 +108,10 @@ button{border:0;background:none;padding:0;cursor:pointer}
 }
 
 /* ============ Primitives ============ */
-.card{background:var(--bg-elev);border-radius:var(--r-l);box-shadow:var(--shadow-1);padding:18px;position:relative}
+.card{background:var(--bg-elev);border-radius:var(--r-l);box-shadow:var(--shadow-1);padding:18px;position:relative;
+  transition:box-shadow .18s ease,transform .14s cubic-bezier(.2,.8,.3,1)}
+.card[data-act]:hover{box-shadow:var(--shadow-2);transform:translateY(-2px)}
+.card[data-act]:active{transform:scale(.995)}
 .card.pad0{padding:0;overflow:hidden}
 .card-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .card-t{font-size:16px;font-weight:650;letter-spacing:-.015em}
@@ -148,6 +151,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .seg button{padding:5px 13px;border-radius:7px;font-size:13px;font-weight:600;color:var(--label);
   transition:background .18s cubic-bezier(.2,.8,.3,1),transform .1s;letter-spacing:-.01em}
 .seg button:active{transform:scale(.97)}
+.seg button:hover:not(.on){background:var(--fill-2)}
 .seg button.on{background:var(--bg-elev);box-shadow:var(--shadow-1)}
 
 .pill{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:999px;
@@ -190,6 +194,7 @@ select.inp{-webkit-appearance:none;appearance:none;cursor:pointer;
   background-position:calc(100% - 15px) 17px,calc(100% - 10px) 17px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
 textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.switch:hover{filter:brightness(.97)}
 .switch{width:49px;height:30px;border-radius:15px;background:var(--fill-3);position:relative;
   transition:background .22s cubic-bezier(.2,.8,.3,1);flex:none;cursor:pointer}
 .switch::after{content:'';position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;background:#fff;
@@ -223,7 +228,9 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
 .sh.corner{position:sticky;left:0;z-index:16;text-align:left;display:flex;align-items:flex-end;
   font-size:11.5px;color:var(--label-2);font-weight:600}
 .scell{border-bottom:1px solid var(--sep);border-left:1px solid var(--sep);min-height:66px;padding:5px;
-  display:flex;flex-direction:column;gap:4px;position:relative;transition:background .15s}
+  display:flex;flex-direction:column;gap:4px;position:relative;transition:background .15s;cursor:pointer}
+.scell:hover{background:color-mix(in srgb,var(--blue) 5%,var(--bg-elev))}
+.scell.wknd:hover{background:color-mix(in srgb,var(--blue) 5%,var(--fill))}
 .scell.wknd{background:var(--fill)}
 .scell.drop{background:#007aff1f;box-shadow:inset 0 0 0 2px var(--blue)}
 .scell.off{background:repeating-linear-gradient(45deg,transparent,transparent 6px,var(--fill-2) 6px,var(--fill-2) 12px)}
@@ -322,6 +329,7 @@ textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
 .tglchip{padding:6px 11px;border-radius:999px;background:var(--fill);font-size:12.5px;font-weight:600;
   transition:transform .1s,background .15s,color .15s}
 .tglchip:active{transform:scale(.95)}
+.tglchip:hover:not(.on){background:var(--fill-2)}
 .tglchip.on{background:var(--blue);color:#fff}
 .mono{font-variant-numeric:tabular-nums}
 .dim{color:var(--label-2)}
@@ -1624,6 +1632,8 @@ function closeSheet() {
   document.removeEventListener('keydown', escClose);
   const { scrim, sheet, mobile } = inst;
   scrim.classList.remove('on');
+  scrim.style.pointerEvents = 'none';        // 淡出期间别再挡住后面的按钮
+  sheet.style.pointerEvents = 'none';
   const bye = () => { sheet.remove(); scrim.remove(); };
   if (mobile) {
     inst.spr && inst.spr.stop();
@@ -1948,7 +1958,7 @@ VIEWS.sched = {
           const list = shiftsOf(d, s.id).sort((a, b) => t2m(a.start) - t2m(b.start));
           const cls = ['scell']; if ([0, 6].includes(dowOf(d))) cls.push('wknd');
           if (!avail && !lv) cls.push('off');
-          return `<div class="${cls.join(' ')}" data-cell="${d}|${s.id}">
+          return `<div class="${cls.join(' ')}" data-cell="${d}|${s.id}" data-act="newShift" data-d="${d}" data-s="${s.id}">
             ${lv ? `<div class="offtag" style="color:var(--purple)">✈ ${leaveName(lv.type)}</div>` : ''}
             ${!lv && pl ? `<div class="offtag" style="color:var(--orange)">${t('sched.waiting', { t: leaveName(pl.type) })}</div>` : ''}
             ${!lv && !avail ? `<div class="offtag">${t('sched.cant')}</div>` : ''}
@@ -2036,10 +2046,17 @@ function enableDrag() {
   const end = e => {
     if (!chip) return;
     const theChip = chip, theGhost = ghost, theId = shId, target = cell, wasMoving = moving;
+    const moved = e ? Math.hypot(e.clientX - sx, e.clientY - sy) : 0;
     chip = null; ghost = null; moving = false;
     cell && cell.classList.remove('drop'); cell = null;
 
-    if (!wasMoving) { openShiftEditor(DB.shifts.find(s => s.id === theId)); return; }
+    /* 只挪了一点点就松手：当成点击去编辑，而不是无声无息地弹回来 */
+    if (!wasMoving || moved < 12) {
+      if (theGhost) theGhost.remove();
+      theChip.classList.remove('src-hidden');
+      openShiftEditor(DB.shifts.find(s => s.id === theId));
+      return;
+    }
 
     const sh = DB.shifts.find(s => s.id === theId);
     let destRect = theChip.getBoundingClientRect(), commit = null;
@@ -3651,7 +3668,8 @@ const ACT = {
       save(); render(); toast(t('msg.cleared', { n }), 'info');
     });
   },
-  newShift(b) {
+  newShift(b, e) {
+    if (e && e.target.closest('.chip')) return;        // 点在班次上时交给拖拽层处理
     const s = staffById(b.dataset.s), tpl = DB.templates[0];
     openShiftEditor({ id: uid(), staffId: b.dataset.s, date: b.dataset.d, start: tpl.start, end: tpl.end, brk: tpl.brk, role: s ? s.roles[0] : 'server', note: '' }, true);
   },
